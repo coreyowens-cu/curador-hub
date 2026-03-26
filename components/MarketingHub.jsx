@@ -4530,3 +4530,4 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
     </div>
   );
 }
+ 
