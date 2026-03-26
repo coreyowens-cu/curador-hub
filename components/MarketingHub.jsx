@@ -570,8 +570,12 @@ input[type="date"].fi{color-scheme:dark;}
 export default function MarketingHub() {
 
   // Core state
-  const [strategy, setStrategy] = useState(DEFAULT_STRATEGY);
-  const [initiatives, setInitiatives] = useState(DEFAULT_INITIATIVES);
+  const [strategy, setStrategy] = useState(() => {
+    try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
+  });
+  const [initiatives, setInitiatives] = useState(() => {
+    try { const v = localStorage.getItem("shared_ns_ns-initiatives"); return v ? JSON.parse(v) : DEFAULT_INITIATIVES; } catch { return DEFAULT_INITIATIVES; }
+  });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
   const [detail, setDetail] = useState(null);
@@ -580,18 +584,18 @@ export default function MarketingHub() {
   const [conceptUpload, setConceptUpload] = useState(null); // init id to upload HTML concept
   const [showAddInit, setShowAddInit] = useState(false);
   const [showEditStrategy, setShowEditStrategy] = useState(false);
-  const [ganttHtml, setGanttHtml] = useState(null);
-  const [ready, setReady] = useState(false);
+  const [ganttHtml, setGanttHtml] = useState(() => { try { return localStorage.getItem("shared_ns_ns-gantt") || null; } catch { return null; } });
+  const [ready, setReady] = useState(true);
 
   // Notes
   const [notesOpen, setNotesOpen] = useState(false);
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-notes"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [noteText, setNoteText] = useState("");
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => { try { const v = localStorage.getItem("ns_ns-user"); return v ? JSON.parse(v) : null; } catch { return null; } });
   // Roles that can make live edits — Marketing Creative Director + CEO
   const EDITOR_ROLES = ["creative", "ceo", "exec"];
   const canEdit = !currentUser || EDITOR_ROLES.includes(currentUser.role);
-  const [showWhoModal, setShowWhoModal] = useState(false);
+  const [showWhoModal, setShowWhoModal] = useState(() => { try { return !localStorage.getItem("ns_ns-user"); } catch { return true; } });
   const [whoName, setWhoName] = useState("");
   const [whoRole, setWhoRole] = useState("content");
 
@@ -599,19 +603,19 @@ export default function MarketingHub() {
   const [lsbOpen, setLsbOpen] = useState(true);
   const [leftTab, setLeftTab] = useState("company");
   const [activeBrand, setActiveBrand] = useState(null); // null = company view
-  const [company, setCompany] = useState(DEFAULT_COMPANY);
-  const [brands, setBrands] = useState(DEFAULT_BRANDS);
-  const [teamMembers, setTeamMembers] = useState([]); // shared
-  const [orgRoles, setOrgRoles] = useState(ORG_ROLES);
+  const [company, setCompany] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-company"); return v ? JSON.parse(v) : DEFAULT_COMPANY; } catch { return DEFAULT_COMPANY; } });
+  const [brands, setBrands] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-brands"); return v ? JSON.parse(v) : DEFAULT_BRANDS; } catch { return DEFAULT_BRANDS; } });
+  const [teamMembers, setTeamMembers] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-team"); return v ? JSON.parse(v) : []; } catch { return []; } }); // shared
+  const [orgRoles, setOrgRoles] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-orgroles"); return v ? JSON.parse(v) : ORG_ROLES; } catch { return ORG_ROLES; } });
   const [selectedMember, setSelectedMember] = useState(null);
-  const [campaigns, setCampaigns] = useState([]);
+  const [campaigns, setCampaigns] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-campaigns"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [hlInitId, setHlInitId] = useState(null);
   const [showAddBrandInit, setShowAddBrandInit] = useState(null);
   const [showBriefUpload, setShowBriefUpload] = useState(null);
   const [teamView, setTeamView] = useState(null); // "orgchart" | "members"
-  const [concepts, setConcepts] = useState([]); // [{id, name, html, createdAt}]
+  const [concepts, setConcepts] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-concepts"); return v ? JSON.parse(v) : []; } catch { return []; } }); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
 
   // Load
@@ -684,24 +688,18 @@ export default function MarketingHub() {
       .catch(e => console.error("❌ Failed:", e));
   }, [initiatives, ready]);
 
-  // Load HTML concepts from public URL — only after initiatives are fully loaded from storage
+  // Concept HTML cache — stored separately so it never triggers the initiatives save effect
+  const conceptHtmlCache = useRef({});
   useEffect(() => {
     if (!ready) return;
-    // Small delay to let storage load settle first
-    const t = setTimeout(() => {
-      setInitiatives(p => {
-        const needsFetch = p.filter(i => i._conceptUrl && !i.htmlConcept);
-        if (needsFetch.length === 0) return p;
-        needsFetch.forEach(init => {
-          fetch(init._conceptUrl)
-            .then(r => r.ok ? r.text() : Promise.reject(r.status))
-            .then(html => setInitiatives(prev => prev.map(x => x.id === init.id ? { ...x, htmlConcept: html } : x)))
-            .catch(() => {});
-        });
-        return p; // don't change state yet, fetch will update individually
-      });
-    }, 300);
-    return () => clearTimeout(t);
+    initiatives.forEach(init => {
+      if (init._conceptUrl && !conceptHtmlCache.current[init.id]) {
+        fetch(init._conceptUrl)
+          .then(r => r.ok ? r.text() : Promise.reject(r.status))
+          .then(html => { conceptHtmlCache.current[init.id] = html; })
+          .catch(() => {});
+      }
+    });
   }, [ready]);
   useEffect(() => { if (ready) window.storage.set("ns-notes", JSON.stringify(notes), true).catch(() => {}); }, [notes, ready]);
   useEffect(() => { if (ready && ganttHtml) window.storage.set("ns-gantt", ganttHtml, true).catch(() => {}); }, [ganttHtml, ready]);
@@ -980,7 +978,8 @@ export default function MarketingHub() {
                     {initiatives.map(init => {
                       const color = getChannelColor(init.channel);
                       const channelShort = (init.channel || "").split(" · ")[1] || init.channel;
-                      const hasConcept = !!init.htmlConcept;
+                      const cachedHtml = conceptHtmlCache.current[init.id] || init.htmlConcept || null;
+                      const hasConcept = !!cachedHtml;
                       const hasConceptUrl = !!init._conceptUrl;
                       const isLoadingConcept = hasConceptUrl && !hasConcept;
                       const pct = dateProgress(init.startDate, init.endDate);
@@ -999,7 +998,7 @@ export default function MarketingHub() {
                           {hasConcept && (
                             <div style={{ height: 120, overflow: "hidden", position: "relative", background: "#111", cursor: "pointer" }} onClick={() => setConceptModal(init.id)}>
                               <iframe
-                                srcDoc={init.htmlConcept}
+                                srcDoc={cachedHtml}
                                 style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }}
                                 sandbox="allow-scripts"
                                 title={`preview-${init.id}`}
@@ -1511,7 +1510,7 @@ export default function MarketingHub() {
       {/* MODALS */}
       {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} />}
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
-      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); return init ? <ConceptViewerModal init={init} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} /> : null; })()}
+      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = conceptHtmlCache.current[init.id] || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} /> : null; })()}
       {conceptUpload && <ConceptHtmlUploadModal initName={initiatives.find(i => i.id === conceptUpload)?.title || ""} onClose={() => setConceptUpload(null)} onSave={(html, name) => saveConceptHtml(conceptUpload, html, name)} />}
       {showAddInit && <AddInitiativeModal
         pillars={strategy.pillars} brands={brands} preselectedBrand={null}
