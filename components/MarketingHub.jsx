@@ -665,10 +665,10 @@ export default function MarketingHub() {
   useEffect(() => { 
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
-    console.log("💾 Saving", toSave.length, "initiatives");
-    window.storage.set("ns-initiatives", JSON.stringify(toSave), true)
-      .then(() => console.log("✅ Saved"))
-      .catch(e => console.error("❌ Failed:", e));
+    const str = JSON.stringify(toSave);
+    // Save synchronously first, then via storage API
+    try { localStorage.setItem("shared_ns_ns-initiatives", str); } catch {}
+    window.storage.set("ns-initiatives", str, true).catch(() => {});
   }, [initiatives, ready]);
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
@@ -708,6 +708,8 @@ export default function MarketingHub() {
     const color = colorForName(name);
     const user = { name, color, role };
     setCurrentUser(user);
+    // Save directly to localStorage synchronously
+    try { localStorage.setItem("ns_ns-user", JSON.stringify(user)); } catch {}
     window.storage.set("ns-user", JSON.stringify(user)).catch(() => {});
     // Register in shared team
     setTeamMembers(prev => {
