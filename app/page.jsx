@@ -27,94 +27,65 @@ function PasswordGate({ onUnlock }) {
   };
 
   return (
-    <div style={{
-      position:"fixed",inset:0,background:"#07070f",
-      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      fontFamily:"'DM Sans',sans-serif",
-    }}>
-      <div style={{marginBottom:40,textAlign:"center"}}>
-        <div style={{fontSize:32,fontWeight:700,letterSpacing:".14em",color:"#ede8df",textTransform:"uppercase",marginBottom:6}}>
-          C<span style={{color:"#3bb54a"}}>Ú</span>RADOR
+    <div style={{ position:"fixed",inset:0,background:"#07070f",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif" }}>
+      <div style={{ marginBottom:40,textAlign:"center" }}>
+        <div style={{ fontSize:32,fontWeight:700,letterSpacing:".14em",color:"#ede8df",textTransform:"uppercase",marginBottom:6 }}>
+          C<span style={{ color:"#3bb54a" }}>Ú</span>RADOR
         </div>
-        <div style={{fontSize:11,letterSpacing:".22em",textTransform:"uppercase",color:"#8a87a8"}}>Marketing OS</div>
+        <div style={{ fontSize:11,letterSpacing:".22em",textTransform:"uppercase",color:"#8a87a8" }}>Marketing OS</div>
       </div>
-      <div style={{
-        background:"#0d0d1a",border:"1px solid rgba(255,255,255,.08)",
-        borderRadius:16,padding:"32px 36px",width:340,
-        boxShadow:"0 24px 64px rgba(0,0,0,.5)",
-        animation: shake ? "shake .4s ease" : "none",
-      }}>
-        <div style={{fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6}}>Enter password to continue</div>
-        <div style={{fontSize:12,color:"#8a87a8",marginBottom:20}}>This site is private to the CÚRADOR team.</div>
-        <input
-          type="password" value={val} autoFocus placeholder="Password"
+      <div style={{ background:"#0d0d1a",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:"32px 36px",width:340,boxShadow:"0 24px 64px rgba(0,0,0,.5)",animation:shake?"shake .4s ease":"none" }}>
+        <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>Enter password to continue</div>
+        <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>This site is private to the CÚRADOR team.</div>
+        <input type="password" value={val} autoFocus placeholder="Password"
           onChange={e => { setVal(e.target.value); setError(false); }}
           onKeyDown={e => e.key === "Enter" && attempt()}
-          style={{
-            width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:10,
-            background:"rgba(255,255,255,.04)",
-            border:`1px solid ${error ? "#e07b6a" : "rgba(255,255,255,.1)"}`,
-            color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",
-            boxSizing:"border-box",transition:"border-color .2s",
-          }}
-        />
-        {error && <div style={{fontSize:11,color:"#e07b6a",marginBottom:8}}>Incorrect password — try again.</div>}
-        <button onClick={attempt} style={{
-          width:"100%",padding:"11px",borderRadius:9,border:"none",
-          background:"linear-gradient(135deg,#c9a84c,#a07030)",
-          color:"#07070f",fontFamily:"inherit",fontSize:13,fontWeight:700,
-          letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer",
-        }}>Enter →</button>
+          style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:10,background:"rgba(255,255,255,.04)",border:`1px solid ${error?"#e07b6a":"rgba(255,255,255,.1)"}`,color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box" }} />
+        {error && <div style={{ fontSize:11,color:"#e07b6a",marginBottom:8 }}>Incorrect password — try again.</div>}
+        <button onClick={attempt} style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#c9a84c,#a07030)",color:"#07070f",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer" }}>Enter →</button>
       </div>
       <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
     </div>
   );
 }
 
-async function readHubState() {
-  const [s, i, co, br, ca, tm] = await Promise.all([
-    storage.get("ns-strategy", true),
-    storage.get("ns-initiatives", true),
-    storage.get("ns-company", true),
-    storage.get("ns-brands", true),
-    storage.get("ns-campaigns", true),
-    storage.get("ns-team", true),
-  ]);
-  return {
-    strategy:    s  ? JSON.parse(s.value)  : null,
-    initiatives: i  ? JSON.parse(i.value)  : [],
-    company:     co ? JSON.parse(co.value) : null,
-    brands:      br ? JSON.parse(br.value) : null,
-    campaigns:   ca ? JSON.parse(ca.value) : [],
-    teamMembers: tm ? JSON.parse(tm.value) : [],
-  };
-}
-
 export default function Page() {
   const [unlocked, setUnlocked] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [hubKey, setHubKey] = useState(0);
   const [hubState, setHubState] = useState({});
-  const syncRef = useRef(null);
 
-  // Check session on mount
   useEffect(() => {
     window.storage = storage;
     if (sessionStorage.getItem("ch-auth") === "1") setUnlocked(true);
   }, []);
 
   const syncState = useCallback(async () => {
-    const state = await readHubState();
-    setHubState(state);
+    try {
+      const [s, i, co, br, ca, tm] = await Promise.all([
+        storage.get("ns-strategy", true),
+        storage.get("ns-initiatives", true),
+        storage.get("ns-company", true),
+        storage.get("ns-brands", true),
+        storage.get("ns-campaigns", true),
+        storage.get("ns-team", true),
+      ]);
+      setHubState({
+        strategy:    s  ? JSON.parse(s.value)  : null,
+        initiatives: i  ? JSON.parse(i.value)  : [],
+        company:     co ? JSON.parse(co.value) : null,
+        brands:      br ? JSON.parse(br.value) : null,
+        campaigns:   ca ? JSON.parse(ca.value) : [],
+        teamMembers: tm ? JSON.parse(tm.value) : [],
+      });
+    } catch {}
   }, []);
 
   useEffect(() => {
     if (!unlocked) return;
     syncState();
-    syncRef.current = setInterval(syncState, 3000);
-    const onUpdate = () => { syncState(); setHubKey(k => k + 1); };
-    window.addEventListener("hub-updated", onUpdate);
-    return () => { clearInterval(syncRef.current); window.removeEventListener("hub-updated", onUpdate); };
+    // Sync state for AI but DON'T remount MarketingHub
+    window.addEventListener("hub-updated", syncState);
+    return () => window.removeEventListener("hub-updated", syncState);
   }, [unlocked, syncState]);
 
   const handleAction = useCallback(async (action) => {
@@ -160,7 +131,7 @@ export default function Page() {
 
   return (
     <>
-      <MarketingHub key={hubKey} />
+      <MarketingHub />
       <AIAssistant hubState={hubState} onAction={handleAction} isOpen={aiOpen} onToggle={() => setAiOpen(o => !o)} />
     </>
   );
