@@ -1,152 +1,167 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { storage } from "../lib/storage";
 
-// Dynamically import to avoid SSR issues with window/document access
 const MarketingHub = dynamic(() => import("../components/MarketingHub"), { ssr: false });
 const AIAssistant = dynamic(() => import("../components/AIAssistant"), { ssr: false });
 
-// Inject the storage polyfill into window so the hub component can use it
-// without modification (it calls window.storage.get / .set)
-function StorageInjector() {
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.storage = storage;
+const SITE_PASSWORD = "curador2026";
+
+function PasswordGate({ onUnlock }) {
+  const [val, setVal] = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const attempt = () => {
+    if (val.trim().toLowerCase() === SITE_PASSWORD) {
+      sessionStorage.setItem("ch-auth", "1");
+      onUnlock();
+    } else {
+      setError(true);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setTimeout(() => setError(false), 2000);
+      setVal("");
     }
-  }, []);
-  return null;
+  };
+
+  return (
+    <div style={{
+      position:"fixed",inset:0,background:"#07070f",
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      fontFamily:"'DM Sans',sans-serif",
+    }}>
+      <div style={{marginBottom:40,textAlign:"center"}}>
+        <div style={{fontSize:32,fontWeight:700,letterSpacing:".14em",color:"#ede8df",textTransform:"uppercase",marginBottom:6}}>
+          C<span style={{color:"#3bb54a"}}>Ú</span>RADOR
+        </div>
+        <div style={{fontSize:11,letterSpacing:".22em",textTransform:"uppercase",color:"#8a87a8"}}>Marketing OS</div>
+      </div>
+      <div style={{
+        background:"#0d0d1a",border:"1px solid rgba(255,255,255,.08)",
+        borderRadius:16,padding:"32px 36px",width:340,
+        boxShadow:"0 24px 64px rgba(0,0,0,.5)",
+        animation: shake ? "shake .4s ease" : "none",
+      }}>
+        <div style={{fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6}}>Enter password to continue</div>
+        <div style={{fontSize:12,color:"#8a87a8",marginBottom:20}}>This site is private to the CÚRADOR team.</div>
+        <input
+          type="password" value={val} autoFocus placeholder="Password"
+          onChange={e => { setVal(e.target.value); setError(false); }}
+          onKeyDown={e => e.key === "Enter" && attempt()}
+          style={{
+            width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:10,
+            background:"rgba(255,255,255,.04)",
+            border:`1px solid ${error ? "#e07b6a" : "rgba(255,255,255,.1)"}`,
+            color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",
+            boxSizing:"border-box",transition:"border-color .2s",
+          }}
+        />
+        {error && <div style={{fontSize:11,color:"#e07b6a",marginBottom:8}}>Incorrect password — try again.</div>}
+        <button onClick={attempt} style={{
+          width:"100%",padding:"11px",borderRadius:9,border:"none",
+          background:"linear-gradient(135deg,#c9a84c,#a07030)",
+          color:"#07070f",fontFamily:"inherit",fontSize:13,fontWeight:700,
+          letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer",
+        }}>Enter →</button>
+      </div>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+}
+
+async function readHubState() {
+  const [s, i, co, br, ca, tm] = await Promise.all([
+    storage.get("ns-strategy", true),
+    storage.get("ns-initiatives", true),
+    storage.get("ns-company", true),
+    storage.get("ns-brands", true),
+    storage.get("ns-campaigns", true),
+    storage.get("ns-team", true),
+  ]);
+  return {
+    strategy:    s  ? JSON.parse(s.value)  : null,
+    initiatives: i  ? JSON.parse(i.value)  : [],
+    company:     co ? JSON.parse(co.value) : null,
+    brands:      br ? JSON.parse(br.value) : null,
+    campaigns:   ca ? JSON.parse(ca.value) : [],
+    teamMembers: tm ? JSON.parse(tm.value) : [],
+  };
 }
 
 export default function Page() {
+  const [unlocked, setUnlocked] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [hubKey, setHubKey] = useState(0);
+  const [hubState, setHubState] = useState({});
+  const syncRef = useRef(null);
 
-  // Shadow state — mirrors what the hub stores, so the AI gets live context
-  const [hubState, setHubState] = useState({
-    brands: null,
-    company: null,
-    initiatives: null,
-    campaigns: null,
-    strategy: null,
-    teamMembers: null,
-  });
-
-  // Poll hub state from localStorage so AI always has fresh context
+  // Check session on mount
   useEffect(() => {
-    const sync = async () => {
-      const [s, i, co, br, ca, tm] = await Promise.all([
-        storage.get("ns-strategy"),
-        storage.get("ns-initiatives"),
-        storage.get("ns-company"),
-        storage.get("ns-brands"),
-        storage.get("ns-campaigns", true),
-        storage.get("ns-team", true),
-      ]);
-      setHubState({
-        strategy: s ? JSON.parse(s.value) : null,
-        initiatives: i ? JSON.parse(i.value) : [],
-        company: co ? JSON.parse(co.value) : null,
-        brands: br ? JSON.parse(br.value) : null,
-        campaigns: ca ? JSON.parse(ca.value) : [],
-        teamMembers: tm ? JSON.parse(tm.value) : [],
-      });
-    };
-
-    // Sync immediately and then every 3 seconds so AI sees live changes
-    sync();
-    const id = setInterval(sync, 3000);
-    return () => clearInterval(id);
+    window.storage = storage;
+    if (sessionStorage.getItem("ch-auth") === "1") setUnlocked(true);
   }, []);
 
-  /**
-   * Handle actions emitted by the AI assistant.
-   * Each action type reads current storage, mutates, and writes back —
-   * which causes the MarketingHub to re-read and update via its own effects.
-   */
+  const syncState = useCallback(async () => {
+    const state = await readHubState();
+    setHubState(state);
+  }, []);
+
+  useEffect(() => {
+    if (!unlocked) return;
+    syncState();
+    syncRef.current = setInterval(syncState, 3000);
+    const onUpdate = () => { syncState(); setHubKey(k => k + 1); };
+    window.addEventListener("hub-updated", onUpdate);
+    return () => { clearInterval(syncRef.current); window.removeEventListener("hub-updated", onUpdate); };
+  }, [unlocked, syncState]);
+
   const handleAction = useCallback(async (action) => {
     if (!action?.type) return;
     const { type, payload } = action;
-
     switch (type) {
       case "ADD_INITIATIVE": {
-        const existing = await storage.get("ns-initiatives");
+        const existing = await storage.get("ns-initiatives", true);
         const list = existing ? JSON.parse(existing.value) : [];
-        const newInit = {
-          id: `init-ai-${Date.now()}`,
-          title: payload.title || "Untitled Initiative",
-          description: payload.description || "",
-          owner: payload.owner || "Brand Team",
-          pillar: payload.pillar || "Brand & Identity",
-          quarter: payload.quarter || "Q2 2026",
-          brandId: payload.brandId || null,
-          startDate: payload.startDate || "",
-          endDate: payload.endDate || "",
-          revolving: payload.revolving || false,
-          fileUrl: null, fileName: null, _brief: null, _briefSource: null,
-        };
-        await storage.set("ns-initiatives", JSON.stringify([...list, newInit]));
-        // Force a re-render hint via a custom event
-        window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
+        await storage.set("ns-initiatives", JSON.stringify([...list, {
+          id: `init-ai-${Date.now()}`, title: payload.title || "Untitled",
+          description: payload.description || "", owner: payload.owner || "Brand Team",
+          channel: payload.channel || "06 · Social Media Strategy",
+          brandId: payload.brandId || null, startDate: payload.startDate || "",
+          endDate: payload.endDate || "", revolving: !!payload.revolving,
+          fileUrl: null, fileName: null, _brief: null,
+        }]), true);
         break;
       }
-
-      case "UPDATE_INITIATIVE": {
-        const existing = await storage.get("ns-initiatives");
-        const list = existing ? JSON.parse(existing.value) : [];
-        const updated = list.map(init =>
-          init.id === payload.id ? { ...init, ...payload.updates } : init
-        );
-        await storage.set("ns-initiatives", JSON.stringify(updated));
-        window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
-        break;
-      }
-
       case "ADD_CAMPAIGN": {
         const existing = await storage.get("ns-campaigns", true);
         const list = existing ? JSON.parse(existing.value) : [];
-        const newCampaign = {
-          id: `cmp-ai-${Date.now()}`,
-          title: payload.title || "Untitled Campaign",
-          brand: payload.brand || "CÚRADOR",
-          concept: payload.concept || "",
-          status: payload.status || "brief",
-          brief: payload.brief || null,
+        await storage.set("ns-campaigns", JSON.stringify([{
+          id: `cmp-ai-${Date.now()}`, title: payload.title || "Untitled",
+          brand: payload.brand || "CÚRADOR", concept: payload.concept || "",
+          status: payload.status || "brief", brief: payload.brief || null,
           createdAt: new Date().toISOString(),
-        };
-        await storage.set("ns-campaigns", JSON.stringify([newCampaign, ...list]), true);
-        window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
+        }, ...list]), true);
         break;
       }
-
       case "UPDATE_STRATEGY": {
-        const existing = await storage.get("ns-strategy");
-        const strategy = existing ? JSON.parse(existing.value) : {};
-        await storage.set("ns-strategy", JSON.stringify({ ...strategy, ...payload }));
-        window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
+        const existing = await storage.get("ns-strategy", true);
+        const strat = existing ? JSON.parse(existing.value) : {};
+        await storage.set("ns-strategy", JSON.stringify({ ...strat, ...payload }), true);
         break;
       }
-
-      case "SUGGEST_BRIEF": {
-        // No hub mutation — the AI message shows the brief inline
-        console.log("Brief suggestion:", payload);
-        break;
-      }
-
-      default:
-        console.warn("Unknown AI action:", type);
+      default: console.log("AI action:", type, payload);
     }
+    window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
   }, []);
+
+  if (!unlocked) return <PasswordGate onUnlock={() => { window.storage = storage; setUnlocked(true); }} />;
 
   return (
     <>
-      <StorageInjector />
-      <MarketingHub />
-      <AIAssistant
-        hubState={hubState}
-        onAction={handleAction}
-        isOpen={aiOpen}
-        onToggle={() => setAiOpen(o => !o)}
-      />
+      <MarketingHub key={hubKey} />
+      <AIAssistant hubState={hubState} onAction={handleAction} isOpen={aiOpen} onToggle={() => setAiOpen(o => !o)} />
     </>
   );
 }
