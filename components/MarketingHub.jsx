@@ -574,7 +574,12 @@ export default function MarketingHub() {
     try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
   });
   const [initiatives, setInitiatives] = useState(() => {
-    try { const v = localStorage.getItem("shared_ns_ns-initiatives"); return v ? JSON.parse(v) : DEFAULT_INITIATIVES; } catch { return DEFAULT_INITIATIVES; }
+    try {
+      const v = localStorage.getItem("shared_ns_ns-initiatives");
+      console.log("🔑 Init load - initiatives key has:", v ? JSON.parse(v).length + " items" : "nothing");
+      if (v) return JSON.parse(v);
+    } catch(e) { console.error("Init load error:", e); }
+    return DEFAULT_INITIATIVES;
   });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
