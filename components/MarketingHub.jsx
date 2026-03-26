@@ -667,11 +667,12 @@ export default function MarketingHub() {
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
   // Save initiatives on every change (strip htmlConcept — fetched fresh from _conceptUrl)
+  const isFirstRender = useRef(true);
   useEffect(() => { 
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
     const str = JSON.stringify(toSave);
-    // Save synchronously first, then via storage API
     try { localStorage.setItem("shared_ns_ns-initiatives", str); } catch {}
     window.storage.set("ns-initiatives", str, true).catch(() => {});
   }, [initiatives, ready]);
