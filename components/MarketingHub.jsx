@@ -630,7 +630,6 @@ export default function MarketingHub() {
           } catch { return null; }
         };
         const s  = get("ns-strategy", true);
-        const i  = get("ns-initiatives", true);
         const n  = get("ns-notes", true);
         const u  = get("ns-user", false);
         const g  = get("ns-gantt", true);
@@ -639,13 +638,7 @@ export default function MarketingHub() {
         const tm = get("ns-team", true);
         const ca = get("ns-campaigns", true);
         if (s) setStrategy(JSON.parse(s.value));
-        if (i) {
-          const loaded = JSON.parse(i.value);
-          console.log("📦 Loaded", loaded.length, "initiatives from storage");
-          setInitiatives(loaded);
-        } else {
-          console.log("📦 No saved initiatives found, using defaults");
-        }
+        // initiatives loaded via useState lazy initializer - no need to load here
         if (n) setNotes(JSON.parse(n.value));
         if (g) setGanttHtml(g.value);
         if (co) setCompany(JSON.parse(co.value));
