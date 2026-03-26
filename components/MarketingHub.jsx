@@ -576,7 +576,7 @@ function PasswordGate({ onUnlock }) {
 
   const attempt = () => {
     if (val.trim().toLowerCase() === SITE_PASSWORD) {
-      sessionStorage.setItem("ch-auth", "1");
+      if (typeof window !== "undefined") sessionStorage.setItem("ch-auth", "1");
       onUnlock();
     } else {
       setError(true);
