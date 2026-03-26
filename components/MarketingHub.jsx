@@ -633,7 +633,13 @@ export default function MarketingHub() {
           window.storage.get("ns-concepts", true),
         ]);
         if (s) setStrategy(JSON.parse(s.value));
-        if (i) setInitiatives(JSON.parse(i.value));
+        if (i) {
+          const loaded = JSON.parse(i.value);
+          console.log("📦 Loaded", loaded.length, "initiatives from storage");
+          setInitiatives(loaded);
+        } else {
+          console.log("📦 No saved initiatives found, using defaults");
+        }
         if (n) setNotes(JSON.parse(n.value));
         if (g) setGanttHtml(g.value);
         if (co) setCompany(JSON.parse(co.value));
@@ -668,16 +674,18 @@ export default function MarketingHub() {
   }, []);
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
-  // Save initiatives — strip htmlConcept (always fetched from _conceptUrl, never stored)
-  // Use a ref to track last saved version to avoid loop with concept loader
+  // Save initiatives
   const lastSavedInitiatives = useRef(null);
   useEffect(() => { 
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
     const key = JSON.stringify(toSave);
-    if (key === lastSavedInitiatives.current) return; // no change besides htmlConcept
+    if (key === lastSavedInitiatives.current) return;
     lastSavedInitiatives.current = key;
-    window.storage.set("ns-initiatives", key, true).catch(() => {});
+    console.log("💾 Saving", toSave.length, "initiatives to storage");
+    window.storage.set("ns-initiatives", key, true)
+      .then(() => console.log("✅ Initiatives saved"))
+      .catch(e => console.error("❌ Save failed:", e));
   }, [initiatives, ready]);
 
   // Load HTML concepts from public URL — runs once on ready, never re-triggers
