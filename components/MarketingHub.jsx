@@ -618,24 +618,26 @@ export default function MarketingHub() {
   const [concepts, setConcepts] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-concepts"); return v ? JSON.parse(v) : []; } catch { return []; } }); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
 
-  // Load
+  // Load — read localStorage directly (no timing dependency on window.storage injection)
   useEffect(() => {
     (async () => {
-      // Small delay to ensure window.storage is injected
-      await new Promise(r => setTimeout(r, 50));
       try {
-        const [s, i, n, u, g, co, br, tm, ca] = await Promise.all([
-          window.storage.get("ns-strategy", true),
-          window.storage.get("ns-initiatives", true),
-          window.storage.get("ns-notes", true),
-          window.storage.get("ns-user"),
-          window.storage.get("ns-gantt", true),
-          window.storage.get("ns-company", true),
-          window.storage.get("ns-brands", true),
-          window.storage.get("ns-team", true),
-          window.storage.get("ns-campaigns", true),
-          window.storage.get("ns-concepts", true),
-        ]);
+        const get = (key, shared = false) => {
+          try {
+            const k = (shared ? "shared_" : "") + "ns_" + key;
+            const v = localStorage.getItem(k);
+            return v ? { value: v } : null;
+          } catch { return null; }
+        };
+        const s  = get("ns-strategy", true);
+        const i  = get("ns-initiatives", true);
+        const n  = get("ns-notes", true);
+        const u  = get("ns-user", false);
+        const g  = get("ns-gantt", true);
+        const co = get("ns-company", true);
+        const br = get("ns-brands", true);
+        const tm = get("ns-team", true);
+        const ca = get("ns-campaigns", true);
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
           const loaded = JSON.parse(i.value);
@@ -649,28 +651,16 @@ export default function MarketingHub() {
         if (co) setCompany(JSON.parse(co.value));
         if (br) setBrands(JSON.parse(br.value));
         if (tm) setTeamMembers(JSON.parse(tm.value));
-        const or = await window.storage.get("ns-orgroles", true);
+        const or = get("ns-orgroles", true);
         if (or) setOrgRoles(JSON.parse(or.value));
-        // Load shared org chart positions
-        const op = await window.storage.get("ns-orgpos", true).catch(()=>null);
-        const oc = await window.storage.get("ns-orgconns", true).catch(()=>null);
+        const op = get("ns-orgpos", true);
+        const oc = get("ns-orgconns", true);
         if (op) window.__savedOrgPos = JSON.parse(op.value);
         if (oc) window.__savedOrgConns = JSON.parse(oc.value);
         if (ca) setCampaigns(JSON.parse(ca.value));
         if (u) { setCurrentUser(JSON.parse(u.value)); }
         else setShowWhoModal(true);
-        const [,,,,,,,,, cn] = await Promise.all([
-          window.storage.get("ns-strategy", true),
-          window.storage.get("ns-initiatives", true),
-          window.storage.get("ns-notes", true),
-          window.storage.get("ns-user"),
-          window.storage.get("ns-gantt", true),
-          window.storage.get("ns-company", true),
-          window.storage.get("ns-brands", true),
-          window.storage.get("ns-team", true),
-          window.storage.get("ns-campaigns", true),
-          window.storage.get("ns-concepts", true),
-        ]);
+        const cn = get("ns-concepts", true);
         if (cn) setConcepts(JSON.parse(cn.value));
       } catch (_) { setShowWhoModal(true); }
       setReady(true);
