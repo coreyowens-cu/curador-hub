@@ -674,32 +674,35 @@ export default function MarketingHub() {
   }, []);
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
-  // Save initiatives
-  const lastSavedInitiatives = useRef(null);
+  // Save initiatives on every change (strip htmlConcept — fetched fresh from _conceptUrl)
   useEffect(() => { 
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
-    const key = JSON.stringify(toSave);
-    if (key === lastSavedInitiatives.current) return;
-    lastSavedInitiatives.current = key;
-    console.log("💾 Saving", toSave.length, "initiatives to storage");
-    window.storage.set("ns-initiatives", key, true)
-      .then(() => console.log("✅ Initiatives saved"))
-      .catch(e => console.error("❌ Save failed:", e));
+    console.log("💾 Saving", toSave.length, "initiatives");
+    window.storage.set("ns-initiatives", JSON.stringify(toSave), true)
+      .then(() => console.log("✅ Saved"))
+      .catch(e => console.error("❌ Failed:", e));
   }, [initiatives, ready]);
 
-  // Load HTML concepts from public URL — runs once on ready, never re-triggers
+  // Load HTML concepts from public URL — only after initiatives are fully loaded from storage
   useEffect(() => {
     if (!ready) return;
-    initiatives.forEach(init => {
-      if (init._conceptUrl && !init.htmlConcept) {
-        fetch(init._conceptUrl)
-          .then(r => r.ok ? r.text() : Promise.reject(r.status))
-          .then(html => setInitiatives(p => p.map(x => x.id === init.id ? { ...x, htmlConcept: html } : x)))
-          .catch(() => {});
-      }
-    });
-  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Small delay to let storage load settle first
+    const t = setTimeout(() => {
+      setInitiatives(p => {
+        const needsFetch = p.filter(i => i._conceptUrl && !i.htmlConcept);
+        if (needsFetch.length === 0) return p;
+        needsFetch.forEach(init => {
+          fetch(init._conceptUrl)
+            .then(r => r.ok ? r.text() : Promise.reject(r.status))
+            .then(html => setInitiatives(prev => prev.map(x => x.id === init.id ? { ...x, htmlConcept: html } : x)))
+            .catch(() => {});
+        });
+        return p; // don't change state yet, fetch will update individually
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [ready]);
   useEffect(() => { if (ready) window.storage.set("ns-notes", JSON.stringify(notes), true).catch(() => {}); }, [notes, ready]);
   useEffect(() => { if (ready && ganttHtml) window.storage.set("ns-gantt", ganttHtml, true).catch(() => {}); }, [ganttHtml, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-company", JSON.stringify(company), true).catch(() => {}); }, [company, ready]);
