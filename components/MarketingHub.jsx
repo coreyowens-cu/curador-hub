@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+// localStorage shim — makes window.storage work outside Claude artifact sandbox
+if (typeof window !== 'undefined' && !window.storage) {
+  window.storage = {
+    get: async (key) => { try { const v = localStorage.getItem(key); return v ? {value:v} : null; } catch { return null; } },
+    set: async (key, value) => { try { localStorage.setItem(key, value); return {value}; } catch { return null; } },
+    delete: async (key) => { try { localStorage.removeItem(key); } catch {} return null; },
+    list: async () => ({ keys: [] })
+  };
+}
+
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');`;
 
 const ORG_ROLES = [
@@ -574,11 +584,7 @@ export default function MarketingHub() {
     try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
   });
   const [initiatives, setInitiatives] = useState(() => {
-    try {
-      const v = localStorage.getItem("curador_initiatives");
-      if (v) { const p = JSON.parse(v); if (p.length > 0) return p; }
-    } catch {}
-    return DEFAULT_INITIATIVES;
+    try { const v = localStorage.getItem("shared_ns_ns-initiatives"); return v ? JSON.parse(v) : DEFAULT_INITIATIVES; } catch { return DEFAULT_INITIATIVES; }
   });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
@@ -622,42 +628,59 @@ export default function MarketingHub() {
   const [concepts, setConcepts] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-concepts"); return v ? JSON.parse(v) : []; } catch { return []; } }); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
 
-  // Load — read localStorage directly (no timing dependency on window.storage injection)
+  // Load
   useEffect(() => {
     (async () => {
+      // Small delay to ensure window.storage is injected
+      await new Promise(r => setTimeout(r, 50));
       try {
-        const get = (key, shared = false) => {
-          try {
-            const k = (shared ? "shared_" : "") + "ns_" + key;
-            const v = localStorage.getItem(k);
-            return v ? { value: v } : null;
-          } catch { return null; }
-        };
-        const s  = get("ns-strategy", true);
-        const n  = get("ns-notes", true);
-        const u  = get("ns-user", false);
-        const g  = get("ns-gantt", true);
-        const co = get("ns-company", true);
-        const br = get("ns-brands", true);
-        const tm = get("ns-team", true);
-        const ca = get("ns-campaigns", true);
+        const [s, i, n, u, g, co, br, tm, ca] = await Promise.all([
+          window.storage.get("ns-strategy", true),
+          window.storage.get("ns-initiatives", true),
+          window.storage.get("ns-notes", true),
+          window.storage.get("ns-user"),
+          window.storage.get("ns-gantt", true),
+          window.storage.get("ns-company", true),
+          window.storage.get("ns-brands", true),
+          window.storage.get("ns-team", true),
+          window.storage.get("ns-campaigns", true),
+          window.storage.get("ns-concepts", true),
+        ]);
         if (s) setStrategy(JSON.parse(s.value));
-        // initiatives loaded via useState lazy initializer - no need to load here
+        if (i) {
+          const loaded = JSON.parse(i.value);
+          console.log("📦 Loaded", loaded.length, "initiatives from storage");
+          setInitiatives(loaded);
+        } else {
+          console.log("📦 No saved initiatives found, using defaults");
+        }
         if (n) setNotes(JSON.parse(n.value));
         if (g) setGanttHtml(g.value);
         if (co) setCompany(JSON.parse(co.value));
         if (br) setBrands(JSON.parse(br.value));
         if (tm) setTeamMembers(JSON.parse(tm.value));
-        const or = get("ns-orgroles", true);
+        const or = await window.storage.get("ns-orgroles", true);
         if (or) setOrgRoles(JSON.parse(or.value));
-        const op = get("ns-orgpos", true);
-        const oc = get("ns-orgconns", true);
+        // Load shared org chart positions
+        const op = await window.storage.get("ns-orgpos", true).catch(()=>null);
+        const oc = await window.storage.get("ns-orgconns", true).catch(()=>null);
         if (op) window.__savedOrgPos = JSON.parse(op.value);
         if (oc) window.__savedOrgConns = JSON.parse(oc.value);
         if (ca) setCampaigns(JSON.parse(ca.value));
         if (u) { setCurrentUser(JSON.parse(u.value)); }
         else setShowWhoModal(true);
-        const cn = get("ns-concepts", true);
+        const [,,,,,,,,, cn] = await Promise.all([
+          window.storage.get("ns-strategy", true),
+          window.storage.get("ns-initiatives", true),
+          window.storage.get("ns-notes", true),
+          window.storage.get("ns-user"),
+          window.storage.get("ns-gantt", true),
+          window.storage.get("ns-company", true),
+          window.storage.get("ns-brands", true),
+          window.storage.get("ns-team", true),
+          window.storage.get("ns-campaigns", true),
+          window.storage.get("ns-concepts", true),
+        ]);
         if (cn) setConcepts(JSON.parse(cn.value));
       } catch (_) { setShowWhoModal(true); }
       setReady(true);
@@ -666,12 +689,14 @@ export default function MarketingHub() {
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
   // Save initiatives on every change (strip htmlConcept — fetched fresh from _conceptUrl)
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
+  useEffect(() => { 
+    if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
-    try { localStorage.setItem("curador_initiatives", JSON.stringify(toSave)); } catch(e) { console.error("SAVE ERROR:", e); }
-  }, [initiatives]);
+    console.log("💾 Saving", toSave.length, "initiatives");
+    window.storage.set("ns-initiatives", JSON.stringify(toSave), true)
+      .then(() => console.log("✅ Saved"))
+      .catch(e => console.error("❌ Failed:", e));
+  }, [initiatives, ready]);
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
   const conceptHtmlCache = useRef({});
@@ -710,8 +735,6 @@ export default function MarketingHub() {
     const color = colorForName(name);
     const user = { name, color, role };
     setCurrentUser(user);
-    // Save directly to localStorage synchronously
-    try { localStorage.setItem("ns_ns-user", JSON.stringify(user)); } catch {}
     window.storage.set("ns-user", JSON.stringify(user)).catch(() => {});
     // Register in shared team
     setTeamMembers(prev => {
@@ -807,8 +830,7 @@ export default function MarketingHub() {
             {lsbOpen && (
               <div className="lsb-body">
                 {/* CÚRADOR + brands always visible at top */}
-                <CompanyPanel
-                  company={company}
+                <CompanyPanel company={company}
                   brands={brands}
                   activeBrand={activeBrand}
                   initiatives={initiatives}
@@ -984,8 +1006,7 @@ export default function MarketingHub() {
                           {/* Concept preview thumbnail */}
                           {hasConcept && (
                             <div style={{ height: 120, overflow: "hidden", position: "relative", background: "#111", cursor: "pointer" }} onClick={() => setConceptModal(init.id)}>
-                              <iframe
-                                srcDoc={cachedHtml}
+                              <iframe srcDoc={cachedHtml}
                                 style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }}
                                 sandbox="allow-scripts"
                                 title={`preview-${init.id}`}
@@ -1036,7 +1057,6 @@ export default function MarketingHub() {
                                       style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", cursor: "pointer" }}>✕</button>
                                   </div>
                                 )}
-                              </div>
                               </div>
                               <div style={{ display: "flex", gap: 6 }}>
                                 {(hasConcept || isLoadingConcept) ? (
@@ -1090,8 +1110,7 @@ export default function MarketingHub() {
 
             {/* ── CONCEPTS ── */}
             {leftTab === "concepts" && !activeBrand && (
-              <ConceptsPanel
-                concepts={concepts}
+              <ConceptsPanel concepts={concepts}
                 activeConceptId={activeConceptId}
                 setActiveConceptId={setActiveConceptId}
                 onAdd={(concept) => setConcepts(p => [...p, concept])}
@@ -1499,8 +1518,7 @@ export default function MarketingHub() {
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
       {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = conceptHtmlCache.current[init.id] || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} /> : null; })()}
       {conceptUpload && <ConceptHtmlUploadModal initName={initiatives.find(i => i.id === conceptUpload)?.title || ""} onClose={() => setConceptUpload(null)} onSave={(html, name) => saveConceptHtml(conceptUpload, html, name)} />}
-      {showAddInit && <AddInitiativeModal
-        pillars={strategy.pillars} brands={brands} preselectedBrand={null}
+      {showAddInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={null}
         existing={typeof showAddInit === "string" ? initiatives.find(i => i.id === showAddInit) : null}
         onClose={() => setShowAddInit(false)}
         onSave={init => {
@@ -1903,8 +1921,7 @@ function CompanyPanel({ company, brands, activeBrand, onBrandSelect, initiatives
           <div className="cp-master-tab-sub">Marketing Vision</div>
         </div>
         {/* Collapse toggle */}
-        <div
-          onClick={e => { e.stopPropagation(); setBrandsOpen(o => !o); }}
+        <div onClick={e => { e.stopPropagation(); setBrandsOpen(o => !o); }}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 6px", color: "var(--text-muted)", fontSize: 10, flexShrink: 0, transition: "transform .2s", transform: brandsOpen ? "rotate(90deg)" : "rotate(0deg)" }}
           title={brandsOpen ? "Collapse brands" : "Expand brands"}
         >▶</div>
@@ -1934,8 +1951,7 @@ function CompanyPanel({ company, brands, activeBrand, onBrandSelect, initiatives
                       {brandInits.length}
                     </div>
                   )}
-                  <button
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "var(--text-muted)", fontSize: 10, flexShrink: 0, transition: "transform .18s", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+                  <button style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "var(--text-muted)", fontSize: 10, flexShrink: 0, transition: "transform .18s", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}
                     onClick={e => toggleBrand(e, b.id)}
                     title={isOpen ? "Collapse" : "Show initiatives"}
                   >▶</button>
@@ -2358,8 +2374,7 @@ function OrgChartView({ teamMembers, currentUser, orgRoles: initialRoles, onSele
                 transform: isDragging ? "scale(1.05)" : "scale(1)",
                 transition: isDragging ? "none" : "transform .12s",
               }}>
-                <div
-                  style={{
+                <div style={{
                     width: "100%", height: "100%", borderRadius: 10, padding: "7px 10px",
                     border: `1.5px solid ${borderColor}`,
                     background: isMe ? "rgba(201,168,76,.07)" : filled ? "rgba(255,255,255,.03)" : "var(--surface2)",
@@ -2406,8 +2421,7 @@ function OrgChartView({ teamMembers, currentUser, orgRoles: initialRoles, onSele
                 {/* Edit mode controls */}
                 {editMode && editing !== role.id && (
                   <div style={{ position: "absolute", top: -10, right: -10, display: "flex", gap: 3 }} onMouseDown={e => e.stopPropagation()}>
-                    <div
-                      title="Draw a connection from this node — click then click another node"
+                    <div title="Draw a connection from this node — click then click another node"
                       style={{ width: 18, height: 18, borderRadius: "50%", border: "1px solid rgba(77,158,142,.5)", background: drawConn?.fromId === role.id ? "#4d9e8e" : "rgba(77,158,142,.15)", color: "#4d9e8e", fontSize: 13, cursor: "crosshair", display: "grid", placeItems: "center", transition: "background .15s" }}
                       onClick={e => {
                         e.stopPropagation();
@@ -2433,8 +2447,7 @@ function OrgChartView({ teamMembers, currentUser, orgRoles: initialRoles, onSele
 
                 {/* Connection port dot — drag to draw */}
                 {editMode && !drawConn && (
-                  <div
-                    title="Drag to draw a new connection"
+                  <div title="Drag to draw a new connection"
                     style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 14, height: 14, borderRadius: "50%", background: "#4d9e8e", border: "2px solid var(--surface)", cursor: "crosshair", zIndex: 10 }}
                     onMouseDown={e => { e.stopPropagation(); const { x, y } = getCanvasXY(e); setDrawConn({ fromId: role.id, mx: x, my: y }); }}
                   />
@@ -2791,8 +2804,7 @@ function ChannelsPanel({ initiatives, pillars, pillarAccents, onInitClick, hlIni
               <div className="ch-p-ct">{items.length}</div>
             </div>
             {items.map(init => (
-              <div
-                key={init.id}
+              <div key={init.id}
                 className={`ch-card ${hlInitId === init.id ? "active" : ""}`}
                 style={{ borderLeftColor: hlInitId === init.id ? "var(--gold)" : acc.solid }}
                 onClick={() => onInitClick(init)}
@@ -3748,8 +3760,7 @@ function BriefUploadModal({ brandId, brand, pillars, onClose, onSave }) {
     setError(null);
     setParsed(null);
     const reader = new FileReader();
-    reader.onload = e => setFileData(e.target.result); // data URL
-    reader.readAsDataURL(f);
+    reader.onload = e => setFileData(e.target.result); // data URL reader.readAsDataURL(f);
   };
 
   const onDrop = useCallback(e => {
@@ -4434,8 +4445,7 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-sm" onClick={exitEditor}>← Back to View</button>
-            <button
-              onClick={pushUpdate}
+            <button onClick={pushUpdate}
               style={{
                 padding: "6px 16px", borderRadius: 7, border: "none", cursor: "pointer",
                 background: saved ? "#4d9e8e" : "#c9a84c", color: "#07070f",
@@ -4458,8 +4468,7 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
               <button className="btn btn-sm" style={{ marginLeft: "auto", fontSize: 9 }} onClick={() => fileRef.current.click()}>↺ Replace File</button>
               <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
             </div>
-            <textarea
-              ref={textareaRef}
+            <textarea ref={textareaRef}
               value={draft}
               onChange={e => setDraft(e.target.value)}
               spellCheck={false}
@@ -4478,8 +4487,7 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
             <div style={{ padding: "7px 14px", borderBottom: "1px solid rgba(0,0,0,.08)", background: "#f5f5f5", flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#666", fontWeight: 500 }}>Live Preview</div>
             </div>
-            <iframe
-              key={draft.length}
+            <iframe key={draft.length}
               srcDoc={draft}
               title="Gantt Live Preview"
               sandbox="allow-scripts allow-same-origin allow-forms"
