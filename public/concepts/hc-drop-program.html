@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Head Change — Drop Program</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0c0b09;
+      --bg-card:   #141210;
+      --bg-raised: #1a1814;
+      --border:    rgba(255,255,255,0.07);
+      --amber:     #c9922a;
+      --amber-dim: rgba(201,146,42,0.12);
+      --amber-mid: rgba(201,146,42,0.25);
+      --cream:     #f0e8d5;
+      --muted:     #7a7168;
+      --text:      #e8e0d0;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      border-bottom: 1px solid var(--border);
+      padding: 48px 64px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .doc-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .doc-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    .doc-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .brand-pills {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 2px;
+      border: 1px solid currentColor;
+    }
+    .pill-amber { color: var(--amber); border-color: rgba(201,146,42,0.4); background: var(--amber-dim); }
+    .pill-muted { color: var(--muted); border-color: rgba(255,255,255,0.1); }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 64px 120px;
+    }
+    section { padding-top: 80px; }
+
+    /* ── SECTION HEADER ── */
+    .sec-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+    .sec-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 600;
+      color: var(--cream);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .sec-desc {
+      color: var(--muted);
+      font-size: 13.5px;
+      max-width: 620px;
+      margin-bottom: 36px;
+    }
+    .sec-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 36px;
+    }
+
+    /* ── THESIS / CALLOUT ── */
+    .thesis {
+      border: 1px solid var(--amber-mid);
+      background: var(--amber-dim);
+      border-radius: 3px;
+      padding: 28px 32px;
+      margin-top: 16px;
+    }
+    .thesis-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+    .thesis-body {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(16px, 2vw, 21px);
+      color: var(--cream);
+      line-height: 1.55;
+      font-style: italic;
+    }
+
+    /* ── GRIDS ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 24px;
+    }
+    .card-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 10px;
+    }
+    .card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .card ul {
+      list-style: none;
+      margin-top: 8px;
+    }
+    .card ul li {
+      font-size: 12.5px;
+      color: var(--muted);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .card ul li::before {
+      content: '→';
+      color: var(--amber);
+      flex-shrink: 0;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .card ul li:last-child { border-bottom: none; }
+    .card.amber-card {
+      border-color: var(--amber-mid);
+      background: rgba(201,146,42,0.06);
+    }
+
+    /* ── PRINCIPLE ── */
+    .principle {
+      background: var(--bg-raised);
+      border-left: 2px solid var(--amber);
+      padding: 14px 20px;
+      margin-top: 10px;
+      border-radius: 0 2px 2px 0;
+    }
+    .principle p {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--cream);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── COMPETE / SPLIT ── */
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .split-col { padding: 28px 28px; }
+    .split-divider { background: var(--border); }
+    .split-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .split-label.amber { color: var(--amber); }
+    .split-item {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .split-item:last-child { border-bottom: none; }
+    .split-item.cream { color: var(--cream); }
+
+    /* ── PHASE ROWS ── */
+    .phase-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .phase-label-col {
+      background: var(--bg-raised);
+      padding: 20px 22px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .phase-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 4px;
+    }
+    .phase-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: var(--cream);
+    }
+    .phase-body {
+      padding: 20px 24px;
+    }
+    .phase-body ul { list-style: none; }
+    .phase-body ul li {
+      font-size: 12.5px;
+      color: var(--muted);
+      padding: 3px 0;
+      display: flex;
+      gap: 8px;
+    }
+    .phase-body ul li::before { content: '·'; color: var(--amber); flex-shrink: 0; }
+
+    /* ── ICON CARDS ── */
+    .icon-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .icon-card {
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 22px;
+      text-align: center;
+    }
+    .icon-card .ic-icon { font-size: 26px; display: block; margin-bottom: 10px; }
+    .icon-card .ic-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      color: var(--cream);
+      margin-bottom: 4px;
+    }
+    .icon-card .ic-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── TAG LIST ── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 4px 11px;
+    }
+    .tag.amber { color: var(--amber); border-color: rgba(201,146,42,0.3); }
+
+    /* ── METRIC CARDS ── */
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .metric-card .m-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .metric-card .m-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--cream);
+    }
+    .metric-card .m-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── NEXT STEPS ── */
+    .steps-list { list-style: none; margin-top: 0; }
+    .steps-list li {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .step-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--amber);
+      padding-top: 2px;
+    }
+    .step-text { font-size: 13.5px; color: var(--muted); }
+    .step-text strong { color: var(--cream); font-weight: 500; }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--amber);
+    }
+    .footer-left span {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .footer-right {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-align: right;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .doc-header, .page, .doc-footer { padding-left: 24px; padding-right: 24px; }
+      .grid-2, .grid-3, .grid-4, .icon-cards { grid-template-columns: 1fr; }
+      .split-grid { grid-template-columns: 1fr; }
+      .split-divider { height: 1px; width: 100%; }
+      .phase-row { grid-template-columns: 1fr; }
+      .phase-label-col { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════ HEADER -->
+  <header class="doc-header">
+    <div class="doc-label">Internal Strategy Document · Brand Vertical</div>
+    <div class="doc-title">Drop<br/>Program</div>
+    <div class="doc-sub">Head Change · HC Editions / Supply / Goods</div>
+    <div class="brand-pills">
+      <span class="pill pill-amber">Head Change</span>
+      <span class="pill pill-muted">Limited Release System</span>
+      <span class="pill pill-muted">Confidential · Curador Internal</span>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ═══════════════════════════════════════ 01 OVERVIEW -->
+    <section>
+      <div class="sec-eyebrow">01 — Overview</div>
+      <div class="sec-title">Not Merch. Artifact-Level Drops.</div>
+      <div class="sec-desc">The Head Change Drop Program is a limited-release merchandise and product ecosystem inspired by streetwear culture, scarcity marketing, and collectible design. Each drop is treated as a moment — not a product release.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Program Delivers</div>
+          <div class="card-title">Three Drop Categories</div>
+          <ul>
+            <li>Apparel — premium blanks, cut &amp; sew, accessories</li>
+            <li>Ancillary products — hash lifestyle objects, tools, storage</li>
+            <li>Artist collaborations — local + global rotating voices</li>
+          </ul>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">The Distinction</div>
+          <div class="card-title">Its Own Brand Vertical</div>
+          <p style="font-family:'Playfair Display',serif; font-size:15px; font-style:italic; color:var(--cream); line-height:1.6; margin-top:4px;">
+            You're not building "merch."<br/>
+            You're building artifact-level drops that sit somewhere between streetwear, cannabis culture, and collectible publishing.
+          </p>
+        </div>
+      </div>
+
+      <div class="thesis">
+        <div class="thesis-label">Strategic Position</div>
+        <div class="thesis-body">If executed right, this becomes its own vertical brand — not just an extension of Head Change. This should feel closer to Supreme meets a rare tattoo book drop, not a dispensary hoodie.</div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 02 OBJECTIVES -->
+    <section>
+      <div class="sec-eyebrow">02 — Objectives</div>
+      <div class="sec-title">Why This Exists</div>
+      <div class="sec-desc">Five interlocking goals that compound over time — from cultural relevance to long-term collectible value.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-label">Brand</div>
+          <div class="card-title">Cultural Relevance</div>
+          <p>Build a secondary brand vertical that earns a place in cannabis culture — not by shouting, but by being worth collecting.</p>
+        </div>
+        <div class="card">
+          <div class="card-label">Demand</div>
+          <div class="card-title">Scarcity + Storytelling</div>
+          <p>Drive demand through real scarcity and narrative. Every drop answers: Who made this? Why does it exist? What world does it belong to?</p>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Loyalty</div>
+          <div class="card-title">Repeat Engagement</div>
+          <p>Strengthen customer loyalty through access and exclusivity tied directly to the Head Change loyalty ecosystem.</p>
+        </div>
+        <div class="card">
+          <div class="card-label">Identity</div>
+          <div class="card-title">Lifestyle Brand</div>
+          <p>Position Head Change beyond product — as a lifestyle brand with a distinct cultural point of view.</p>
+        </div>
+        <div class="card">
+          <div class="card-label">Collectibility</div>
+          <div class="card-title">Archive Value</div>
+          <p>Create pieces that gain meaning over time. Secondary market activity is cultural validation — not a problem.</p>
+        </div>
+        <div class="card">
+          <div class="card-label">Revenue</div>
+          <div class="card-title">Near 100% Sell-Through</div>
+          <p>True scarcity drives sell-through. Drop-day revenue spikes, repeat buyers, and archive demand compound over seasons.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 03 CORE STRATEGY -->
+    <section>
+      <div class="sec-eyebrow">03 — Core Strategy</div>
+      <div class="sec-title">Three Engines</div>
+      <div class="sec-desc">Drop model, collaboration engine, and product philosophy — the three mechanics that make this system work.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-label">Drop Model</div>
+          <div class="card-title">Real Scarcity</div>
+          <ul>
+            <li>Limited quantities — true scarcity, not artificial</li>
+            <li>No restocks — or rare archival re-releases only</li>
+            <li>Monthly drops — fast culture cadence</li>
+            <li>Seasonal capsules — higher concept releases</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-label">Collaboration Engine</div>
+          <div class="card-title">Rotating Voices</div>
+          <ul>
+            <li>Tattoo artists</li>
+            <li>Designers</li>
+            <li>Photographers</li>
+            <li>International creatives</li>
+          </ul>
+          <div class="principle" style="margin-top:14px;">
+            <p>Each drop carries a distinct voice + aesthetic.</p>
+          </div>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Product Philosophy</div>
+          <div class="card-title">Objects, Not Merch</div>
+          <ul>
+            <li>Premium blanks — fit, weight, texture matter</li>
+            <li>Elevated packaging — book-like, collectible</li>
+            <li>Objects that feel like artifacts</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 04 PRODUCT CATEGORIES -->
+    <section>
+      <div class="sec-eyebrow">04 — Product Categories</div>
+      <div class="sec-title">What Gets Made</div>
+      <div class="sec-desc">Three tiers of product — core apparel, lifestyle objects, and special editions that bundle all three into collectible kits.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-label">Core Apparel</div>
+          <div class="card-title">Wearables</div>
+          <ul>
+            <li>Heavyweight tees</li>
+            <li>Hoodies / crewnecks</li>
+            <li>Hats / beanies</li>
+            <li>Outerwear — seasonal capsules</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-label">Accessories / Objects</div>
+          <div class="card-title">Lifestyle Layer</div>
+          <ul>
+            <li>Rolling trays</li>
+            <li>Storage jars / stash objects</li>
+            <li>Lighters / tools</li>
+            <li>Printed matter — zines, mini books, inserts</li>
+          </ul>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Special Editions</div>
+          <div class="card-title">The Collectibles</div>
+          <ul>
+            <li>Numbered releases</li>
+            <li>Signed collaborations</li>
+            <li>Bundled kits — apparel + object + print</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 05 BRAND DIRECTION -->
+    <section>
+      <div class="sec-eyebrow">05 — Brand &amp; Creative Direction</div>
+      <div class="sec-title">Tone + Visual Language</div>
+      <div class="sec-desc">Elevated, intentional, art-forward. Rooted in cannabis culture — but not cliché. The reference points matter.</div>
+      <div class="sec-divider"></div>
+
+      <div class="split-grid">
+        <div class="split-col">
+          <div class="split-label">Tone</div>
+          <div class="split-item">Elevated, intentional, art-forward</div>
+          <div class="split-item">Rooted in cannabis culture — not cliché</div>
+          <div class="split-item cream">Closer to gallery merch than dispensary swag</div>
+          <div class="split-item cream">Rare book publishing energy</div>
+          <div class="split-item cream">Streetwear archive sensibility</div>
+        </div>
+        <div class="split-divider"></div>
+        <div class="split-col" style="background: rgba(201,146,42,0.04);">
+          <div class="split-label amber">Visual Language</div>
+          <div class="split-item cream">Strong typography + iconography</div>
+          <div class="split-item cream">Tattoo influence — linework, symbolism</div>
+          <div class="split-item cream">Global references — Japan, Europe, underground</div>
+        </div>
+      </div>
+
+      <div class="tag-list" style="margin-top:20px;">
+        <span class="tag amber">Gallery Merch</span>
+        <span class="tag amber">Rare Book Publishing</span>
+        <span class="tag amber">Streetwear Archive</span>
+        <span class="tag">Tattoo Linework</span>
+        <span class="tag">Japanese Craft</span>
+        <span class="tag">European Underground</span>
+        <span class="tag">Cannabis Culture</span>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 06 CONTENT STRATEGY -->
+    <section>
+      <div class="sec-eyebrow">06 — Content &amp; Media Strategy</div>
+      <div class="sec-title">The Content Is the Product</div>
+      <div class="sec-desc">This is critical. The content around each drop is as important as the object itself. Every piece of media is part of the drop.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-label">Photography</div>
+          <div class="card-title">Editorial-First</div>
+          <ul>
+            <li>Editorial-style shoots — not product on white</li>
+            <li>Studio environments — controlled, art-directed</li>
+            <li>Street / documentary feel</li>
+            <li>Cultural context — music, art, people</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-label">Video</div>
+          <div class="card-title">Short + Long Form</div>
+          <ul>
+            <li>Drop teasers — Reels, TikTok</li>
+            <li>Process videos</li>
+            <li>Artist interviews</li>
+            <li>Mini documentaries per drop</li>
+            <li>Behind-the-scenes storytelling</li>
+          </ul>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Narrative</div>
+          <div class="card-title">Every Drop Answers</div>
+          <ul>
+            <li>Who made this?</li>
+            <li>Why does it exist?</li>
+            <li>What world does it belong to?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 07 RELEASE STRUCTURE -->
+    <section>
+      <div class="sec-eyebrow">07 — Release Structure</div>
+      <div class="sec-title">Three-Phase Drop Cycle</div>
+      <div class="sec-desc">Pre-drop, drop day, and post-drop — each phase has a defined job in building anticipation, executing the moment, and extending the archive.</div>
+      <div class="sec-divider"></div>
+
+      <div class="phase-row">
+        <div class="phase-label-col">
+          <div class="phase-num">Phase 1</div>
+          <div class="phase-name">Pre-Drop</div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:6px;">7–10 days out</div>
+        </div>
+        <div class="phase-body">
+          <ul>
+            <li>Teasers — cropped visuals, textures, hints</li>
+            <li>Artist introduction — who's behind this drop</li>
+            <li>Mood-setting content — build the world first</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase-row">
+        <div class="phase-label-col">
+          <div class="phase-num">Phase 2</div>
+          <div class="phase-name">Drop Day</div>
+        </div>
+        <div class="phase-body">
+          <ul>
+            <li>Full reveal — product + story published simultaneously</li>
+            <li>Email + SMS blast — loyalty members first</li>
+            <li>Website takeover — everything in service of the drop</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phase-row">
+        <div class="phase-label-col">
+          <div class="phase-num">Phase 3</div>
+          <div class="phase-name">Post-Drop</div>
+        </div>
+        <div class="phase-body">
+          <ul>
+            <li>Sold-out messaging — scarcity confirmed, archive begins</li>
+            <li>Community reposts — cultural documentation</li>
+            <li>Archive documentation — this drop now lives forever</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 08 LOYALTY ACCESS -->
+    <section>
+      <div class="sec-eyebrow">08 — Loyalty &amp; Access</div>
+      <div class="sec-title">Tied to the Ecosystem</div>
+      <div class="sec-desc">Drop access is a loyalty benefit — tied directly into the Head Change store and point system. Access unlocks are the reward.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Tiered Access</div>
+          <div class="card-title">Earn Your Way In</div>
+          <ul>
+            <li>Early access for top customers</li>
+            <li>Members-only drops — not available publicly</li>
+            <li>Exclusive pieces behind a loyalty gate</li>
+          </ul>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Gamification</div>
+          <div class="card-title">Points = Access</div>
+          <ul>
+            <li>Points accumulation unlocks drop entry</li>
+            <li>Purchase history unlocks additional privileges</li>
+            <li>Highest tier = first look, every drop</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 09 DISTRIBUTION -->
+    <section>
+      <div class="sec-eyebrow">09 — Distribution</div>
+      <div class="sec-title">Controlled, Curated, Intentional</div>
+      <div class="sec-desc">Scarcity means nothing if it's everywhere. Distribution is a brand decision as much as a logistics one.</div>
+      <div class="sec-divider"></div>
+
+      <div class="icon-cards">
+        <div class="icon-card">
+          <span class="ic-icon">◈</span>
+          <div class="ic-name">Head Change Retail</div>
+          <div class="ic-note">Primary · In-store + online</div>
+        </div>
+        <div class="icon-card">
+          <span class="ic-icon">◇</span>
+          <div class="ic-name">Pop-Ups + Events</div>
+          <div class="ic-note">Secondary · Moment-driven</div>
+        </div>
+        <div class="icon-card" style="border-color:var(--amber-mid); background:rgba(201,146,42,0.06);">
+          <span class="ic-icon">◻</span>
+          <div class="ic-name">Partner Shops</div>
+          <div class="ic-note">Very curated · Selective only</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 10 METRICS -->
+    <section>
+      <div class="sec-eyebrow">10 — Success Metrics</div>
+      <div class="sec-title">What We're Measuring</div>
+      <div class="sec-desc">Five signals that tell us the program is working — from sell-through to secondary market activity.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-3">
+        <div class="metric-card">
+          <div class="m-label">Sell-Through Rate</div>
+          <div class="m-value">Near 100%</div>
+          <div class="m-note">The goal on every drop. True scarcity makes this achievable.</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Revenue</div>
+          <div class="m-value">Drop-Day Spikes</div>
+          <div class="m-note">Concentrated demand drives outsized single-day revenue.</div>
+        </div>
+        <div class="metric-card" style="border-color:var(--amber-mid); background:rgba(201,146,42,0.06);">
+          <div class="m-label">Cultural Signal</div>
+          <div class="m-value">Resale Activity</div>
+          <div class="m-note">Secondary market presence = cultural validation, not a problem.</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Engagement</div>
+          <div class="m-value">Saves + Shares</div>
+          <div class="m-note">Social saves indicate aspiration — the strongest signal of desire.</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Loyalty</div>
+          <div class="m-value">Repeat Rate</div>
+          <div class="m-note">Drop buyers who return for the next drop. The compounding metric.</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Archive</div>
+          <div class="m-value">Drop Count</div>
+          <div class="m-note">Each drop adds to the Head Change archive. Depth is the long game.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 11 LONG-TERM VISION -->
+    <section>
+      <div class="sec-eyebrow">11 — Long-Term Vision</div>
+      <div class="sec-title">Where This Goes</div>
+      <div class="sec-desc">The Drop Program is a foundation. What it enables over time is significantly larger than any single release.</div>
+      <div class="sec-divider"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">The Archive</div>
+          <div class="card-title">Building Over Time</div>
+          <ul>
+            <li>Build a Head Change drop archive — documented, catalogued</li>
+            <li>Annual printed lookbook or book — Scorpion Front tie-in</li>
+            <li>Each drop is a permanent entry in the brand's history</li>
+          </ul>
+        </div>
+        <div class="card amber-card">
+          <div class="card-label">Transition Path</div>
+          <div class="card-title">Where It Scales</div>
+          <ul>
+            <li>Full cut &amp; sew collections</li>
+            <li>Global collaborations</li>
+            <li>Exhibition-style releases</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ 12 NEXT STEPS -->
+    <section>
+      <div class="sec-eyebrow">12 — Next Steps</div>
+      <div class="sec-title">Actionable</div>
+      <div class="sec-desc">Six decisions and actions that move the program from strategy to Drop #001.</div>
+      <div class="sec-divider"></div>
+
+      <ul class="steps-list">
+        <li>
+          <div class="step-num">01</div>
+          <div class="step-text"><strong>Define naming system</strong> — HC Editions / Supply / Goods. Lock the name before anything goes public.</div>
+        </li>
+        <li>
+          <div class="step-num">02</div>
+          <div class="step-text"><strong>Source 2–3 premium blank suppliers</strong> — fit, weight, and texture are non-negotiable at this tier.</div>
+        </li>
+        <li>
+          <div class="step-num">03</div>
+          <div class="step-text"><strong>Identify first 3 collaborators</strong> — the first three voices define the program's cultural range and credibility.</div>
+        </li>
+        <li>
+          <div class="step-num">04</div>
+          <div class="step-text"><strong>Develop Drop #001 concept</strong> — product, collaborator, visual direction, and narrative locked before production begins.</div>
+        </li>
+        <li>
+          <div class="step-num">05</div>
+          <div class="step-text"><strong>Build content plan + shoot schedule</strong> — pre-drop teaser calendar planned before the product ships.</div>
+        </li>
+        <li>
+          <div class="step-num">06</div>
+          <div class="step-text"><strong>Design the packaging system</strong> — this is as important as the product. Packaging is the first physical impression.</div>
+        </li>
+      </ul>
+
+      <div class="thesis" style="margin-top:32px;">
+        <div class="thesis-label">Strategic Note</div>
+        <div class="thesis-body">If you execute this halfway, it becomes forgettable merch. If you execute it like your publishing company, your design work, your eye for culture — it becomes something people collect, archive, and talk about.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════ FOOTER -->
+  <footer class="doc-footer">
+    <div class="footer-left">
+      Head Change
+      <span>Drop Program · Brand Vertical Strategy</span>
+    </div>
+    <div class="footer-right">
+      CÚRADOR Brands · Internal Strategy Document<br/>
+      Confidential · Do Not Distribute
+    </div>
+  </footer>
+
+</body>
+</html>
