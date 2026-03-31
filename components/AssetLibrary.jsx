@@ -9,6 +9,8 @@ const DAM_ASSET_CATS = [
   { id:"all",        label:"All Assets",          icon:"◈" },
   { id:"logo",       label:"Logos & Brand ID",    icon:"◉" },
   { id:"photo",      label:"Photography",          icon:"⬚" },
+  { id:"photo-product",   label:"Product Photography", icon:"📷", sub:true },
+  { id:"photo-lifestyle", label:"Lifestyle",           icon:"🌿", sub:true },
   { id:"social-img", label:"Social Media Images",  icon:"▣" },
   { id:"social-vid", label:"Social / Video",       icon:"▶" },
   { id:"print",      label:"Print / Posters",      icon:"⬜" },
@@ -71,6 +73,7 @@ const ALL_PKG_IDS = new Set(Object.values(DAM_PACKAGING).flat().map(p=>p.id));
 
 const DAM_ALL_TYPES = [
   {id:"logo",label:"Logos & Brand ID"},{id:"photo",label:"Photography"},
+  {id:"photo-product",label:"Product Photography"},{id:"photo-lifestyle",label:"Lifestyle"},
   {id:"social-img",label:"Social Media Images"},{id:"social-vid",label:"Social / Video"},
   {id:"print",label:"Print / Posters"},{id:"education",label:"Budtender Education"},
   {id:"menu",label:"Menu Assets"},{id:"web",label:"Website / Digital"},
@@ -83,7 +86,7 @@ const DAM_ALL_TYPES = [
 ];
 
 const DAM_TYPE_EMOJI = {
-  logo:"🎨",photo:"🖼️","social-img":"📸","social-vid":"🎬",print:"🖨️",
+  logo:"🎨",photo:"🖼️","photo-product":"📷","photo-lifestyle":"🌿","social-img":"📸","social-vid":"🎬",print:"🖨️",
   education:"📚",menu:"🍃",web:"🌐",brief:"📄",concept:"✦",merch:"🛍",
   "merch-tee":"👕","merch-hoodie":"🧥","merch-hat":"🧢",
   "merch-sticker":"🏷","merch-lanyard":"🪪","merch-other":"✦",
@@ -132,6 +135,7 @@ export default function AssetLibrary({
   currentUser, hubBrands, hubCampaigns, onNote,
 }) {
   const isAdmin = currentUser?.name === "Sean";
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const damBrands = useCallback(() => {
     if (!hubBrands) return DAM_BRANDS_DEFAULT;
@@ -166,6 +170,7 @@ export default function AssetLibrary({
     if (activeType === "all") return true;
     if (activeType === "merch") return a.type.startsWith("merch-");
     if (activeType === "packaging") return ALL_PKG_IDS.has(a.type);
+    if (activeType === "photo") return a.type === "photo" || a.type.startsWith("photo-");
     return a.type === activeType;
   });
 
@@ -174,6 +179,7 @@ export default function AssetLibrary({
     if (id==="all") return base.length;
     if (id==="merch") return base.filter(a=>a.type.startsWith("merch-")).length;
     if (id==="packaging") return base.filter(a=>ALL_PKG_IDS.has(a.type)).length;
+    if (id==="photo") return base.filter(a=>a.type==="photo"||a.type.startsWith("photo-")).length;
     return base.filter(a=>a.type===id).length;
   };
 
@@ -216,14 +222,33 @@ export default function AssetLibrary({
 
         <div className="dam-sb-div"/>
         <div className="dam-sb-hdr">Asset Type</div>
-        {DAM_ASSET_CATS.map(t => (
-          <button key={t.id} className={`dam-sb-btn ${activeType===t.id?"on":""}`}
-            onClick={() => setActiveType(t.id)}>
-            <span className="dam-sb-ico">{t.icon}</span>
-            {t.label}
-            {t.id!=="all" && <span className="dam-sb-cnt">{countFor(t.id)||""}</span>}
-          </button>
-        ))}
+        {DAM_ASSET_CATS.map(t => {
+          if (t.id === "photo") return (
+            <button key={t.id} className={`dam-sb-btn ${activeType==="photo"||activeType.startsWith("photo-")?"on":""}`}
+              onClick={() => { setPhotoOpen(o=>!o); setActiveType("photo"); }}>
+              <span className="dam-sb-ico">{t.icon}</span>
+              {t.label}
+              <span className="dam-sb-cnt">{countFor("photo")||""}</span>
+              <span className={`dam-chev ${photoOpen?"open":""}`}>▶</span>
+            </button>
+          );
+          if (t.sub) return photoOpen ? (
+            <button key={t.id} className={`dam-sb-btn sub ${activeType===t.id?"on":""}`}
+              onClick={() => setActiveType(t.id)}>
+              <span className="dam-sb-ico">{t.icon}</span>
+              {t.label}
+              <span className="dam-sb-cnt">{countFor(t.id)||""}</span>
+            </button>
+          ) : null;
+          return (
+            <button key={t.id} className={`dam-sb-btn ${activeType===t.id?"on":""}`}
+              onClick={() => setActiveType(t.id)}>
+              <span className="dam-sb-ico">{t.icon}</span>
+              {t.label}
+              {t.id!=="all" && <span className="dam-sb-cnt">{countFor(t.id)||""}</span>}
+            </button>
+          );
+        })}
 
         <div className="dam-sb-div"/>
         <button className={`dam-sb-btn ${activeType==="merch"||activeType.startsWith("merch-")?"on":""}`}
@@ -356,7 +381,7 @@ export default function AssetLibrary({
             </div>
             <DamAddForm
               brands={resolvedBrands} campaigns={campaignList}
-              defaultType={activeType==="merch"?"merch-tee":activeType==="all"||activeType==="packaging"?"photo":activeType}
+              defaultType={activeType==="merch"?"merch-tee":activeType==="photo"?"photo-product":activeType==="all"||activeType==="packaging"?"photo":activeType}
               defaultBrand={activeBrand==="all"?"curador":activeBrand}
               currentUser={currentUser}
               onSave={addAsset} onCancel={() => setAddOpen(false)} />
