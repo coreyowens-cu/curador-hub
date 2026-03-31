@@ -844,19 +844,20 @@ export default function MarketingHub({ initialUserName }) {
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
   const conceptHtmlCache = useRef({});
+  const [conceptCacheVersion, setConceptCacheVersion] = useState(0);
   useEffect(() => {
     if (!ready) return;
     initiatives.forEach(init => {
       if (init._conceptUrl && !conceptHtmlCache.current[init.id]) {
         fetch(init._conceptUrl)
           .then(r => r.ok ? r.text() : Promise.reject(r.status))
-          .then(html => { conceptHtmlCache.current[init.id] = html; })
+          .then(html => { conceptHtmlCache.current[init.id] = html; setConceptCacheVersion(v => v + 1); })
           .catch(() => {});
       }
       // Load user-uploaded HTML concepts from Supabase
       if (!init._conceptUrl && init.htmlConceptName && !conceptHtmlCache.current[init.id]) {
         window.storage.get(`ns-concept-html-${init.id}`, true)
-          .then(res => { if (res?.value) conceptHtmlCache.current[init.id] = res.value; })
+          .then(res => { if (res?.value) { conceptHtmlCache.current[init.id] = res.value; setConceptCacheVersion(v => v + 1); } })
           .catch(() => {});
       }
     });
@@ -922,6 +923,7 @@ export default function MarketingHub({ initialUserName }) {
   const saveConceptHtml = (id, html, name) => {
     setInitiatives(p => p.map(x => x.id !== id ? x : { ...x, htmlConcept: html, htmlConceptName: name }));
     conceptHtmlCache.current[id] = html;
+    setConceptCacheVersion(v => v + 1);
     window.storage.set(`ns-concept-html-${id}`, html, true).catch(() => {});
     setConceptUpload(null);
   };
@@ -1837,7 +1839,7 @@ export default function MarketingHub({ initialUserName }) {
       )}
       {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} />}
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
-      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = conceptHtmlCache.current[init.id] || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
+      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = (conceptCacheVersion >= 0 && conceptHtmlCache.current[init.id]) || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
       {conceptUpload && <ConceptHtmlUploadModal initName={initiatives.find(i => i.id === conceptUpload)?.title || ""} onClose={() => setConceptUpload(null)} onSave={(html, name) => saveConceptHtml(conceptUpload, html, name)} />}
       {showAddInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={null}
         existing={typeof showAddInit === "string" ? initiatives.find(i => i.id === showAddInit) : null}
