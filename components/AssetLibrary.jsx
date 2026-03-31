@@ -29,6 +29,41 @@ const DAM_MERCH_CATS = [
   { id:"merch-other",    label:"Other",    icon:"✦" },
 ];
 
+// Brand-specific packaging subcategories
+const DAM_PACKAGING = {
+  headchange: [
+    { id:"pkg-hc-case",        label:"Case Packaging" },
+    { id:"pkg-hc-conc-box",    label:"Concentrate Box" },
+    { id:"pkg-hc-box-sticker", label:"Box Sticker" },
+    { id:"pkg-hc-jar-wrap",    label:"Jar Wrap" },
+    { id:"pkg-hc-jar-lid",     label:"Jar Lid" },
+    { id:"pkg-hc-jar-qr",      label:"Jar QR" },
+    { id:"pkg-hc-510-cart",    label:"510 Cart Package" },
+    { id:"pkg-hc-aio-cart",    label:"All-in-One Cart Package" },
+  ],
+  safebet: [
+    { id:"pkg-sb-preroll",     label:"Pre-Roll Package" },
+    { id:"pkg-sb-510-cart",    label:"510 Cart Package" },
+    { id:"pkg-sb-aio-cart",    label:"All-in-One Cart Package" },
+    { id:"pkg-sb-feco",        label:"FECO Package" },
+    { id:"pkg-sb-qr-sticker",  label:"QR Sticker" },
+  ],
+  bubbles: [
+    { id:"pkg-bub-sku1",       label:"Cart SKU 1 Package" },
+    { id:"pkg-bub-sku1-case",  label:"Cart SKU 1 Case" },
+    { id:"pkg-bub-sku2",       label:"Cart SKU 2 Package" },
+    { id:"pkg-bub-sku2-case",  label:"Cart SKU 2 Case" },
+    { id:"pkg-bub-sku3",       label:"Cart SKU 3 Package" },
+    { id:"pkg-bub-sku3-case",  label:"Cart SKU 3 Case" },
+    { id:"pkg-bub-sku4",       label:"Cart SKU 4 Package" },
+    { id:"pkg-bub-sku4-case",  label:"Cart SKU 4 Case" },
+  ],
+  // all brands combined (shown when activeBrand === "all")
+  all: [],
+};
+// Flatten all packaging IDs for easy lookup
+const ALL_PKG_IDS = new Set(Object.values(DAM_PACKAGING).flat().map(p=>p.id));
+
 const DAM_ALL_TYPES = [
   {id:"logo",label:"Logos & Brand ID"},{id:"photo",label:"Photography"},
   {id:"social-img",label:"Social Media Images"},{id:"social-vid",label:"Social / Video"},
@@ -38,6 +73,8 @@ const DAM_ALL_TYPES = [
   {id:"merch-tee",label:"Tee"},{id:"merch-hoodie",label:"Hoodie"},
   {id:"merch-hat",label:"Hat"},{id:"merch-sticker",label:"Sticker"},
   {id:"merch-lanyard",label:"Lanyard"},{id:"merch-other",label:"Other Merch"},
+  // packaging
+  ...Object.values(DAM_PACKAGING).flat().map(p=>({id:p.id,label:p.label})),
 ];
 
 const DAM_TYPE_EMOJI = {
@@ -45,6 +82,8 @@ const DAM_TYPE_EMOJI = {
   education:"📚",menu:"🍃",web:"🌐",brief:"📄",concept:"✦",merch:"🛍",
   "merch-tee":"👕","merch-hoodie":"🧥","merch-hat":"🧢",
   "merch-sticker":"🏷","merch-lanyard":"🪪","merch-other":"✦",
+  // packaging — generic box emoji for all pkg types
+  ...Object.fromEntries(Object.values(DAM_PACKAGING).flat().map(p=>[p.id,"📦"])),
 };
 
 const DAM_BRANDS_DEFAULT = [
@@ -81,7 +120,7 @@ export default function AssetLibrary({
   assets, setAssets, driveAssets, setDriveAssets,
   activeType, setActiveType, activeBrand, setActiveBrand,
   search, setSearch, view, setView,
-  merchOpen, setMerchOpen, addOpen, setAddOpen,
+  merchOpen, setMerchOpen, packagingOpen, setPackagingOpen, addOpen, setAddOpen,
   preview, setPreview, config, setConfig,
   folders, setFolders, connected, setConnected,
   syncing, setSyncing, settingsOpen, setSettingsOpen,
@@ -91,9 +130,12 @@ export default function AssetLibrary({
 
   const damBrands = useCallback(() => {
     if (!hubBrands) return DAM_BRANDS_DEFAULT;
+    const hubList = Object.values(hubBrands).map(b => ({ id:b.id, name:b.name, color:b.color||"#c9a84c" }));
+    const hasCurador = hubList.some(b => b.id === "curador" || b.name?.toLowerCase().includes("curador"));
     return [
       { id:"all", name:"All Brands", color:"#c9a84c" },
-      ...Object.values(hubBrands).map(b => ({ id:b.id, name:b.name, color:b.color||"#c9a84c" }))
+      ...(!hasCurador ? [{ id:"curador", name:"CÚRADOR", color:"#4d9e8e" }] : []),
+      ...hubList,
     ];
   }, [hubBrands]);
 
@@ -118,6 +160,7 @@ export default function AssetLibrary({
     }
     if (activeType === "all") return true;
     if (activeType === "merch") return a.type.startsWith("merch-");
+    if (activeType === "packaging") return ALL_PKG_IDS.has(a.type);
     return a.type === activeType;
   });
 
@@ -125,8 +168,22 @@ export default function AssetLibrary({
     const base = allAssets.filter(a => activeBrand==="all"||a.brandId===activeBrand);
     if (id==="all") return base.length;
     if (id==="merch") return base.filter(a=>a.type.startsWith("merch-")).length;
+    if (id==="packaging") return base.filter(a=>ALL_PKG_IDS.has(a.type)).length;
     return base.filter(a=>a.type===id).length;
   };
+
+  // Which packaging subcategories to show in sidebar
+  const pkgCats = (() => {
+    if (activeBrand === "all") {
+      return Object.values(DAM_PACKAGING).flat();
+    }
+    // match on brand id — normalize to lowercase key
+    const key = activeBrand?.toLowerCase().replace(/[^a-z]/g,"");
+    for (const [k, v] of Object.entries(DAM_PACKAGING)) {
+      if (key?.includes(k) || k.includes(key)) return v;
+    }
+    return [];
+  })();
 
   const getBrandColor = (id) => resolvedBrands.find(b=>b.id===id)?.color||"#c9a84c";
   const getBrandName  = (id) => resolvedBrands.find(b=>b.id===id)?.name||id;
@@ -179,6 +236,29 @@ export default function AssetLibrary({
             <span className="dam-sb-cnt">{countFor(m.id)||""}</span>
           </button>
         ))}
+
+        {/* Packaging — brand-specific */}
+        <div className="dam-sb-div"/>
+        <button className={`dam-sb-btn ${activeType==="packaging"||ALL_PKG_IDS.has(activeType)?"on":""}`}
+          onClick={() => { setPackagingOpen(o=>!o); setActiveType("packaging"); }}>
+          <span className="dam-sb-ico">📦</span>
+          Packaging
+          <span className="dam-sb-cnt">{countFor("packaging")||""}</span>
+          <span className={`dam-chev ${packagingOpen?"open":""}`}>▶</span>
+        </button>
+        {packagingOpen && pkgCats.length > 0 && pkgCats.map(p => (
+          <button key={p.id} className={`dam-sb-btn sub ${activeType===p.id?"on":""}`}
+            onClick={() => setActiveType(p.id)}>
+            <span className="dam-sb-ico">📦</span>
+            {p.label}
+            <span className="dam-sb-cnt">{countFor(p.id)||""}</span>
+          </button>
+        ))}
+        {packagingOpen && pkgCats.length === 0 && (
+          <div style={{padding:"6px 16px 4px 28px",fontSize:10,color:"var(--text-muted)",fontStyle:"italic"}}>
+            Select a brand to see packaging types
+          </div>
+        )}
       </div>
 
       {/* Main */}
@@ -271,7 +351,7 @@ export default function AssetLibrary({
             </div>
             <DamAddForm
               brands={resolvedBrands} campaigns={campaignList}
-              defaultType={activeType==="merch"?"merch-tee":activeType==="all"?"photo":activeType}
+              defaultType={activeType==="merch"?"merch-tee":activeType==="all"||activeType==="packaging"?"photo":activeType}
               defaultBrand={activeBrand==="all"?"curador":activeBrand}
               currentUser={currentUser}
               onSave={addAsset} onCancel={() => setAddOpen(false)} />
@@ -322,6 +402,15 @@ function DamAddForm({ brands, campaigns, defaultType, defaultBrand, currentUser,
             </optgroup>
             <optgroup label="Merch">
               {DAM_MERCH_CATS.filter(m=>m.id!=="merch").map(m=><option key={m.id} value={m.id}>{m.label}</option>)}
+            </optgroup>
+            <optgroup label="Head Change Packaging">
+              {DAM_PACKAGING.headchange.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+            </optgroup>
+            <optgroup label="Safe Bet Packaging">
+              {DAM_PACKAGING.safebet.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
+            </optgroup>
+            <optgroup label="Bubbles Packaging">
+              {DAM_PACKAGING.bubbles.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
             </optgroup>
           </select>
         </div>

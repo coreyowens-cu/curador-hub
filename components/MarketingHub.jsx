@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import AssetLibrary from "./AssetLibrary";
 
 // localStorage shim — makes window.storage work outside Claude artifact sandbox
 if (typeof window !== 'undefined' && !window.storage) {
@@ -347,14 +348,14 @@ html,body{background:var(--bg);min-height:100vh;}
 .dam-sb{width:210px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;background:var(--surface);}
 .dam-sb::-webkit-scrollbar{width:3px;}
 .dam-sb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
-.dam-sb-hdr{padding:14px 14px 5px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);font-weight:700;}
-.dam-sb-btn{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--bf);font-size:11.5px;color:var(--text-dim);transition:all .13s;}
+.dam-sb-hdr{padding:14px 14px 5px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);font-weight:700;}
+.dam-sb-btn{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--bf);font-size:13px;color:var(--text-dim);transition:all .13s;}
 .dam-sb-btn:hover{background:rgba(255,255,255,.04);color:var(--text);}
 .dam-sb-btn.on{background:var(--gold-dim);color:var(--gold);}
 .dam-sb-ico{font-size:11px;width:15px;text-align:center;flex-shrink:0;}
 .dam-sb-cnt{margin-left:auto;font-size:9px;opacity:.32;}
 .dam-sb-div{height:1px;background:var(--border2);margin:6px 12px;}
-.dam-sb-btn.sub{padding-left:30px;font-size:11px;color:var(--text-muted);}
+.dam-sb-btn.sub{padding-left:30px;font-size:12px;color:var(--text-muted);}
 .dam-sb-btn.sub.on{color:var(--gold);background:var(--gold-dim);}
 .dam-chev{margin-left:auto;font-size:9px;opacity:.4;transition:transform .2s;}
 .dam-chev.open{transform:rotate(90deg);}
@@ -362,7 +363,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .dam-bar{padding:11px 18px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border2);flex-shrink:0;}
 .dam-sw{position:relative;flex:1;}
 .dam-si{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;}
-.dam-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px 7px 30px;color:var(--text);font-family:var(--bf);font-size:12px;outline:none;transition:border-color .15s;box-sizing:border-box;}
+.dam-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 32px;color:var(--text);font-family:var(--bf);font-size:14px;outline:none;transition:border-color .15s;box-sizing:border-box;}
 .dam-search:focus{border-color:rgba(201,168,76,.3);}
 .dam-vbtn{width:27px;height:27px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:12px;transition:all .12s;}
 .dam-vbtn.on{border-color:rgba(201,168,76,.4);color:var(--gold);background:var(--gold-dim);}
@@ -383,14 +384,14 @@ html,body{background:var(--bg);min-height:100vh;}
 .dam-iact:hover{background:var(--gold);color:var(--bg);}
 .dam-iact.del:hover{background:#e07b6a;color:#fff;}
 .dam-card-body{padding:8px 10px;}
-.dam-card-name{font-size:11px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.dam-card-name{font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
 .dam-card-meta{display:flex;align-items:center;gap:5px;}
 .dam-bchip{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
 .dam-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.02);cursor:pointer;transition:all .12s;}
 .dam-row:hover{background:var(--surface2);border-color:rgba(255,255,255,.1);}
 .dam-row-thumb{width:34px;height:34px;border-radius:6px;background:var(--surface2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;position:relative;}
 .dam-row-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;}
-.dam-row-name{flex:1;font-size:12px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dam-row-name{flex:1;font-size:14px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dam-row-type{font-size:10px;color:var(--text-muted);min-width:120px;}
 .dam-row-date{font-size:10px;color:var(--text-muted);min-width:78px;text-align:right;}
 .dam-row-acts{display:flex;gap:3px;opacity:0;transition:opacity .12s;}
@@ -684,7 +685,7 @@ input[type="date"].fi{color-scheme:dark;}
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
-export default function MarketingHub() {
+export default function MarketingHub({ initialUserName }) {
 
   // Core state
   const [strategy, setStrategy] = useState(() => {
@@ -698,10 +699,12 @@ export default function MarketingHub() {
   const [detail, setDetail] = useState(null);
   const [fileModal, setFileModal] = useState(null);
   const [conceptModal, setConceptModal] = useState(null);   // init id to view HTML concept
+  const [briefViewer, setBriefViewer] = useState(null);     // { data, name, type, title }
   const [conceptUpload, setConceptUpload] = useState(null); // init id to upload HTML concept
   const [showAddInit, setShowAddInit] = useState(false);
   const [showEditStrategy, setShowEditStrategy] = useState(false);
   const [ganttHtml, setGanttHtml] = useState(() => { try { return localStorage.getItem("shared_ns_ns-gantt") || null; } catch { return null; } });
+  const [timelineItems, setTimelineItems] = useState(() => { try { const d = localStorage.getItem("shared_ns_ns-timeline"); return d ? JSON.parse(d) : []; } catch { return []; } });
   const [ready, setReady] = useState(true);
 
   // Notes
@@ -709,12 +712,27 @@ export default function MarketingHub() {
   const [notes, setNotes] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-notes"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [noteText, setNoteText] = useState("");
   const [currentUser, setCurrentUser] = useState(() => { try { const v = localStorage.getItem("ns_ns-user"); return v ? JSON.parse(v) : null; } catch { return null; } });
-  // Roles that can make live edits — Marketing Creative Director + CEO
-  const EDITOR_ROLES = ["creative", "ceo", "exec"];
-  const canEdit = !currentUser || EDITOR_ROLES.includes(currentUser.role);
-  const [showWhoModal, setShowWhoModal] = useState(() => { try { return !localStorage.getItem("ns_ns-user"); } catch { return true; } });
+  const isAdmin = currentUser?.name === "Sean";
+  const canEdit = isAdmin;
+  const canAddContent = true; // everyone can add campaigns, concepts, notes, download
+  const [showWhoModal, setShowWhoModal] = useState(() => {
+    if (initialUserName) return false;
+    try { return !localStorage.getItem("ns_ns-user"); } catch { return true; }
+  });
   const [whoName, setWhoName] = useState("");
   const [whoRole, setWhoRole] = useState("content");
+
+  // Auto-set user from login gate name selection
+  useEffect(() => {
+    if (initialUserName) {
+      const role = initialUserName === "Sean" ? "creative" : "content";
+      const color = colorForName(initialUserName);
+      const user = { name: initialUserName, color, role };
+      setCurrentUser(user);
+      try { localStorage.setItem("ns_ns-user", JSON.stringify(user)); } catch {}
+      setShowWhoModal(false);
+    }
+  }, [initialUserName]);
 
   // Left panel
   const [lsbOpen, setLsbOpen] = useState(true);
@@ -737,7 +755,8 @@ export default function MarketingHub() {
   const [damBrand,     setDamBrand]     = useState("all");
   const [damSearch,    setDamSearch]    = useState("");
   const [damView,      setDamView]      = useState("grid");
-  const [damMerchOpen, setDamMerchOpen] = useState(false);
+  const [damMerchOpen,     setDamMerchOpen]     = useState(false);
+  const [damPackagingOpen, setDamPackagingOpen] = useState(false);
   const [damAddOpen,   setDamAddOpen]   = useState(false);
   const [damPreview,   setDamPreview]   = useState(null);
   const [damConfig,    setDamConfig]    = useState(() => { try { const s = localStorage.getItem("dam_config"); return s ? JSON.parse(s) : {clientId:""}; } catch { return {clientId:""}; } });
@@ -756,7 +775,7 @@ export default function MarketingHub() {
       // Small delay to ensure window.storage is injected
       await new Promise(r => setTimeout(r, 50));
       try {
-        const [s, i, n, u, g, co, br, tm, ca] = await Promise.all([
+        const [s, i, n, u, g, co, br, tm, ca, tl] = await Promise.all([
           window.storage.get("ns-strategy", true),
           window.storage.get("ns-initiatives", true),
           window.storage.get("ns-notes", true),
@@ -767,6 +786,7 @@ export default function MarketingHub() {
           window.storage.get("ns-team", true),
           window.storage.get("ns-campaigns", true),
           window.storage.get("ns-concepts", true),
+          window.storage.get("ns-timeline", true),
         ]);
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
@@ -778,6 +798,7 @@ export default function MarketingHub() {
         }
         if (n) setNotes(JSON.parse(n.value));
         if (g) setGanttHtml(g.value);
+        if (tl) setTimelineItems(JSON.parse(tl.value));
         if (co) setCompany(JSON.parse(co.value));
         if (br) setBrands(JSON.parse(br.value));
         if (tm) setTeamMembers(JSON.parse(tm.value));
@@ -835,6 +856,7 @@ export default function MarketingHub() {
   }, [ready]);
   useEffect(() => { if (ready) window.storage.set("ns-notes", JSON.stringify(notes), true).catch(() => {}); }, [notes, ready]);
   useEffect(() => { if (ready && ganttHtml) window.storage.set("ns-gantt", ganttHtml, true).catch(() => {}); }, [ganttHtml, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-timeline", JSON.stringify(timelineItems), true).catch(() => {}); }, [timelineItems, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-company", JSON.stringify(company), true).catch(() => {}); }, [company, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-brands", JSON.stringify(brands), true).catch(() => {}); }, [brands, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-team", JSON.stringify(teamMembers), true).catch(() => {}); }, [teamMembers, ready]);
@@ -876,6 +898,18 @@ export default function MarketingHub() {
     setNotes(p => [{ id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: noteText.trim(), ts: new Date().toISOString() }, ...p]);
     setNoteText("");
   };
+  const addNoteWithContext = (ctx) => {
+    if (!ctx || !currentUser) return;
+    const text = ctx.prefill || ctx.text || "";
+    if (!text.trim()) { setNotesOpen(true); return; }
+    setNotes(p => [{
+      id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color,
+      text: text.trim(), ts: new Date().toISOString(),
+      context: ctx.label ? `${ctx.type || ctx.section || "Note"}: ${ctx.label}` : (ctx.context || null),
+      section: ctx.section || null, brand: ctx.brand || null,
+    }, ...p]);
+    setNotesOpen(true);
+  };
 
   const saveFile = (id, url, name) => { setInitiatives(p => p.map(x => x.id !== id ? x : { ...x, fileUrl: url, fileName: name })); setFileModal(null); };
   const saveConceptHtml = (id, html, name) => { setInitiatives(p => p.map(x => x.id !== id ? x : { ...x, htmlConcept: html, htmlConceptName: name })); setConceptUpload(null); };
@@ -912,7 +946,9 @@ export default function MarketingHub() {
       {showWhoModal && <WhoModal whoName={whoName} setWhoName={setWhoName} whoRole={whoRole} setWhoRole={setWhoRole} onSave={saveUser} orgRoles={orgRoles} />}
       {selectedMember && <TeamMemberModal member={selectedMember} currentUser={currentUser} onClose={() => setSelectedMember(null)} onUpdate={updateMemberProfile} />}
       {showCampaignModal && <CampaignModal currentUser={currentUser} pillars={strategy.pillars} onClose={() => setShowCampaignModal(false)} onSave={(c) => { setCampaigns(p => [c, ...p]); setShowCampaignModal(false); }} onSaveAsInit={saveCampaignAsInit} />}
-      {selectedCampaign && <CampaignDetailModal campaign={selectedCampaign} pillars={strategy.pillars} onClose={() => setSelectedCampaign(null)} onNote={(ctx) => { openNoteWithContext(ctx); }} onSaveAsInit={(init) => { saveCampaignAsInit(init); setCampaigns(p => p.map(c => c.id === selectedCampaign.id ? { ...c, status: "approved" } : c)); setSelectedCampaign(null); }} />}
+      {selectedCampaign && <CampaignDetailModal campaign={selectedCampaign} pillars={strategy.pillars} onClose={() => setSelectedCampaign(null)} onNote={(ctx) => addNoteWithContext(ctx)} onSaveAsInit={(init) => { saveCampaignAsInit(init); setCampaigns(p => p.map(c => c.id === selectedCampaign.id ? { ...c, status: "approved" } : c)); setSelectedCampaign(null); }}
+        onViewConcept={selectedCampaign._fromConcept ? () => { setLeftTab("concepts"); setActiveBrand(null); setActiveConceptId(selectedCampaign._fromConcept); setSelectedCampaign(null); } : null}
+      />}
 
       <div className="page">
         {/* ── HEADER ── */}
@@ -941,6 +977,13 @@ export default function MarketingHub() {
             <button className={`notes-toggle ${notesOpen ? "open" : ""}`} onClick={() => setNotesOpen(o => !o)}>
               ✏ Notes {notes.length > 0 && <span className="notes-count">{notes.length}</span>}
             </button>
+            {currentUser && (
+              <button onClick={() => { sessionStorage.removeItem("ch-auth"); sessionStorage.removeItem("ch-user"); window.location.reload(); }}
+                style={{ padding:"5px 10px",borderRadius:100,border:"1px solid var(--border)",background:"transparent",color:"var(--text-muted)",fontSize:10,letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer",fontFamily:"var(--bf)",transition:"all .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(224,123,106,.4)"; e.currentTarget.style.color="#e07b6a"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="var(--border)"; e.currentTarget.style.color="var(--text-muted)"; }}
+                title="Sign out">Sign Out</button>
+            )}
           </div>
         </header>
 
@@ -976,7 +1019,6 @@ export default function MarketingHub() {
                     { id: "campaigns",   icon: "🚀", label: "Campaigns" },
                     { id: "concepts",    icon: "🎨", label: "Concepts" },
                     { id: "timeline",    icon: "📅", label: "Timeline" },
-                    { id: "dam",         icon: "◈",  label: "Asset Library" },
                   ].map(t => (
                     <button key={t.id} className={`lsb-tab ${leftTab === t.id ? "on" : ""}`} onClick={() => { setLeftTab(t.id); setActiveBrand(null); }}>
                       <span className="lsb-icon">{t.icon}</span>
@@ -1009,6 +1051,27 @@ export default function MarketingHub() {
                       ))}
                     </div>
                   )}
+
+                  {/* Asset Library — below Team */}
+                  <div style={{ height: 1, background: "var(--border2)", margin: "4px 0" }} />
+                  <button className={`lsb-tab ${leftTab === "dam" ? "on" : ""}`} onClick={() => { setLeftTab("dam"); setActiveBrand(null); }}>
+                    <span className="lsb-icon">◈</span>
+                    {lsbOpen && <span className="lsb-lbl">Asset Library</span>}
+                  </button>
+
+                  {/* Rebrand Timeline — external link */}
+                  <div style={{ height: 1, background: "var(--border2)", margin: "4px 0" }} />
+                  <a
+                    href="https://seanmatw-glitch.github.io/brand-rebrand-gantt/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lsb-tab"
+                    style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: lsbOpen ? 8 : 0 }}
+                    title="Rebrand Timeline"
+                  >
+                    <span className="lsb-icon">📊</span>
+                    {lsbOpen && <span className="lsb-lbl" style={{ display: "flex", alignItems: "center", gap: 4 }}>Rebrand Timeline <span style={{ fontSize: 9, opacity: .5 }}>↗</span></span>}
+                  </a>
                 </nav>
 
                 {/* Channels / Campaigns hint */}
@@ -1051,9 +1114,7 @@ export default function MarketingHub() {
                           Team Members <span style={{ fontSize: 14, color: "var(--text-muted)", fontFamily: "var(--bf)", fontWeight: 400 }}>· {teamMembers.length}</span>
                         </div>
                       </div>
-                      <button className="btn" onClick={() => setShowWhoModal(true)}>
-                        {currentUser ? "✦ Update Profile" : "+ Join Team"}
-                      </button>
+                      {!currentUser && <button className="btn" onClick={() => setShowWhoModal(true)}>+ Join Team</button>}
                     </div>
                     <MembersGridView teamMembers={teamMembers} currentUser={currentUser} orgRoles={orgRoles} onSelect={setSelectedMember} onChangeUser={() => setShowWhoModal(true)} />
                   </>
@@ -1185,7 +1246,7 @@ export default function MarketingHub() {
                                   </div>
                                 )}
                               </div>
-                              <div style={{ display: "flex", gap: 6 }}>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                                 {(hasConcept || isLoadingConcept) ? (
                                   <button onClick={() => hasConcept ? setConceptModal(init.id) : null} style={{
                                     fontSize: 11, padding: "4px 12px", borderRadius: 6,
@@ -1210,6 +1271,17 @@ export default function MarketingHub() {
                                     onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.color = "var(--text-muted)"; }}
                                   >+ Attach Concept</button>
                                 )}
+                                {init._briefFileData && (
+                                  <button onClick={() => setBriefViewer({ data: init._briefFileData, name: init._briefFile, type: init._briefFileType, title: init.title })} style={{
+                                    fontSize: 11, padding: "4px 12px", borderRadius: 6,
+                                    border: "1px solid rgba(201,168,76,.3)", background: "rgba(201,168,76,.08)",
+                                    color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600,
+                                    letterSpacing: ".04em", transition: "all .13s"
+                                  }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,.18)"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,.08)"; }}
+                                  >📄 View Brief →</button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1229,7 +1301,7 @@ export default function MarketingHub() {
                     <div style={{ fontFamily: "var(--df)", fontSize: 36, fontWeight: 300, color: "var(--text)", marginBottom: 4 }}>Campaigns</div>
                     <div style={{ fontSize: 13, color: "var(--text-dim)" }}>AI-generated briefs and campaign ideas. Click any to view the full brief.</div>
                   </div>
-                  {canEdit && <button className="btn btn-gold" style={{ marginTop: 8 }} onClick={() => setShowCampaignModal(true)}>+ New Brief</button>}
+                  {canAddContent && <button className="btn btn-gold" style={{ marginTop: 8 }} onClick={() => setShowCampaignModal(true)}>+ New Brief</button>}
                 </div>
                 <CampaignsPanel campaigns={campaigns} onNew={() => setShowCampaignModal(true)} onSelect={setSelectedCampaign} onDelete={canEdit ? deleteCampaign : null} fullWidth />
               </div>
@@ -1241,18 +1313,59 @@ export default function MarketingHub() {
                 activeConceptId={activeConceptId}
                 setActiveConceptId={setActiveConceptId}
                 onAdd={(concept) => setConcepts(p => [...p, concept])}
-                onRemove={(id) => { setConcepts(p => p.filter(c => c.id !== id)); if (activeConceptId === id) setActiveConceptId(null); }}
-                onRename={(id, name) => setConcepts(p => p.map(c => c.id === id ? { ...c, name } : c))}
+                onRemove={canEdit ? (id) => { setConcepts(p => p.filter(c => c.id !== id)); if (activeConceptId === id) setActiveConceptId(null); } : null}
+                onRename={canEdit ? (id, name) => setConcepts(p => p.map(c => c.id === id ? { ...c, name } : c)) : null}
                 brands={brands}
-                canEdit={canEdit}
+                canEdit={canAddContent}
+                onPushToCampaign={(concept) => {
+                  const campaign = {
+                    id: `cmp-${Date.now()}`, title: concept.name,
+                    concept: concept.description || concept.name,
+                    brand: brands[concept.brandId]?.name || "CÚRADOR",
+                    objective: concept.description || "",
+                    brief: null, status: "idea",
+                    createdBy: currentUser?.name || "Team",
+                    createdAt: new Date().toISOString(),
+                    _briefFile: concept.briefFile || null,
+                    _briefFileData: concept.briefFileData || null,
+                    _briefFileType: concept.briefFileType || null,
+                    _fromConcept: concept.id,
+                  };
+                  setCampaigns(p => [campaign, ...p]);
+                  setConcepts(p => p.map(c => c.id === concept.id ? { ...c, status: "campaign" } : c));
+                }}
+                onPushToInitiative={(concept, channel, html) => {
+                  const init = {
+                    id: `init-${Date.now()}`, title: concept.name,
+                    description: concept.description || "",
+                    owner: currentUser?.name || "Team",
+                    channel, brandId: concept.brandId || null,
+                    startDate: "", endDate: "", revolving: false,
+                    fileUrl: null, fileName: null, _brief: null,
+                    htmlConcept: html || null,
+                    htmlConceptName: concept.name,
+                    _briefFile: concept.briefFile || null,
+                    _briefFileData: concept.briefFileData || null,
+                    _briefFileType: concept.briefFileType || null,
+                    _fromConcept: concept.id,
+                  };
+                  setInitiatives(p => [...p, init]);
+                  setConcepts(p => p.map(c => c.id === concept.id ? { ...c, status: "initiative" } : c));
+                }}
+                onNote={(text, label) => {
+                  if (!text.trim() || !currentUser) return;
+                  setNotes(p => [{ id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: text.trim(), ts: new Date().toISOString(), context: `Concept: ${label}` }, ...p]);
+                  setNotesOpen(true);
+                }}
               />
             )}
 
             {/* ── TIMELINE ── */}
             {leftTab === "timeline" && !activeBrand && (
-              <GanttViewer ganttHtml={ganttHtml} onUpdate={canEdit ? setGanttHtml : null} canEdit={canEdit} />
+              <GanttViewer ganttHtml={ganttHtml} onUpdate={setGanttHtml} canEdit={canEdit} timelineItems={timelineItems} setTimelineItems={setTimelineItems} currentUser={currentUser} initiatives={initiatives} campaigns={campaigns} canAddContent={canAddContent} />
             )}
 
+            {/* ── ASSET LIBRARY ── */}
             {leftTab === "dam" && !activeBrand && (
               <AssetLibrary
                 assets={damAssets} setAssets={setDamAssets}
@@ -1262,6 +1375,7 @@ export default function MarketingHub() {
                 search={damSearch} setSearch={setDamSearch}
                 view={damView} setView={setDamView}
                 merchOpen={damMerchOpen} setMerchOpen={setDamMerchOpen}
+                packagingOpen={damPackagingOpen} setPackagingOpen={setDamPackagingOpen}
                 addOpen={damAddOpen} setAddOpen={setDamAddOpen}
                 preview={damPreview} setPreview={setDamPreview}
                 config={damConfig} setConfig={setDamConfig}
@@ -1272,7 +1386,7 @@ export default function MarketingHub() {
                 currentUser={currentUser}
                 hubBrands={brands}
                 hubCampaigns={campaigns}
-                onNote={openNoteWithContext}
+                onNote={(ctx) => addNoteWithContext(ctx)}
               />
             )}
 
@@ -1618,7 +1732,7 @@ export default function MarketingHub() {
               )}
 
               {/* GANTT */}
-              {view === "timeline" && <GanttViewer ganttHtml={ganttHtml} onUpdate={canEdit ? setGanttHtml : null} canEdit={canEdit} />}
+              {view === "timeline" && <GanttViewer ganttHtml={ganttHtml} onUpdate={setGanttHtml} canEdit={canEdit} timelineItems={timelineItems} setTimelineItems={setTimelineItems} currentUser={currentUser} initiatives={initiatives} campaigns={campaigns} canAddContent={canAddContent} />}
             </>)}
             </div>
           </main>
@@ -1648,6 +1762,13 @@ export default function MarketingHub() {
                     <div className="note-time">{relativeTime(note.ts)}</div>
                     {currentUser?.name === note.author && <button className="note-del" onClick={() => setNotes(p => p.filter(n => n.id !== note.id))}>✕</button>}
                   </div>
+                  {(note.context || note.section || note.brand) && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 4, marginTop: 2 }}>
+                      {note.context && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(201,168,76,.12)", color: "var(--gold)", letterSpacing: ".04em", fontWeight: 600 }}>{note.context}</span>}
+                      {note.brand && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,.06)", color: "var(--text-muted)", letterSpacing: ".04em" }}>{note.brand}</span>}
+                      {note.section && !note.context?.includes(note.section) && <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,.04)", color: "var(--text-muted)", letterSpacing: ".04em" }}>{note.section}</span>}
+                    </div>
+                  )}
                   <div className="note-body">{note.text}</div>
                 </div>
               ))}
@@ -1664,9 +1785,47 @@ export default function MarketingHub() {
       </div>
 
       {/* MODALS */}
+      {/* Brief Viewer Modal */}
+      {briefViewer && (
+        <div className="overlay" onClick={() => setBriefViewer(null)} style={{ zIndex: 110 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "90vw", maxWidth: 1000, height: "85vh", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 16, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,.6)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>📄</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{briefViewer.title}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{briefViewer.name}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button onClick={() => { const a = document.createElement("a"); a.href = briefViewer.data; a.download = briefViewer.name; a.click(); }}
+                  style={{ fontSize: 11, padding: "5px 12px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)" }}>↓ Download</button>
+                <button onClick={() => setBriefViewer(null)} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center" }}>×</button>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflow: "hidden" }}>
+              {(briefViewer.type || "").startsWith("image/") ? (
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111", overflow: "auto" }}>
+                  <img src={briefViewer.data} alt={briefViewer.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                </div>
+              ) : (briefViewer.type || "").includes("pdf") ? (
+                <iframe src={briefViewer.data} title={briefViewer.name} style={{ width: "100%", height: "100%", border: "none" }} />
+              ) : (
+                <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
+                  <div style={{ fontSize: 48, marginBottom: 16, opacity: .3 }}>📄</div>
+                  <div style={{ fontSize: 14, marginBottom: 8 }}>{briefViewer.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-dim)", marginBottom: 16 }}>This file type can't be previewed inline</div>
+                  <button onClick={() => { const a = document.createElement("a"); a.href = briefViewer.data; a.download = briefViewer.name; a.click(); }}
+                    className="btn" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}>↓ Download File</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} />}
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
-      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = conceptHtmlCache.current[init.id] || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); openNoteWithContext(ctx); }} /> : null; })()}
+      {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = conceptHtmlCache.current[init.id] || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
       {conceptUpload && <ConceptHtmlUploadModal initName={initiatives.find(i => i.id === conceptUpload)?.title || ""} onClose={() => setConceptUpload(null)} onSave={(html, name) => saveConceptHtml(conceptUpload, html, name)} />}
       {showAddInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={null}
         existing={typeof showAddInit === "string" ? initiatives.find(i => i.id === showAddInit) : null}
@@ -2028,21 +2187,7 @@ function MarketingVisionSection({ strategy, initiatives, campaigns, teamMembers,
       {/* BOARD DIVIDER */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, marginBottom: 0 }}>
         <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 4 }}>Initiative Board</div>
-        <div style={{ fontSize: 13, color: "var(--text-dim)" }}>Active initiatives by strategic pillar</div>
-      </div>
-      <div className="pillars">
-        {strategy.pillars.map((p, i) => {
-          const acc = PILLAR_ACCENTS[i % PILLAR_ACCENTS.length];
-          const count = initiatives.filter(x => x.channel === p).length;
-          return (
-            <div key={p} className="pillar-cell">
-              <div className="pillar-num" style={{ backgroundImage: acc.grad }}>{String(i + 1).padStart(2, "0")}</div>
-              <div className="pillar-name">{p}</div>
-              <div className="pillar-count">{count} initiative{count !== 1 ? "s" : ""}</div>
-              <div className="pillar-bar" style={{ width: `${count > 0 ? Math.min(84, 16 + count * 20) : 8}%`, background: acc.grad }} />
-            </div>
-          );
-        })}
+        <div style={{ fontSize: 13, color: "var(--text-dim)" }}>Active initiatives by marketing channel</div>
       </div>
     </div>
   );
@@ -2667,7 +2812,14 @@ function MembersGridView({ teamMembers, currentUser, orgRoles, onSelect, onChang
               </div>
             )}
             {!m.bio && !m.skills?.length && !m.strengths?.length && (
-              <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No profile yet{isMe ? " — click Edit Profile to add yours" : ""}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No profile yet{isMe ? " — tap Edit Profile below" : ""}</div>
+            )}
+            {isMe && (
+              <button onClick={e => { e.stopPropagation(); onSelect(m); }}
+                style={{ marginTop: 10, width: "100%", padding: "7px 0", borderRadius: 8, border: "1px solid rgba(201,168,76,.3)", background: "var(--gold-dim)", color: "var(--gold)", fontSize: 11, fontWeight: 600, fontFamily: "var(--bf)", letterSpacing: ".06em", textTransform: "uppercase", cursor: "pointer", transition: "all .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,.15)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--gold-dim)"; }}
+              >✦ Edit Profile</button>
             )}
           </div>
         );
@@ -3094,6 +3246,8 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(member.title || "");
   const [bio, setBio] = useState(member.bio || "");
+  const [email, setEmail] = useState(member.email || "");
+  const [phone, setPhone] = useState(member.phone || "");
   const [skillsText, setSkillsText] = useState((member.skills || []).join("\n"));
   const [strengthsText, setStrengthsText] = useState((member.strengths || []).join("\n"));
   const [keyPointsText, setKeyPointsText] = useState((member.keyPoints || []).join("\n"));
@@ -3105,6 +3259,8 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate }) {
     onUpdate(member.name, {
       title,
       bio,
+      email,
+      phone,
       skills: skillsText.split("\n").map(s => s.trim()).filter(Boolean),
       strengths: strengthsText.split("\n").map(s => s.trim()).filter(Boolean),
       keyPoints: keyPointsText.split("\n").map(s => s.trim()).filter(Boolean),
@@ -3112,7 +3268,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate }) {
     setEditing(false);
   };
 
-  const hasContent = member.bio || member.title || member.skills?.length || member.strengths?.length || member.keyPoints?.length;
+  const hasContent = member.bio || member.title || member.email || member.phone || member.skills?.length || member.strengths?.length || member.keyPoints?.length;
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -3149,6 +3305,14 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate }) {
                 <textarea className="fta" value={bio} onChange={e => setBio(e.target.value)} placeholder="A brief intro — your background, focus, and what you bring to the team…" style={{ minHeight: 80 }} />
               </div>
               <div className="ff">
+                <label className="fl">Email</label>
+                <input className="fi" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
+              </div>
+              <div className="ff">
+                <label className="fl">Phone</label>
+                <input className="fi" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="(555) 123-4567" />
+              </div>
+              <div className="ff">
                 <label className="fl">Skills (one per line)</label>
                 <textarea className="fta" value={skillsText} onChange={e => setSkillsText(e.target.value)} placeholder="e.g. Brand Strategy&#10;Social Media&#10;Copywriting&#10;Analytics" style={{ minHeight: 100 }} />
               </div>
@@ -3173,6 +3337,25 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate }) {
               ) : isMe ? (
                 <div style={{ padding: "10px 0 14px", color: "var(--text-muted)", fontSize: 12 }}>No bio yet — click <strong style={{ color: "var(--gold)" }}>Edit Profile</strong> to add yours.</div>
               ) : null}
+
+              {/* Contact */}
+              {(member.email || member.phone) && (
+                <div className="tm-sec">
+                  <div className="tm-lbl">Contact</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 4 }}>
+                    {member.email && (
+                      <a href={`mailto:${member.email}`} style={{ fontSize: 12, color: "var(--text-dim)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 14 }}>✉</span> {member.email}
+                      </a>
+                    )}
+                    {member.phone && (
+                      <a href={`tel:${member.phone}`} style={{ fontSize: 12, color: "var(--text-dim)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 14 }}>☎</span> {member.phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Skills */}
               {(member.skills || []).length > 0 && (
@@ -3307,7 +3490,7 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
   };
 
   const saveCampaign = (status = "idea") => {
-    const c = { id: `cmp-${Date.now()}`, title: brief?.title || concept || uploadFile?.name || "Untitled", concept, brand, objective, brief, status, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString(), _briefFile: uploadFile?.name || null };
+    const c = { id: `cmp-${Date.now()}`, title: brief?.title || concept || uploadFile?.name || "Untitled", concept, brand, objective, brief, status, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString(), _briefFile: uploadFile?.name || null, _briefFileData: uploadFileData || null, _briefFileType: uploadFile?.type || null };
     onSave(c);
   };
 
@@ -3401,11 +3584,12 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
   );
 }
 
-function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote }) {
+function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote, onViewConcept }) {
   const [pillar, setPillar] = useState(pillars[0] || "");
   const [quarter, setQuarter] = useState("Q2 2026");
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [showFile, setShowFile] = useState(false);
   const submitNote = () => { if (onNote && noteText.trim()) { onNote({ section:"Campaigns", type:"Campaign", label:campaign.title, id:campaign.id, prefill:noteText.trim() }); setNoteText(""); setNoteOpen(false); } };
 
   return (
@@ -3417,6 +3601,7 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote 
             <div className="msub">{campaign.brand} · Created by {campaign.createdBy}</div>
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            {onViewConcept && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={onViewConcept}>🎨 View Concept</button>}
             <button className="btn btn-sm" onClick={() => setNoteOpen(o => !o)} style={{ borderColor: noteOpen ? "var(--gold)":"var(--border)", color: noteOpen ? "var(--gold)":"var(--text-muted)" }}>✎ Note</button>
             <button className="mclose" onClick={onClose}>×</button>
           </div>
@@ -3438,8 +3623,74 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote 
           </div>
         )}
         <div className="mbody">
-          {campaign.brief ? <BriefDisplay brief={campaign.brief} /> : (
-            <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.75 }}>{campaign.concept}</div>
+          {campaign.brief ? (
+            <>
+              <BriefDisplay brief={campaign.brief} />
+              {campaign._briefFile && campaign._briefFileData && (
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--surface2)", borderRadius: 8, border: "1px solid var(--border2)" }}>
+                  <span style={{ fontSize: 16 }}>📄</span>
+                  <div style={{ flex: 1, fontSize: 12, color: "var(--text-dim)" }}>{campaign._briefFile}</div>
+                  <button className="btn btn-sm" onClick={() => setShowFile(!showFile)}>{showFile ? "Hide File" : "View File"}</button>
+                </div>
+              )}
+              {showFile && campaign._briefFileData && (
+                <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 400 }}>
+                  {(campaign._briefFileType || "").startsWith("image/") ? (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111" }}>
+                      <img src={campaign._briefFileData} alt={campaign._briefFile} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                    </div>
+                  ) : (campaign._briefFileType || "").includes("pdf") ? (
+                    <iframe src={campaign._briefFileData} title={campaign._briefFile} style={{ width: "100%", height: "100%", border: "none" }} />
+                  ) : (
+                    <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)" }}>
+                      <div style={{ fontSize: 13 }}>Preview not available</div>
+                      <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => { const a = document.createElement("a"); a.href = campaign._briefFileData; a.download = campaign._briefFile; a.click(); }}>↓ Download</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div>
+              {campaign.concept && (
+                <div className="brief-sec"><div className="brief-lbl">Concept</div><div className="brief-val" style={{ fontSize: 13, lineHeight: 1.75 }}>{campaign.concept}</div></div>
+              )}
+              {campaign.objective && (
+                <div className="brief-sec"><div className="brief-lbl">Objective</div><div className="brief-val">{campaign.objective}</div></div>
+              )}
+              {campaign._briefFile && (
+                <div className="brief-sec">
+                  <div className="brief-lbl">Attached File</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "var(--surface2)", borderRadius: 8, border: "1px solid var(--border2)", marginTop: 4 }}>
+                    <span style={{ fontSize: 20 }}>📄</span>
+                    <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{campaign._briefFile}</div>
+                    {campaign._briefFileData && (
+                      <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}
+                        onClick={() => setShowFile(!showFile)}>{showFile ? "Hide File" : "View File"}</button>
+                    )}
+                  </div>
+                  {showFile && campaign._briefFileData && (
+                    <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 400 }}>
+                      {(campaign._briefFileType || "").startsWith("image/") ? (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111" }}>
+                          <img src={campaign._briefFileData} alt={campaign._briefFile} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                        </div>
+                      ) : (campaign._briefFileType || "").includes("pdf") ? (
+                        <iframe src={campaign._briefFileData} title={campaign._briefFile} style={{ width: "100%", height: "100%", border: "none" }} />
+                      ) : (
+                        <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)" }}>
+                          <div style={{ fontSize: 13 }}>Preview not available</div>
+                          <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={() => { const a = document.createElement("a"); a.href = campaign._briefFileData; a.download = campaign._briefFile; a.click(); }}>↓ Download</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {!campaign.concept && !campaign._briefFile && (
+                <div style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", padding: "16px 0" }}>No details yet for this campaign.</div>
+              )}
+            </div>
           )}
           {campaign.brief && campaign.status !== "approved" && (
             <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--surface2)", borderRadius: 10, border: "1px solid var(--border2)" }}>
@@ -4389,8 +4640,17 @@ ${atob(base64)}` }];
     setBriefProcessing(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!f.title.trim() && !conceptName) return;
+    // Read brief file data if available
+    let fileData = null;
+    let fileType = null;
+    if (briefFile) {
+      fileType = briefFile.type || null;
+      try {
+        fileData = await new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(briefFile); });
+      } catch {}
+    }
     onSave({
       id: `concept-${Date.now()}`,
       name: f.title.trim() || conceptName || "Untitled",
@@ -4398,8 +4658,10 @@ ${atob(base64)}` }];
       brandId: f.brandId,
       channel: f.channel,
       html: conceptHtml || null,
-      brief: briefParsed ? { keyPoints: briefParsed.keyPoints || [] } : null,
+      brief: briefParsed ? { title: briefParsed.title || f.title, description: briefParsed.description || f.description, keyPoints: briefParsed.keyPoints || [] } : null,
       briefFile: briefFile?.name || null,
+      briefFileData: fileData,
+      briefFileType: fileType,
       createdAt: new Date().toISOString(),
     });
   };
@@ -4531,11 +4793,15 @@ ${atob(base64)}` }];
   );
 }
 
-function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, brands, canEdit }) {
+function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, brands, canEdit, onPushToCampaign, onPushToInitiative, onNote }) {
   const [dragging, setDragging] = useState(false);
   const [renaming, setRenaming] = useState(null);
   const [renameVal, setRenameVal] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPushMenu, setShowPushMenu] = useState(false);
+  const [pushChannel, setPushChannel] = useState(CHANNELS[0]);
+  const [fileViewer, setFileViewer] = useState(null); // { data, name, type, conceptName }
+  const [viewerNote, setViewerNote] = useState("");
   const [loadedHtml, setLoadedHtml] = useState({}); // { [id]: html } — loaded on demand
 
   // Load HTML from storage when concept is selected
@@ -4607,8 +4873,8 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
               >
                 {renaming === c.id ? (
                   <input autoFocus value={renameVal} onChange={e => setRenameVal(e.target.value)}
-                    onBlur={() => { onRename(c.id, renameVal || c.name); setRenaming(null); }}
-                    onKeyDown={e => { if (e.key === "Enter") { onRename(c.id, renameVal || c.name); setRenaming(null); } if (e.key === "Escape") setRenaming(null); }}
+                    onBlur={() => { if (onRename) onRename(c.id, renameVal || c.name); setRenaming(null); }}
+                    onKeyDown={e => { if (e.key === "Enter") { if (onRename) onRename(c.id, renameVal || c.name); setRenaming(null); } if (e.key === "Escape") setRenaming(null); }}
                     onClick={e => e.stopPropagation()}
                     style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--gold)", borderRadius: 4, padding: "2px 6px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
                 ) : (
@@ -4617,15 +4883,19 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                       {brand && <div style={{ width: 7, height: 7, borderRadius: "50%", background: brand.color, flexShrink: 0 }} />}
                       <span style={{ fontSize: 12, color: activeConceptId === c.id ? "var(--gold)" : "var(--text)", fontWeight: activeConceptId === c.id ? 600 : 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
                     </div>
-                    {c.channel && <div style={{ fontSize: 9, color: "var(--text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{(c.channel||"").split(" · ")[1] || c.channel}</div>}
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+                      {c.channel && <div style={{ fontSize: 9, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{(c.channel||"").split(" · ")[1] || c.channel}</div>}
+                      {c.status === "campaign" && <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 100, background: "rgba(201,168,76,.12)", color: "var(--gold)", fontWeight: 600, letterSpacing: ".04em", whiteSpace: "nowrap" }}>→ Campaign</span>}
+                      {c.status === "initiative" && <span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 100, background: "rgba(77,158,142,.12)", color: "#4d9e8e", fontWeight: 600, letterSpacing: ".04em", whiteSpace: "nowrap" }}>→ Initiative</span>}
+                    </div>
                   </div>
                 )}
-                {activeConceptId === c.id && renaming !== c.id && (
+                {activeConceptId === c.id && renaming !== c.id && (onRename || onRemove) && (
                   <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-                    <button onClick={e => { e.stopPropagation(); setRenaming(c.id); setRenameVal(c.name); }}
-                      style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(255,255,255,.05)", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text-muted)", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Rename</button>
-                    <button onClick={e => { e.stopPropagation(); handleRemove(c.id); }}
-                      style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(224,123,106,.08)", border: "1px solid rgba(224,123,106,.2)", borderRadius: 4, color: "#e07b6a", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Delete</button>
+                    {onRename && <button onClick={e => { e.stopPropagation(); setRenaming(c.id); setRenameVal(c.name); }}
+                      style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(255,255,255,.05)", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text-muted)", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Rename</button>}
+                    {onRemove && <button onClick={e => { e.stopPropagation(); handleRemove(c.id); }}
+                      style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(224,123,106,.08)", border: "1px solid rgba(224,123,106,.2)", borderRadius: 4, color: "#e07b6a", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Delete</button>}
                   </div>
                 )}
               </div>
@@ -4647,7 +4917,31 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                   {new Date(activeConcept.createdAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"})}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 7 }}>
+              <div style={{ display: "flex", gap: 7, alignItems: "center", position: "relative" }}>
+                {activeConcept.status !== "campaign" && activeConcept.status !== "initiative" && onPushToCampaign && (
+                  <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}
+                    onClick={() => { onPushToCampaign(activeConcept); }}>→ Campaign</button>
+                )}
+                {activeConcept.status !== "initiative" && onPushToInitiative && (
+                  <button className="btn btn-sm" style={{ borderColor: "rgba(77,158,142,.3)", color: "#4d9e8e" }}
+                    onClick={() => setShowPushMenu(o => !o)}>→ Initiative</button>
+                )}
+                {showPushMenu && (
+                  <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px", boxShadow: "0 12px 40px rgba(0,0,0,.4)", zIndex: 20, width: 260 }}
+                    onClick={e => e.stopPropagation()}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Push to Initiative</div>
+                    <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 10 }}>Select a marketing channel:</div>
+                    <select value={pushChannel} onChange={e => setPushChannel(e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", marginBottom: 10, outline: "none" }}>
+                      {CHANNELS.map(ch => <option key={ch} value={ch}>{ch}</option>)}
+                    </select>
+                    <div style={{ display: "flex", gap: 7, justifyContent: "flex-end" }}>
+                      <button className="btn btn-sm" onClick={() => setShowPushMenu(false)}>Cancel</button>
+                      <button className="btn btn-sm" style={{ borderColor: "rgba(77,158,142,.4)", color: "#4d9e8e", fontWeight: 600 }}
+                        onClick={() => { onPushToInitiative(activeConcept, pushChannel, activeHtml); setShowPushMenu(false); }}>Confirm →</button>
+                    </div>
+                  </div>
+                )}
                 <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); window.open(URL.createObjectURL(blob),"_blank"); }}>Open ↗</button>
                 <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=activeConcept.name+".html"; a.click(); }}>↓ Download</button>
               </div>
@@ -4665,11 +4959,112 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
             <iframe key={activeConcept.id} srcDoc={activeHtml} title={activeConcept.name} sandbox="allow-scripts allow-same-origin allow-forms allow-downloads" style={{ flex: 1, border: "none", width: "100%", background: "#fff" }} />
           </>
         ) : activeConcept && !activeHtml ? (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ textAlign: "center", color: "var(--text-muted)" }}>
-              <div style={{ fontSize: 28, marginBottom: 12, opacity: .3 }}>🎨</div>
-              <div style={{ fontSize: 13 }}>No HTML attached to this concept</div>
-              <div style={{ fontSize: 11, marginTop: 4, opacity: .6 }}>Brief notes and metadata are saved</div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 13 }}>🎨</span>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>{activeConcept.name}</div>
+                {activeConcept.channel && <div style={{ fontSize: 10, color: "var(--gold)", padding: "1px 8px", border: "1px solid rgba(201,168,76,.25)", borderRadius: 100 }}>{(activeConcept.channel||"").split(" · ")[1]||activeConcept.channel}</div>}
+              </div>
+              <div style={{ display: "flex", gap: 7, alignItems: "center", position: "relative" }}>
+                {activeConcept.status !== "campaign" && activeConcept.status !== "initiative" && onPushToCampaign && (
+                  <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}
+                    onClick={() => { onPushToCampaign(activeConcept); }}>→ Campaign</button>
+                )}
+                {activeConcept.status !== "initiative" && onPushToInitiative && (
+                  <button className="btn btn-sm" style={{ borderColor: "rgba(77,158,142,.3)", color: "#4d9e8e" }}
+                    onClick={() => setShowPushMenu(o => !o)}>→ Initiative</button>
+                )}
+                {showPushMenu && (
+                  <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px", boxShadow: "0 12px 40px rgba(0,0,0,.4)", zIndex: 20, width: 260 }}
+                    onClick={e => e.stopPropagation()}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Push to Initiative</div>
+                    <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 10 }}>Select a marketing channel:</div>
+                    <select value={pushChannel} onChange={e => setPushChannel(e.target.value)}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", marginBottom: 10, outline: "none" }}>
+                      {CHANNELS.map(ch => <option key={ch} value={ch}>{ch}</option>)}
+                    </select>
+                    <div style={{ display: "flex", gap: 7, justifyContent: "flex-end" }}>
+                      <button className="btn btn-sm" onClick={() => setShowPushMenu(false)}>Cancel</button>
+                      <button className="btn btn-sm" style={{ borderColor: "rgba(77,158,142,.4)", color: "#4d9e8e", fontWeight: 600 }}
+                        onClick={() => { onPushToInitiative(activeConcept, pushChannel, null); setShowPushMenu(false); }}>Confirm →</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "28px 36px" }}>
+              <div style={{ maxWidth: 640 }}>
+                {/* Title */}
+                <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: "var(--text)", marginBottom: 6, lineHeight: 1.2 }}>{activeConcept.name}</div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 24, flexWrap: "wrap" }}>
+                  {activeConcept.brandId && (() => { const br = Object.values(brands || {}).find(b => b.id === activeConcept.brandId); return br ? <span style={{ fontSize: 10, padding: "2px 10px", borderRadius: 100, background: br.color+"18", color: br.color, fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase" }}>{br.name}</span> : null; })()}
+                  {activeConcept.channel && <span style={{ fontSize: 10, padding: "2px 10px", borderRadius: 100, background: "rgba(201,168,76,.08)", color: "var(--gold)", border: "1px solid rgba(201,168,76,.2)" }}>{(activeConcept.channel||"").split(" · ")[1]||activeConcept.channel}</span>}
+                  {activeConcept.status && activeConcept.status !== "draft" && (
+                    <span style={{ fontSize: 10, padding: "2px 10px", borderRadius: 100, background: activeConcept.status === "campaign" ? "rgba(201,168,76,.12)" : "rgba(77,158,142,.12)", color: activeConcept.status === "campaign" ? "var(--gold)" : "#4d9e8e", fontWeight: 600 }}>
+                      → {activeConcept.status === "campaign" ? "Campaign" : "Initiative"}
+                    </span>
+                  )}
+                  <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{new Date(activeConcept.createdAt).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</span>
+                </div>
+
+                {/* Description / Overview */}
+                {(activeConcept.description || activeConcept.brief?.description) && (
+                  <div style={{ marginBottom: 24, padding: "18px 20px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12 }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 8 }}>Overview</div>
+                    <div style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.8 }}>{activeConcept.brief?.description || activeConcept.description}</div>
+                  </div>
+                )}
+
+                {/* Key Points */}
+                {activeConcept.brief?.keyPoints?.length > 0 && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 12 }}>Key Points</div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {activeConcept.brief.keyPoints.map((pt, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
+                          <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.25)", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, color: "var(--gold)", flexShrink: 0 }}>{i+1}</div>
+                          <span style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.65, paddingTop: 2 }}>{pt}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Attached Brief File */}
+                {activeConcept.briefFile && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Attached Brief</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
+                      <span style={{ fontSize: 22 }}>📄</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 500 }}>{activeConcept.briefFile}</div>
+                      </div>
+                      {activeConcept.briefFileData && (
+                        <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}
+                          onClick={() => setFileViewer({ data: activeConcept.briefFileData, name: activeConcept.briefFile, type: activeConcept.briefFileType, conceptName: activeConcept.name })}>View</button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Channel detail */}
+                {activeConcept.channel && (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4 }}>Marketing Channel</div>
+                    <div style={{ fontSize: 13, color: "var(--text-dim)" }}>{activeConcept.channel}</div>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {!activeConcept.description && !activeConcept.brief?.description && !activeConcept.brief?.keyPoints?.length && !activeConcept.briefFile && (
+                  <div style={{ padding: "32px 0", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, opacity: .2, marginBottom: 10 }}>🎨</div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>No brief or details attached yet.</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, opacity: .7 }}>Add a description, upload a brief, or attach an HTML concept.</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -4691,18 +5086,409 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
           </div>
         )}
       </div>
+
+      {/* File Viewer Modal */}
+      {fileViewer && (
+        <div className="overlay" onClick={() => setFileViewer(null)} style={{ zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "90vw", maxWidth: 1100, height: "85vh", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 16, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,.6)" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>📄</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>{fileViewer.name}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{fileViewer.conceptName}</div>
+                </div>
+              </div>
+              <button onClick={() => setFileViewer(null)} style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center" }}>×</button>
+            </div>
+            {/* Body */}
+            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+              {/* File preview */}
+              <div style={{ flex: 1, overflow: "hidden", background: "#fff" }}>
+                {(fileViewer.type || "").startsWith("image/") ? (
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111", overflow: "auto" }}>
+                    <img src={fileViewer.data} alt={fileViewer.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                  </div>
+                ) : (fileViewer.type || "").includes("pdf") ? (
+                  <iframe src={fileViewer.data} title={fileViewer.name} style={{ width: "100%", height: "100%", border: "none" }} />
+                ) : (
+                  <div style={{ padding: 32, textAlign: "center", color: "var(--text-muted)" }}>
+                    <div style={{ fontSize: 40, marginBottom: 12, opacity: .3 }}>📄</div>
+                    <div style={{ fontSize: 13 }}>Preview not available for this file type</div>
+                    <button className="btn btn-sm" style={{ marginTop: 12 }} onClick={() => { const a = document.createElement("a"); a.href = fileViewer.data; a.download = fileViewer.name; a.click(); }}>↓ Download</button>
+                  </div>
+                )}
+              </div>
+              {/* Notes sidebar */}
+              <div style={{ width: 280, flexShrink: 0, borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", background: "var(--surface)" }}>
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border2)" }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>Notes</div>
+                </div>
+                <div style={{ flex: 1, padding: "12px", overflowY: "auto" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.65 }}>Add a note about this brief — it will appear in the main notes panel.</div>
+                </div>
+                <div style={{ padding: "12px", borderTop: "1px solid var(--border2)" }}>
+                  <textarea value={viewerNote} onChange={e => setViewerNote(e.target.value)}
+                    placeholder="Add your note… (⌘↵ to post)"
+                    onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && viewerNote.trim() && onNote) { onNote(viewerNote, fileViewer.conceptName); setViewerNote(""); } }}
+                    style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px", color: "var(--text)", fontFamily: "var(--bf)", fontSize: 12, lineHeight: 1.6, resize: "none", outline: "none", minHeight: 64, boxSizing: "border-box", transition: "border-color .15s" }}
+                    onFocus={e => e.target.style.borderColor = "rgba(201,168,76,.35)"}
+                    onBlur={e => e.target.style.borderColor = "var(--border)"} />
+                  <button disabled={!viewerNote.trim()} onClick={() => { if (onNote && viewerNote.trim()) { onNote(viewerNote, fileViewer.conceptName); setViewerNote(""); } }}
+                    style={{ marginTop: 6, width: "100%", padding: "7px", borderRadius: 7, border: "none", background: viewerNote.trim() ? "var(--gold)" : "rgba(255,255,255,.06)", color: viewerNote.trim() ? "var(--bg)" : "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 11, fontWeight: 600, cursor: viewerNote.trim() ? "pointer" : "not-allowed", transition: "all .15s" }}>Post Note →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
+/* ─── TIMELINE PANEL ─── */
+const TIMELINE_CATEGORIES = ["Campaign", "Initiative", "Event", "Launch", "Milestone", "Deliverable", "Other"];
+const TIMELINE_STATUSES = ["planned", "in-progress", "completed", "on-hold", "cancelled"];
+const TIMELINE_STATUS_COLORS = { "planned": "#8b7fc0", "in-progress": "#c9a84c", "completed": "#4d9e8e", "on-hold": "#e07b6a", "cancelled": "#666" };
+
+function TimelinePanel({ items, setItems, canEdit, ganttHtml, onUpdateGantt, currentUser, initiatives, campaigns }) {
+  const [selected, setSelected] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [showGantt, setShowGantt] = useState(false);
+  const [filter, setFilter] = useState("all");
+
+  // Sort items by start date
+  const sorted = [...items].sort((a, b) => new Date(a.startDate || 0) - new Date(b.startDate || 0));
+  const filtered = filter === "all" ? sorted : sorted.filter(i => i.status === filter);
+
+  // Months for the visual bar
+  const now = new Date();
+  const months = [];
+  for (let m = -1; m < 8; m++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + m, 1);
+    months.push({ label: d.toLocaleString("en", { month: "short" }), year: d.getFullYear(), date: d });
+  }
+  const rangeStart = months[0].date.getTime();
+  const rangeEnd = new Date(months[months.length - 1].date.getFullYear(), months[months.length - 1].date.getMonth() + 1, 0).getTime();
+  const rangeDur = rangeEnd - rangeStart || 1;
+
+  const getBarStyle = (item) => {
+    const s = new Date(item.startDate || now).getTime();
+    const e = new Date(item.endDate || item.startDate || now).getTime();
+    const left = Math.max(0, Math.min(100, ((s - rangeStart) / rangeDur) * 100));
+    const right = Math.max(0, Math.min(100, ((e - rangeStart) / rangeDur) * 100));
+    const width = Math.max(1, right - left);
+    return { left: `${left}%`, width: `${width}%` };
+  };
+
+  const addItem = (item) => { setItems(p => [...p, { ...item, id: `tl-${Date.now()}`, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString() }]); setShowAdd(false); };
+  const updateItem = (id, updates) => { setItems(p => p.map(i => i.id === id ? { ...i, ...updates } : i)); };
+  const deleteItem = (id) => { setItems(p => p.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+
+  const selectedItem = items.find(i => i.id === selected);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
+      {/* Toolbar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Project Timeline</div>
+          <div style={{ fontSize: 10, color: "var(--text-muted)", padding: "2px 8px", border: "1px solid var(--border2)", borderRadius: 100 }}>{items.length} items</div>
+        </div>
+        <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+          {/* Status filter */}
+          <select value={filter} onChange={e => setFilter(e.target.value)}
+            style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)" }}>
+            <option value="all">All Statuses</option>
+            {TIMELINE_STATUSES.map(s => <option key={s} value={s}>{s.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}</option>)}
+          </select>
+          {ganttHtml && <button className="btn btn-sm" onClick={() => setShowGantt(o => !o)}>{showGantt ? "← Items" : "📊 Gantt View"}</button>}
+          {canEdit && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", fontWeight: 600 }} onClick={() => setShowAdd(true)}>+ Add Item</button>}
+        </div>
+      </div>
+
+      {showGantt ? (
+        <GanttViewer ganttHtml={ganttHtml} onUpdate={onUpdateGantt} canEdit={canEdit} />
+      ) : (
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* LEFT — Timeline list + visual */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {/* Month headers */}
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "rgba(255,255,255,.02)" }}>
+              <div style={{ width: 280, flexShrink: 0, padding: "8px 16px", fontSize: 10, color: "var(--text-muted)", letterSpacing: ".08em", textTransform: "uppercase", fontWeight: 600, borderRight: "1px solid var(--border)" }}>Item</div>
+              <div style={{ flex: 1, display: "flex", position: "relative" }}>
+                {months.map((m, i) => (
+                  <div key={i} style={{ flex: 1, textAlign: "center", padding: "8px 0", fontSize: 10, color: m.date.getMonth() === now.getMonth() && m.year === now.getFullYear() ? "var(--gold)" : "var(--text-muted)", fontWeight: m.date.getMonth() === now.getMonth() ? 700 : 400, letterSpacing: ".06em", borderRight: i < months.length - 1 ? "1px solid rgba(255,255,255,.04)" : "none" }}>
+                    {m.label} {m.year !== now.getFullYear() ? `'${String(m.year).slice(2)}` : ""}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rows */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {filtered.length === 0 && (
+                <div style={{ padding: "60px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: 36, opacity: .2, marginBottom: 10 }}>📅</div>
+                  <div style={{ fontSize: 13, color: "var(--text-muted)" }}>No timeline items yet</div>
+                  {canEdit && <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>Click + Add Item to get started</div>}
+                </div>
+              )}
+              {filtered.map(item => {
+                const barStyle = getBarStyle(item);
+                const statusColor = TIMELINE_STATUS_COLORS[item.status] || "#888";
+                const isSelected = selected === item.id;
+                return (
+                  <div key={item.id} onClick={() => setSelected(item.id)}
+                    style={{ display: "flex", borderBottom: "1px solid var(--border2)", cursor: "pointer", background: isSelected ? "rgba(201,168,76,.04)" : "transparent", transition: "background .1s" }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,.02)"; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
+                    {/* Item info */}
+                    <div style={{ width: 280, flexShrink: 0, padding: "10px 16px", borderRight: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+                        <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 1 }}>{item.category} · {item.owner || "Unassigned"}</div>
+                      </div>
+                    </div>
+                    {/* Gantt bar */}
+                    <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", padding: "6px 0" }}>
+                      {/* Grid lines */}
+                      {months.map((_, i) => <div key={i} style={{ position: "absolute", left: `${(i / months.length) * 100}%`, top: 0, bottom: 0, borderLeft: "1px solid rgba(255,255,255,.03)" }} />)}
+                      {/* Today marker */}
+                      <div style={{ position: "absolute", left: `${((now.getTime() - rangeStart) / rangeDur) * 100}%`, top: 0, bottom: 0, borderLeft: "1px dashed rgba(201,168,76,.3)", zIndex: 1 }} />
+                      {/* Bar */}
+                      <div style={{ position: "absolute", ...barStyle, height: 20, borderRadius: 4, background: `linear-gradient(90deg, ${statusColor}44, ${statusColor}88)`, border: `1px solid ${statusColor}66`, top: "50%", transform: "translateY(-50%)", minWidth: 6 }}>
+                        <div style={{ fontSize: 9, color: "#fff", padding: "2px 6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: "16px" }}>{item.title}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT — Detail panel */}
+          {selectedItem && (
+            <div style={{ width: 380, flexShrink: 0, borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", background: "var(--surface)", overflowY: "auto" }}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", lineHeight: 1.3 }}>{selectedItem.title}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{selectedItem.category} · Added by {selectedItem.createdBy}</div>
+                </div>
+                <button onClick={() => setSelected(null)} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>×</button>
+              </div>
+              <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+                {/* Status */}
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Status</div>
+                  {canEdit ? (
+                    <select value={selectedItem.status} onChange={e => updateItem(selectedItem.id, { status: e.target.value })}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: TIMELINE_STATUS_COLORS[selectedItem.status], fontSize: 12, fontFamily: "var(--bf)", fontWeight: 600 }}>
+                      {TIMELINE_STATUSES.map(s => <option key={s} value={s}>{s.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}</option>)}
+                    </select>
+                  ) : (
+                    <span style={{ fontSize: 12, color: TIMELINE_STATUS_COLORS[selectedItem.status], fontWeight: 600 }}>{selectedItem.status.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}</span>
+                  )}
+                </div>
+                {/* Dates */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Start Date</div>
+                    {canEdit ? <input type="date" value={selectedItem.startDate || ""} onChange={e => updateItem(selectedItem.id, { startDate: e.target.value })}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }} />
+                      : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.startDate || "—"}</span>}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>End Date</div>
+                    {canEdit ? <input type="date" value={selectedItem.endDate || ""} onChange={e => updateItem(selectedItem.id, { endDate: e.target.value })}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }} />
+                      : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.endDate || "—"}</span>}
+                  </div>
+                </div>
+                {/* Owner */}
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Owner</div>
+                  {canEdit ? <input value={selectedItem.owner || ""} onChange={e => updateItem(selectedItem.id, { owner: e.target.value })} placeholder="Assign owner…"
+                    style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }} />
+                    : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.owner || "Unassigned"}</span>}
+                </div>
+                {/* Estimated Cost */}
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Estimated Cost</div>
+                  {canEdit ? <input value={selectedItem.cost || ""} onChange={e => updateItem(selectedItem.id, { cost: e.target.value })} placeholder="$0.00"
+                    style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--gold)", fontSize: 13, fontFamily: "var(--bf)", fontWeight: 600 }} />
+                    : <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{selectedItem.cost || "—"}</span>}
+                </div>
+                {/* Description */}
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Description</div>
+                  {canEdit ? <textarea value={selectedItem.description || ""} onChange={e => updateItem(selectedItem.id, { description: e.target.value })} placeholder="Add details…" rows={3}
+                    style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", lineHeight: 1.65, resize: "vertical", boxSizing: "border-box" }} />
+                    : <div style={{ fontSize: 12, color: "var(--text)", lineHeight: 1.65 }}>{selectedItem.description || "No description"}</div>}
+                </div>
+                {/* Key Points */}
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Key Points</div>
+                  {(selectedItem.keyPoints || []).map((pt, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.25)", display: "grid", placeItems: "center", fontSize: 9, fontWeight: 700, color: "var(--gold)", flexShrink: 0 }}>{i + 1}</div>
+                      {canEdit ? (
+                        <div style={{ display: "flex", flex: 1, gap: 4 }}>
+                          <input value={pt} onChange={e => { const kp = [...(selectedItem.keyPoints || [])]; kp[i] = e.target.value; updateItem(selectedItem.id, { keyPoints: kp }); }}
+                            style={{ flex: 1, padding: "5px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }} />
+                          <button onClick={() => { const kp = (selectedItem.keyPoints || []).filter((_, j) => j !== i); updateItem(selectedItem.id, { keyPoints: kp }); }}
+                            style={{ width: 24, height: 24, borderRadius: 5, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", cursor: "pointer", fontSize: 11, display: "grid", placeItems: "center" }}>×</button>
+                        </div>
+                      ) : <span style={{ fontSize: 12, color: "var(--text-dim)" }}>{pt}</span>}
+                    </div>
+                  ))}
+                  {canEdit && <button onClick={() => updateItem(selectedItem.id, { keyPoints: [...(selectedItem.keyPoints || []), ""] })}
+                    style={{ fontSize: 11, padding: "5px 12px", borderRadius: 6, border: "1px dashed rgba(255,255,255,.12)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)", width: "100%", marginTop: 4 }}>+ Add Key Point</button>}
+                </div>
+                {/* Link to initiative/campaign */}
+                {selectedItem.linkedInitiative && (
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Linked To</div>
+                    <div style={{ fontSize: 12, color: "var(--gold)", padding: "6px 10px", background: "rgba(201,168,76,.06)", borderRadius: 7, border: "1px solid rgba(201,168,76,.15)" }}>{selectedItem.linkedInitiative}</div>
+                  </div>
+                )}
+                {/* Delete */}
+                {canEdit && (
+                  <button onClick={() => { if (confirm(`Delete "${selectedItem.title}"?`)) deleteItem(selectedItem.id); }}
+                    style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 7, border: "1px solid rgba(224,123,106,.3)", background: "rgba(224,123,106,.06)", color: "#e07b6a", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "var(--bf)", letterSpacing: ".04em" }}>Delete Item</button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ADD ITEM MODAL */}
+      {showAdd && <TimelineAddModal onClose={() => setShowAdd(false)} onAdd={addItem} initiatives={initiatives} campaigns={campaigns} />}
+    </div>
+  );
+}
+
+function TimelineAddModal({ onClose, onAdd, initiatives, campaigns }) {
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("Campaign");
+  const [status, setStatus] = useState("planned");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState("");
+  const [owner, setOwner] = useState("");
+  const [cost, setCost] = useState("");
+  const [description, setDescription] = useState("");
+  const [linkedInitiative, setLinkedInitiative] = useState("");
+
+  const submit = () => {
+    if (!title.trim()) return;
+    onAdd({ title: title.trim(), category, status, startDate, endDate, owner: owner.trim(), cost: cost.trim(), description: description.trim(), linkedInitiative: linkedInitiative || null, keyPoints: [] });
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="mhdr">
+          <div>
+            <div className="mtitle">Add Timeline Item</div>
+            <div className="msub">This will be saved permanently to the project timeline</div>
+          </div>
+          <button className="mclose" onClick={onClose}>×</button>
+        </div>
+        <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 14, padding: "20px 24px" }}>
+          {/* Title */}
+          <div>
+            <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Title *</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Packaging Redesign Launch" autoFocus
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+          </div>
+          {/* Category + Status */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Category</label>
+              <select value={category} onChange={e => setCategory(e.target.value)}
+                style={{ width: "100%", padding: "9px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }}>
+                {TIMELINE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value)}
+                style={{ width: "100%", padding: "9px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }}>
+                {TIMELINE_STATUSES.map(s => <option key={s} value={s}>{s.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}</option>)}
+              </select>
+            </div>
+          </div>
+          {/* Dates */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Start Date</label>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                style={{ width: "100%", padding: "9px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>End Date</label>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                style={{ width: "100%", padding: "9px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+            </div>
+          </div>
+          {/* Owner + Cost */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Owner</label>
+              <input value={owner} onChange={e => setOwner(e.target.value)} placeholder="Who's responsible?"
+                style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Estimated Cost</label>
+              <input value={cost} onChange={e => setCost(e.target.value)} placeholder="$0.00"
+                style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--gold)", fontSize: 13, fontFamily: "var(--bf)", fontWeight: 600, boxSizing: "border-box" }} />
+            </div>
+          </div>
+          {/* Link to existing */}
+          <div>
+            <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Link to Initiative / Campaign</label>
+            <select value={linkedInitiative} onChange={e => setLinkedInitiative(e.target.value)}
+              style={{ width: "100%", padding: "9px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }}>
+              <option value="">None</option>
+              <optgroup label="Initiatives">
+                {(initiatives || []).map(i => <option key={i.id} value={i.title}>{i.title}</option>)}
+              </optgroup>
+              <optgroup label="Campaigns">
+                {(campaigns || []).map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
+              </optgroup>
+            </select>
+          </div>
+          {/* Description */}
+          <div>
+            <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Description</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Add details, deliverables, notes…" rows={3}
+              style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", lineHeight: 1.65, resize: "vertical", boxSizing: "border-box" }} />
+          </div>
+        </div>
+        <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button disabled={!title.trim()} onClick={submit}
+            style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: title.trim() ? "var(--gold)" : "rgba(255,255,255,.06)", color: title.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: 12, fontWeight: 700, cursor: title.trim() ? "pointer" : "not-allowed", fontFamily: "var(--bf)", letterSpacing: ".04em" }}>Add to Timeline</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineItems, currentUser, initiatives, campaigns, canAddContent }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(ganttHtml || "");
   const [saved, setSaved] = useState(false);
+  const [panel, setPanel] = useState(null); // "items" or null
+  const [selected, setSelected] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
   const fileRef = useRef();
   const textareaRef = useRef();
+  const canModify = canEdit || canAddContent;
 
-  // Keep draft in sync if ganttHtml changes externally
   useEffect(() => {
     if (ganttHtml) { setDraft(ganttHtml); return; }
     fetch(DEFAULT_GANTT_URL).then(r=>r.text()).then(html=>{setDraft(html);onUpdate(html);}).catch(()=>{});
@@ -4715,107 +5501,220 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit }) {
     r.readAsText(file);
   };
 
-  const pushUpdate = () => {
-    onUpdate(draft);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
+  const pushUpdate = () => { onUpdate(draft); setSaved(true); setTimeout(() => setSaved(false), 2500); };
+  const exitEditor = () => setEditing(false);
 
-  const exitEditor = () => { setEditing(false); };
+  const addItem = (item) => { setTimelineItems(p => [...p, { ...item, id: `tl-${Date.now()}`, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString() }]); setShowAdd(false); };
+  const updateItem = (id, updates) => setTimelineItems(p => p.map(i => i.id === id ? { ...i, ...updates } : i));
+  const deleteItem = (id) => { setTimelineItems(p => p.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+  const selectedItem = (timelineItems || []).find(i => i.id === selected);
 
   if (editing) {
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)" }}>
-        {/* Editor toolbar */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 18px", borderBottom: "1px solid var(--border)",
-          background: "var(--surface)", flexShrink: 0,
-        }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#e07b6a", boxShadow: "0 0 6px #e07b6a" }} />
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Timeline Editor</div>
             <div style={{ fontSize: 10, color: "var(--text-muted)", padding: "2px 8px", border: "1px solid var(--border2)", borderRadius: 100 }}>Live preview updates as you type</div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-sm" onClick={exitEditor}>← Back to View</button>
-            <button onClick={pushUpdate}
-              style={{
-                padding: "6px 16px", borderRadius: 7, border: "none", cursor: "pointer",
-                background: saved ? "#4d9e8e" : "#c9a84c", color: "#07070f",
-                fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase",
-                transition: "background .3s", fontFamily: "var(--bf)",
-              }}
-            >
+            <button className="btn btn-sm" onClick={exitEditor}>← Back</button>
+            <button onClick={pushUpdate} style={{ padding: "6px 16px", borderRadius: 7, border: "none", cursor: "pointer", background: saved ? "#4d9e8e" : "#c9a84c", color: "#07070f", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", transition: "background .3s", fontFamily: "var(--bf)" }}>
               {saved ? "✓ Saved" : "Push Update"}
             </button>
           </div>
         </div>
-
-        {/* Split panel */}
         <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", overflow: "hidden" }}>
-          {/* Left — code editor */}
           <div style={{ display: "flex", flexDirection: "column", borderRight: "1px solid var(--border)", background: "#0a0a14" }}>
             <div style={{ padding: "7px 14px", borderBottom: "1px solid rgba(255,255,255,.06)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 500 }}>HTML Source</div>
               <div style={{ fontSize: 10, color: "var(--text-muted)" }}>· {draft.length.toLocaleString()} chars</div>
-              <button className="btn btn-sm" style={{ marginLeft: "auto", fontSize: 9 }} onClick={() => fileRef.current.click()}>↺ Replace File</button>
+              <button className="btn btn-sm" style={{ marginLeft: "auto", fontSize: 9 }} onClick={() => fileRef.current.click()}>↺ Replace</button>
               <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
             </div>
-            <textarea ref={textareaRef}
-              value={draft}
-              onChange={e => setDraft(e.target.value)}
-              spellCheck={false}
-              style={{
-                flex: 1, padding: "14px 16px",
-                background: "transparent", border: "none", outline: "none",
-                color: "#a8c4e0", fontFamily: "'DM Mono','Fira Code','Courier New',monospace",
-                fontSize: 12, lineHeight: 1.65, resize: "none",
-                overflowY: "auto", tabSize: 2,
-              }}
-            />
+            <textarea ref={textareaRef} value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false}
+              style={{ flex: 1, padding: "14px 16px", background: "transparent", border: "none", outline: "none", color: "#a8c4e0", fontFamily: "'DM Mono','Fira Code','Courier New',monospace", fontSize: 12, lineHeight: 1.65, resize: "none", overflowY: "auto", tabSize: 2 }} />
           </div>
-
-          {/* Right — live preview */}
           <div style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
             <div style={{ padding: "7px 14px", borderBottom: "1px solid rgba(0,0,0,.08)", background: "#f5f5f5", flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#666", fontWeight: 500 }}>Live Preview</div>
             </div>
-            <iframe key={draft.length}
-              srcDoc={draft}
-              title="Gantt Live Preview"
-              sandbox="allow-scripts allow-same-origin allow-forms"
-              style={{ flex: 1, border: "none", width: "100%" }}
-            />
+            <iframe key={draft.length} srcDoc={draft} title="Gantt Live Preview" sandbox="allow-scripts allow-same-origin allow-forms" style={{ flex: 1, border: "none", width: "100%" }} />
           </div>
         </div>
       </div>
     );
   }
 
-  // View mode
+  // View mode — Gantt iframe + items panel
   return (
-    <div className="gv-wrap">
-      <div className="gv-bar">
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)" }}>
+      {/* Top bar */}
+      <div className="gv-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div className="gv-title">
           Curador Brands — Project Timeline
           <span>Interactive Gantt · Drag bars to reschedule</span>
         </div>
         <div style={{ display: "flex", gap: 7 }}>
-          {canEdit && <button className="btn btn-sm" onClick={() => setEditing(true)} style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}>
-            ✏ Edit
-          </button>}
-          <button className="btn btn-sm" onClick={() => fileRef.current.click()}>↺ Replace</button>
-          <button className="btn btn-sm" onClick={() => { onUpdate(null); }}>↩ Reset</button>
+          <button className={`btn btn-sm${panel === "items" ? " active" : ""}`} onClick={() => setPanel(p => p === "items" ? null : "items")}
+            style={panel === "items" ? { borderColor: "rgba(201,168,76,.4)", color: "var(--gold)" } : {}}>
+            📋 Items {(timelineItems||[]).length > 0 && <span style={{ marginLeft: 4, fontSize: 9, padding: "1px 5px", borderRadius: 100, background: "rgba(201,168,76,.15)", color: "var(--gold)" }}>{(timelineItems||[]).length}</span>}
+          </button>
+          <button className="btn btn-sm" onClick={() => {
+            const w = window.open("", "_blank", "width=1400,height=800");
+            if (w) { w.document.open(); w.document.write(ganttHtml || draft); w.document.close(); }
+          }}>↗ Expand</button>
+          {canEdit && <button className="btn btn-sm" onClick={() => setEditing(true)} style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}>✏ Edit HTML</button>}
+          {canEdit && <button className="btn btn-sm" onClick={() => fileRef.current.click()}>↺ Replace</button>}
+          {canEdit && <button className="btn btn-sm" onClick={() => { onUpdate(null); }}>↩ Reset</button>}
           <input ref={fileRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => handleFile(e.target.files[0])} />
         </div>
       </div>
-      <iframe
-        className="gv-frame"
-        srcDoc={ganttHtml}
-        title="Timeline"
-        sandbox="allow-scripts allow-same-origin allow-downloads allow-forms"
-      />
+
+      {/* Content: iframe + optional items panel */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Gantt iframe */}
+        <iframe className="gv-frame" srcDoc={ganttHtml} title="Timeline" sandbox="allow-scripts allow-same-origin allow-downloads allow-forms"
+          style={{ flex: 1, border: "none", borderTop: 0 }} />
+
+        {/* Items panel */}
+        {panel === "items" && (
+          <div style={{ width: selected ? 680 : 340, flexShrink: 0, borderLeft: "1px solid var(--border)", display: "flex", overflow: "hidden", transition: "width .2s", background: "var(--bg)" }}>
+            {/* Items list */}
+            <div style={{ width: 340, flexShrink: 0, display: "flex", flexDirection: "column", borderRight: selected ? "1px solid var(--border)" : "none" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>Timeline Items</div>
+                {canModify && <button onClick={() => setShowAdd(true)}
+                  style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(201,168,76,.3)", background: "rgba(201,168,76,.06)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600 }}>+ Add</button>}
+              </div>
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                {(timelineItems||[]).length === 0 && (
+                  <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, opacity: .2, marginBottom: 8 }}>📋</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>No items yet</div>
+                    {canModify && <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>Add items with costs, dates, and details</div>}
+                  </div>
+                )}
+                {[...(timelineItems||[])].sort((a,b) => new Date(a.startDate||0) - new Date(b.startDate||0)).map(item => {
+                  const sc = TIMELINE_STATUS_COLORS[item.status] || "#888";
+                  return (
+                    <div key={item.id} onClick={() => setSelected(item.id)}
+                      style={{ padding: "10px 16px", borderBottom: "1px solid var(--border2)", cursor: "pointer", background: selected === item.id ? "rgba(201,168,76,.06)" : "transparent", transition: "background .1s" }}
+                      onMouseEnter={e => { if (selected !== item.id) e.currentTarget.style.background = "rgba(255,255,255,.02)"; }}
+                      onMouseLeave={e => { if (selected !== item.id) e.currentTarget.style.background = "transparent"; }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 7, height: 7, borderRadius: "50%", background: sc, flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 3, alignItems: "center" }}>
+                            <span style={{ fontSize: 10, color: sc, fontWeight: 600 }}>{(item.status||"planned").replace("-"," ")}</span>
+                            {item.cost && <span style={{ fontSize: 10, color: "var(--gold)" }}>{item.cost}</span>}
+                            {item.startDate && <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{new Date(item.startDate).toLocaleDateString("en",{month:"short",day:"numeric"})}</span>}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>→</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Detail panel */}
+            {selectedItem && (
+              <div style={{ width: 340, flexShrink: 0, display: "flex", flexDirection: "column", overflowY: "auto", background: "var(--surface)" }}>
+                <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.3 }}>{selectedItem.title}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 3 }}>{selectedItem.category} · {selectedItem.createdBy}</div>
+                  </div>
+                  <button onClick={() => setSelected(null)} style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 13, display: "grid", placeItems: "center" }}>×</button>
+                </div>
+                <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 14 }}>
+                  {/* Status */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Status</div>
+                    {canModify ? <select value={selectedItem.status} onChange={e => updateItem(selectedItem.id, { status: e.target.value })}
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: TIMELINE_STATUS_COLORS[selectedItem.status], fontSize: 12, fontFamily: "var(--bf)", fontWeight: 600 }}>
+                      {TIMELINE_STATUSES.map(s => <option key={s} value={s}>{s.replace("-"," ").replace(/\b\w/g,c=>c.toUpperCase())}</option>)}
+                    </select> : <span style={{ fontSize: 12, color: TIMELINE_STATUS_COLORS[selectedItem.status], fontWeight: 600 }}>{(selectedItem.status||"").replace("-"," ")}</span>}
+                  </div>
+                  {/* Dates */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Start</div>
+                      {canModify ? <input type="date" value={selectedItem.startDate||""} onChange={e => updateItem(selectedItem.id, { startDate: e.target.value })}
+                        style={{ width: "100%", padding: "7px 8px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+                        : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.startDate || "—"}</span>}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>End</div>
+                      {canModify ? <input type="date" value={selectedItem.endDate||""} onChange={e => updateItem(selectedItem.id, { endDate: e.target.value })}
+                        style={{ width: "100%", padding: "7px 8px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+                        : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.endDate || "—"}</span>}
+                    </div>
+                  </div>
+                  {/* Owner */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Owner</div>
+                    {canModify ? <input value={selectedItem.owner||""} onChange={e => updateItem(selectedItem.id, { owner: e.target.value })} placeholder="Assign…"
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+                      : <span style={{ fontSize: 12, color: "var(--text)" }}>{selectedItem.owner || "Unassigned"}</span>}
+                  </div>
+                  {/* Cost */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Estimated Cost</div>
+                    {canModify ? <input value={selectedItem.cost||""} onChange={e => updateItem(selectedItem.id, { cost: e.target.value })} placeholder="$0.00"
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--gold)", fontSize: 13, fontFamily: "var(--bf)", fontWeight: 600, boxSizing: "border-box" }} />
+                      : <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600 }}>{selectedItem.cost || "—"}</span>}
+                  </div>
+                  {/* Description */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Description</div>
+                    {canModify ? <textarea value={selectedItem.description||""} onChange={e => updateItem(selectedItem.id, { description: e.target.value })} placeholder="Details…" rows={3}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", lineHeight: 1.6, resize: "vertical", boxSizing: "border-box" }} />
+                      : <div style={{ fontSize: 12, color: "var(--text)", lineHeight: 1.6 }}>{selectedItem.description || "—"}</div>}
+                  </div>
+                  {/* Key Points */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Key Points</div>
+                    {(selectedItem.keyPoints||[]).map((pt, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                        <div style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.25)", display: "grid", placeItems: "center", fontSize: 8, fontWeight: 700, color: "var(--gold)", flexShrink: 0 }}>{i+1}</div>
+                        {canModify ? (
+                          <div style={{ display: "flex", flex: 1, gap: 4 }}>
+                            <input value={pt} onChange={e => { const kp = [...(selectedItem.keyPoints||[])]; kp[i] = e.target.value; updateItem(selectedItem.id, { keyPoints: kp }); }}
+                              style={{ flex: 1, padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+                            <button onClick={() => { const kp = (selectedItem.keyPoints||[]).filter((_,j)=>j!==i); updateItem(selectedItem.id, { keyPoints: kp }); }}
+                              style={{ width: 22, height: 22, borderRadius: 5, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", cursor: "pointer", fontSize: 10, display: "grid", placeItems: "center" }}>×</button>
+                          </div>
+                        ) : <span style={{ fontSize: 11, color: "var(--text-dim)" }}>{pt}</span>}
+                      </div>
+                    ))}
+                    {canModify && <button onClick={() => updateItem(selectedItem.id, { keyPoints: [...(selectedItem.keyPoints||[]), ""] })}
+                      style={{ fontSize: 10, padding: "4px 10px", borderRadius: 6, border: "1px dashed rgba(255,255,255,.12)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)", width: "100%", marginTop: 3 }}>+ Key Point</button>}
+                  </div>
+                  {/* Linked */}
+                  {selectedItem.linkedInitiative && (
+                    <div>
+                      <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 5 }}>Linked To</div>
+                      <div style={{ fontSize: 12, color: "var(--gold)", padding: "5px 10px", background: "rgba(201,168,76,.06)", borderRadius: 7, border: "1px solid rgba(201,168,76,.15)" }}>{selectedItem.linkedInitiative}</div>
+                    </div>
+                  )}
+                  {canModify && (
+                    <button onClick={() => { if (confirm(`Delete "${selectedItem.title}"?`)) deleteItem(selectedItem.id); }}
+                      style={{ marginTop: 6, width: "100%", padding: "7px", borderRadius: 7, border: "1px solid rgba(224,123,106,.3)", background: "rgba(224,123,106,.06)", color: "#e07b6a", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "var(--bf)" }}>Delete</button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Add modal */}
+      {showAdd && <TimelineAddModal onClose={() => setShowAdd(false)} onAdd={addItem} initiatives={initiatives} campaigns={campaigns} />}
     </div>
   );
 }

@@ -7,16 +7,19 @@ const MarketingHub = dynamic(() => import("../components/MarketingHub"), { ssr: 
 const AIAssistant = dynamic(() => import("../components/AIAssistant"), { ssr: false });
 
 const SITE_PASSWORD = "curador2026";
+const TEAM_NAMES = ["Sean","Luke","Bryan","Matt","Peter","Corey","Jorge","Aaron"];
 
 function PasswordGate({ onUnlock }) {
   const [val, setVal] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
+  const [step, setStep] = useState("password"); // "password" | "name"
+  const [selectedName, setSelectedName] = useState("");
 
   const attempt = () => {
     if (val.trim().toLowerCase() === SITE_PASSWORD) {
       sessionStorage.setItem("ch-auth", "1");
-      onUnlock();
+      setStep("name");
     } else {
       setError(true);
       setShake(true);
@@ -24,6 +27,12 @@ function PasswordGate({ onUnlock }) {
       setTimeout(() => setError(false), 2000);
       setVal("");
     }
+  };
+
+  const enterAs = () => {
+    if (!selectedName) return;
+    sessionStorage.setItem("ch-user", selectedName);
+    onUnlock(selectedName);
   };
 
   return (
@@ -35,14 +44,30 @@ function PasswordGate({ onUnlock }) {
         <div style={{ fontSize:11,letterSpacing:".22em",textTransform:"uppercase",color:"#8a87a8" }}>Marketing OS</div>
       </div>
       <div style={{ background:"#0d0d1a",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:"32px 36px",width:340,boxShadow:"0 24px 64px rgba(0,0,0,.5)",animation:shake?"shake .4s ease":"none" }}>
-        <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>Enter password to continue</div>
-        <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>This site is private to the CÚRADOR team.</div>
-        <input type="password" value={val} autoFocus placeholder="Password"
-          onChange={e => { setVal(e.target.value); setError(false); }}
-          onKeyDown={e => e.key === "Enter" && attempt()}
-          style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:10,background:"rgba(255,255,255,.04)",border:`1px solid ${error?"#e07b6a":"rgba(255,255,255,.1)"}`,color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box" }} />
-        {error && <div style={{ fontSize:11,color:"#e07b6a",marginBottom:8 }}>Incorrect password — try again.</div>}
-        <button onClick={attempt} style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#c9a84c,#a07030)",color:"#07070f",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer" }}>Enter →</button>
+        {step === "password" ? (
+          <>
+            <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>Enter password to continue</div>
+            <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>This site is private to the CÚRADOR team.</div>
+            <input type="password" value={val} autoFocus placeholder="Password"
+              onChange={e => { setVal(e.target.value); setError(false); }}
+              onKeyDown={e => e.key === "Enter" && attempt()}
+              style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:10,background:"rgba(255,255,255,.04)",border:`1px solid ${error?"#e07b6a":"rgba(255,255,255,.1)"}`,color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box" }} />
+            {error && <div style={{ fontSize:11,color:"#e07b6a",marginBottom:8 }}>Incorrect password — try again.</div>}
+            <button onClick={attempt} style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:"linear-gradient(135deg,#c9a84c,#a07030)",color:"#07070f",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:"pointer" }}>Enter →</button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>Who are you?</div>
+            <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>Select your name to continue.</div>
+            <select value={selectedName} onChange={e => setSelectedName(e.target.value)} autoFocus
+              style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:14,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",cursor:"pointer" }}>
+              <option value="" disabled style={{ color:"#8a87a8" }}>Select your name…</option>
+              {TEAM_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <button onClick={enterAs} disabled={!selectedName}
+              style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:selectedName?"linear-gradient(135deg,#c9a84c,#a07030)":"rgba(255,255,255,.06)",color:selectedName?"#07070f":"#8a87a8",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:selectedName?"pointer":"not-allowed",transition:"all .15s" }}>Continue →</button>
+          </>
+        )}
       </div>
       <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
     </div>
@@ -51,12 +76,17 @@ function PasswordGate({ onUnlock }) {
 
 export default function Page() {
   const [unlocked, setUnlocked] = useState(false);
+  const [userName, setUserName] = useState(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [hubState, setHubState] = useState({});
 
   useEffect(() => {
     window.storage = storage;
-    if (sessionStorage.getItem("ch-auth") === "1") setUnlocked(true);
+    if (sessionStorage.getItem("ch-auth") === "1") {
+      setUnlocked(true);
+      const saved = sessionStorage.getItem("ch-user");
+      if (saved) setUserName(saved);
+    }
   }, []);
 
   const syncState = useCallback(async () => {
@@ -127,11 +157,11 @@ export default function Page() {
     window.dispatchEvent(new CustomEvent("hub-updated", { detail: { type } }));
   }, []);
 
-  if (!unlocked) return <PasswordGate onUnlock={() => { window.storage = storage; setUnlocked(true); }} />;
+  if (!unlocked) return <PasswordGate onUnlock={(name) => { window.storage = storage; setUserName(name); setUnlocked(true); }} />;
 
   return (
     <>
-      <MarketingHub />
+      <MarketingHub initialUserName={userName} />
       <AIAssistant hubState={hubState} onAction={handleAction} isOpen={aiOpen} onToggle={() => setAiOpen(o => !o)} />
     </>
   );
