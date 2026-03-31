@@ -50,6 +50,7 @@ const DAM_PACKAGING = {
     { id:"pkg-sb-aio-cart",    label:"All-in-One Cart Package" },
     { id:"pkg-sb-aio-case",    label:"All-in-One Cart Case" },
     { id:"pkg-sb-feco",        label:"FECO Package" },
+    { id:"pkg-sb-feco-case",   label:"FECO Case" },
     { id:"pkg-sb-qr-sticker",  label:"QR Sticker" },
   ],
   bubbles: [
