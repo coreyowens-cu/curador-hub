@@ -792,8 +792,13 @@ export default function MarketingHub({ initialUserName }) {
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
           const loaded = JSON.parse(i.value);
-          console.log("📦 Loaded", loaded.length, "initiatives from storage");
-          setInitiatives(loaded);
+          // Merge: add any default initiatives missing from saved data
+          const merged = [...loaded];
+          DEFAULT_INITIATIVES.forEach(def => {
+            if (!merged.find(x => x.id === def.id)) merged.push(def);
+          });
+          console.log("📦 Loaded", merged.length, "initiatives from storage");
+          setInitiatives(merged);
         } else {
           console.log("📦 No saved initiatives found, using defaults");
         }
