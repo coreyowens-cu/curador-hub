@@ -7,7 +7,6 @@ const MarketingHub = dynamic(() => import("../components/MarketingHub"), { ssr: 
 const AIAssistant = dynamic(() => import("../components/AIAssistant"), { ssr: false });
 
 const SITE_PASSWORD = "curador2026";
-const TEAM_NAMES = ["Sean","Luke","Bryan","Matt","Peter","Corey","Jorge","Aaron"];
 
 function PasswordGate({ onUnlock }) {
   const [val, setVal] = useState("");
@@ -57,15 +56,14 @@ function PasswordGate({ onUnlock }) {
           </>
         ) : (
           <>
-            <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>Who are you?</div>
-            <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>Select your name to continue.</div>
-            <select value={selectedName} onChange={e => setSelectedName(e.target.value)} autoFocus
-              style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:14,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",cursor:"pointer" }}>
-              <option value="" disabled style={{ color:"#8a87a8" }}>Select your name…</option>
-              {TEAM_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-            <button onClick={enterAs} disabled={!selectedName}
-              style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:selectedName?"linear-gradient(135deg,#c9a84c,#a07030)":"rgba(255,255,255,.06)",color:selectedName?"#07070f":"#8a87a8",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:selectedName?"pointer":"not-allowed",transition:"all .15s" }}>Continue →</button>
+            <div style={{ fontSize:14,color:"#ede8df",fontWeight:500,marginBottom:6 }}>What's your name?</div>
+            <div style={{ fontSize:12,color:"#8a87a8",marginBottom:20 }}>Enter your name to continue.</div>
+            <input type="text" value={selectedName} onChange={e => setSelectedName(e.target.value)} autoFocus
+              placeholder="Your name"
+              onKeyDown={e => e.key === "Enter" && enterAs()}
+              style={{ width:"100%",padding:"11px 14px",borderRadius:9,marginBottom:14,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",color:"#ede8df",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box" }} />
+            <button onClick={enterAs} disabled={!selectedName.trim()}
+              style={{ width:"100%",padding:"11px",borderRadius:9,border:"none",background:selectedName.trim()?"linear-gradient(135deg,#c9a84c,#a07030)":"rgba(255,255,255,.06)",color:selectedName.trim()?"#07070f":"#8a87a8",fontFamily:"inherit",fontSize:13,fontWeight:700,letterSpacing:".06em",textTransform:"uppercase",cursor:selectedName.trim()?"pointer":"not-allowed",transition:"all .15s" }}>Continue →</button>
           </>
         )}
       </div>
