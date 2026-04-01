@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CURADOR — SMS + Newsletter Strategy</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@200;300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0c0a;
+    --surface: #141310;
+    --border: rgba(255,255,255,0.07);
+    --gold: #c9a96e;
+    --gold-dim: rgba(201,169,110,0.15);
+    --gold-mid: rgba(201,169,110,0.4);
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.45);
+    --dim: rgba(232,228,220,0.2);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,12,10,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.3em;
+    color: var(--gold); text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex; gap: 6px; list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--muted); text-decoration: none;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); border-color: var(--gold-mid); }
+
+  /* ─── SECTIONS ─── */
+  section {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 48px 80px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    justify-content: flex-end;
+    padding-bottom: 100px;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 70% 40%, rgba(201,169,110,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(201,169,110,0.04) 0%, transparent 60%);
+  }
+  .hero-line {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.35em;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(64px, 9vw, 130px);
+    font-weight: 900; line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin-bottom: 40px;
+    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-title em {
+    font-style: italic; color: var(--gold);
+  }
+  .hero-sub {
+    font-size: 18px; font-weight: 300; letter-spacing: 0.06em;
+    color: var(--muted); max-width: 480px; line-height: 1.6;
+    opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .hero-rule {
+    position: absolute; right: 48px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    opacity: 0; animation: fadeIn 1s 1s forwards;
+  }
+  .hero-rule-line {
+    width: 1px; height: 140px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  }
+  .hero-rule-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.3em; color: var(--muted);
+    writing-mode: vertical-rl; text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 72px);
+    font-weight: 700; line-height: 1.05;
+    margin-bottom: 48px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* ─── CORE STRATEGY ─── */
+  .big-statement {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3.5vw, 44px);
+    font-style: italic; line-height: 1.4;
+    color: var(--text);
+    border-left: 2px solid var(--gold);
+    padding-left: 32px;
+    max-width: 680px;
+    margin-bottom: 56px;
+  }
+  .pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    max-width: 860px;
+  }
+  .pillar {
+    background: var(--surface); padding: 32px 28px;
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+  }
+  .pillar:hover { background: rgba(201,169,110,0.05); }
+  .pillar-icon {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.25em;
+    color: var(--gold); margin-bottom: 14px;
+    display: block;
+  }
+  .pillar-text {
+    font-size: 16px; font-weight: 400; letter-spacing: 0.04em;
+    line-height: 1.5; color: var(--text);
+  }
+
+  /* ─── CHANNEL ROLES ─── */
+  .channels {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 900px;
+  }
+  .channel-card {
+    border: 1px solid var(--border); padding: 40px 36px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .channel-card:hover { border-color: var(--gold-mid); }
+  .channel-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--gold);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .channel-card:hover::before { transform: scaleX(1); }
+  .channel-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.35em;
+    color: var(--gold); margin-bottom: 16px; display: block;
+  }
+  .channel-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px; font-weight: 900;
+    margin-bottom: 20px; line-height: 1;
+  }
+  .channel-role {
+    font-size: 15px; letter-spacing: 0.12em; font-weight: 600;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px;
+  }
+  .channel-desc {
+    font-size: 15px; color: var(--muted); line-height: 1.7;
+  }
+  .channel-rule {
+    grid-column: 1/-1;
+    background: var(--gold-dim); border: 1px solid var(--gold-mid);
+    padding: 28px 36px;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-style: italic;
+    text-align: center; color: var(--text);
+  }
+
+  /* ─── SEGMENTATION ─── */
+  .segments {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    border: 1px solid var(--border); max-width: 860px;
+  }
+  .segment {
+    padding: 36px 32px;
+    border-right: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+  .segment:last-child { border-right: none; }
+  .segment:hover { background: rgba(201,169,110,0.04); }
+  .seg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 12px;
+  }
+  .seg-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .seg-tags { display: flex; flex-direction: column; gap: 8px; }
+  .seg-tag {
+    font-size: 13px; letter-spacing: 0.08em;
+    color: var(--muted); padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .seg-tag:last-child { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    background: var(--gold); color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em;
+    padding: 3px 8px; margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* ─── NEWSLETTER ─── */
+  .newsletter-grid {
+    display: grid; grid-template-columns: 1fr 1.6fr; gap: 48px; max-width: 960px;
+  }
+  .nl-meta { display: flex; flex-direction: column; gap: 24px; }
+  .nl-stat {
+    border: 1px solid var(--border); padding: 24px;
+    transition: border-color 0.3s;
+  }
+  .nl-stat:hover { border-color: var(--gold-mid); }
+  .nl-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 10px;
+  }
+  .nl-stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700;
+  }
+  .nl-sections { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .nl-item {
+    background: var(--surface); padding: 22px 28px;
+    display: flex; gap: 20px; align-items: flex-start;
+    transition: background 0.3s;
+  }
+  .nl-item:hover { background: rgba(201,169,110,0.04); }
+  .nl-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--gold); min-width: 24px; padding-top: 2px;
+  }
+  .nl-item-title {
+    font-size: 15px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .nl-item-desc { font-size: 14px; color: var(--muted); }
+
+  /* ─── SMS ─── */
+  .sms-grid {
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; max-width: 960px;
+  }
+  .sms-messages { display: flex; flex-direction: column; gap: 16px; }
+  .sms-msg {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 2px solid var(--gold);
+    padding: 22px 24px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .sms-msg:hover { transform: translateX(4px); border-color: var(--gold); }
+  .sms-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 8px;
+  }
+  .sms-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-style: italic; line-height: 1.4;
+  }
+  .sms-rules { display: flex; flex-direction: column; gap: 12px; }
+  .sms-rule-group { }
+  .sms-rule-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 10px;
+  }
+  .sms-rule-item {
+    font-size: 14px; color: var(--muted); padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sms-rule-item .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--gold); flex-shrink: 0;
+  }
+  .sms-rule-item.not .dot { background: rgba(232,228,220,0.2); }
+  .cadence-box {
+    border: 1px solid var(--gold-mid); background: var(--gold-dim);
+    padding: 24px; margin-bottom: 24px;
+  }
+  .cadence-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 8px;
+  }
+  .cadence-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700;
+  }
+
+  /* ─── JOURNEY ─── */
+  .journey {
+    display: flex; align-items: stretch; max-width: 960px; position: relative;
+  }
+  .journey-step {
+    flex: 1; padding: 32px 24px;
+    border: 1px solid var(--border);
+    border-right: none; position: relative;
+    transition: background 0.3s;
+  }
+  .journey-step:last-child { border-right: 1px solid var(--border); }
+  .journey-step:hover { background: rgba(201,169,110,0.04); }
+  .journey-step::after {
+    content: '→';
+    position: absolute; right: -14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold); font-size: 18px; z-index: 1;
+    background: var(--bg); padding: 4px 2px;
+  }
+  .journey-step:last-child::after { display: none; }
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 16px;
+  }
+  .step-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ─── COMPLIANCE ─── */
+  .compliance-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; max-width: 960px;
+  }
+  .comp-card {
+    border: 1px solid var(--border); padding: 32px;
+  }
+  .comp-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 20px;
+  }
+  .comp-item {
+    font-size: 14px; color: var(--muted); padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .comp-item .mark { color: var(--gold); font-size: 12px; }
+  .comp-item .mark.no { color: rgba(232,228,220,0.3); }
+  .lang-shift {
+    grid-column: 1/-1;
+    border: 1px solid var(--border); padding: 32px;
+    display: grid; grid-template-columns: 1fr 48px 1fr;
+    align-items: center; gap: 24px;
+  }
+  .lang-col { display: flex; flex-direction: column; gap: 10px; }
+  .lang-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px; padding: 10px 14px;
+    border: 1px solid var(--border);
+  }
+  .lang-item.old { color: var(--dim); border-style: dashed; text-decoration: line-through; }
+  .lang-item.new { border-color: var(--gold-mid); color: var(--gold); }
+  .lang-arrow {
+    text-align: center; color: var(--gold); font-size: 22px;
+  }
+  .lang-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--muted);
+    margin-bottom: 12px; display: block;
+  }
+
+  /* ─── KPI ─── */
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); max-width: 860px;
+  }
+  .kpi-card {
+    background: var(--surface); padding: 36px 28px;
+  }
+  .kpi-channel {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.35em; color: var(--gold);
+    display: block; margin-bottom: 20px;
+  }
+  .kpi-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
+  .kpi-list li {
+    font-size: 14px; color: var(--muted); padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.04em;
+  }
+  .kpi-list li:last-child { border-bottom: none; }
+  .kpi-star {
+    color: var(--gold); font-style: normal; font-size: 12px;
+  }
+
+  /* ─── ROADMAP ─── */
+  .roadmap {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 960px;
+  }
+  .phase {
+    border: 1px solid var(--border); padding: 36px 28px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .phase:hover { border-color: var(--gold-mid); }
+  .phase-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--border);
+  }
+  .phase-bar-fill {
+    height: 100%; background: var(--gold);
+    transition: width 1s ease;
+  }
+  .phase-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 8px;
+  }
+  .phase-months {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .phase-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--muted); margin-bottom: 24px;
+    border-bottom: 1px solid var(--border); padding-bottom: 16px;
+  }
+  .phase-items { display: flex; flex-direction: column; gap: 8px; }
+  .phase-item {
+    font-size: 14px; color: var(--muted); padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-item:last-child { border-bottom: none; }
+
+  /* ─── ROADMAP EXPANDED ─── */
+  .roadmap-intro {
+    font-size: 17px; color: var(--muted); line-height: 1.7;
+    max-width: 600px; margin-bottom: 56px;
+    border-left: 2px solid var(--border); padding-left: 24px;
+  }
+  .roadmap-full { display: flex; flex-direction: column; gap: 2px; max-width: 1000px; }
+  .phase-full {
+    border: 1px solid var(--border); position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .phase-full:hover { border-color: var(--gold-mid); }
+  .phase-full-bar {
+    height: 2px; background: var(--border); position: absolute; top: 0; left: 0; right: 0;
+  }
+  .phase-full-bar-fill { height: 100%; background: var(--gold); }
+  .phase-full-inner {
+    display: grid; grid-template-columns: 260px 1fr;
+    padding: 40px; gap: 48px;
+  }
+  .phase-full-left {
+    border-right: 1px solid var(--border); padding-right: 40px;
+  }
+  .phase-tagline {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-style: italic;
+    color: var(--muted); line-height: 1.5; margin-top: 12px;
+  }
+  .phase-full-right { padding-top: 4px; }
+  .phase-flow { display: flex; flex-direction: column; }
+  .flow-step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 18px 0; border-bottom: 1px solid var(--border);
+  }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--gold);
+    min-width: 24px; padding-top: 2px;
+  }
+  .flow-title {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .flow-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+  .flow-arrow {
+    font-family: 'DM Mono', monospace;
+    color: var(--gold-mid); font-size: 16px;
+    padding: 4px 0 4px 44px;
+  }
+
+  /* ─── CLOSING ─── */
+  #closing {
+    min-height: 80vh;
+    background:
+      radial-gradient(ellipse 70% 90% at 30% 50%, rgba(201,169,110,0.07) 0%, transparent 70%);
+  }
+  .closing-not {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; letter-spacing: 0.3em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 16px;
+    text-decoration: line-through;
+  }
+  .closing-is {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 54px);
+    font-style: italic; line-height: 1.3;
+    max-width: 720px; margin-bottom: 56px;
+    color: var(--text);
+  }
+  .closing-is span { color: var(--gold); }
+  .next-steps { display: flex; flex-direction: column; gap: 1px; max-width: 600px; background: var(--border); }
+  .next-step {
+    background: var(--surface); padding: 20px 28px;
+    display: flex; gap: 20px; align-items: center;
+    transition: background 0.3s;
+  }
+  .next-step:hover { background: rgba(201,169,110,0.05); }
+  .ns-arrow { color: var(--gold); font-size: 16px; }
+  .ns-text { font-size: 15px; color: var(--muted); letter-spacing: 0.04em; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 36px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .footer-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.3em; color: var(--gold);
+  }
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--dim); letter-spacing: 0.2em;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">CURADOR</span>
+  <ul class="nav-links">
+    <li><a href="#strategy">Strategy</a></li>
+    <li><a href="#channels">Channels</a></li>
+    <li><a href="#audience">Audience</a></li>
+    <li><a href="#newsletter">Newsletter</a></li>
+    <li><a href="#sms">SMS</a></li>
+    <li><a href="#journey">Journey</a></li>
+    <li><a href="#compliance">Compliance</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-line"></div>
+  <div class="hero-eyebrow">Head Change Pilot — Scalable Across Portfolio</div>
+  <h1 class="hero-title">SMS +<br><em>Newsletter</em><br>Strategy</h1>
+  <p class="hero-sub">A controlled, compliance-safe communication engine for CURADOR brands</p>
+  <div class="hero-rule">
+    <div class="hero-rule-line"></div>
+    <span class="hero-rule-text">CURADOR — 2024</span>
+    <div class="hero-rule-line"></div>
+  </div>
+</section>
+
+<!-- CORE STRATEGY -->
+<section id="strategy">
+  <div class="section-num reveal">01 — CORE STRATEGY</div>
+  <h2 class="section-title reveal reveal-delay-1">The <em>Big Idea</em></h2>
+  <p class="big-statement reveal reveal-delay-2">Own the audience → communicate with restraint → drive behavior through culture, not pressure</p>
+  <div class="pillars reveal reveal-delay-3">
+    <div class="pillar">
+      <span class="pillar-icon">01</span>
+      <p class="pillar-text">A first-party<br>data asset</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">02</span>
+      <p class="pillar-text">A segmented<br>communication system</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">03</span>
+      <p class="pillar-text">A drop-driven<br>retention engine</p>
+    </div>
+  </div>
+</section>
+
+<!-- CHANNELS -->
+<section id="channels">
+  <div class="section-num reveal">02 — CHANNEL ROLES</div>
+  <h2 class="section-title reveal reveal-delay-1"><em>Two</em> Channels,<br>One System</h2>
+  <div class="channels">
+    <div class="channel-card reveal reveal-delay-1">
+      <span class="channel-type">Foundation Channel</span>
+      <div class="channel-name">Email</div>
+      <div class="channel-role">Depth + Story + Consistency</div>
+      <p class="channel-desc">Safe, scalable, brand-building. Weekly or biweekly cadence. This is where the relationship lives.</p>
+    </div>
+    <div class="channel-card reveal reveal-delay-2">
+      <span class="channel-type">Precision Channel</span>
+      <div class="channel-name">SMS</div>
+      <div class="channel-role">Timing + Urgency + Access</div>
+      <p class="channel-desc">Used sparingly. High intent only — drops, availability, VIP access. Never noise.</p>
+    </div>
+    <div class="channel-rule reveal reveal-delay-3">
+      Email builds the relationship &nbsp;—&nbsp; SMS activates it
+    </div>
+  </div>
+</section>
+
+<!-- AUDIENCE -->
+<section id="audience">
+  <div class="section-num reveal">03 — AUDIENCE SEGMENTATION</div>
+  <h2 class="section-title reveal reveal-delay-1">Who We're<br><em>Talking To</em></h2>
+  <div class="segments reveal reveal-delay-2">
+    <div class="segment">
+      <span class="seg-label">Segment A</span>
+      <div class="seg-name">Consumers</div>
+      <div class="seg-tags">
+        <div class="seg-tag">General audience</div>
+        <div class="seg-tag">Product interest</div>
+        <div class="seg-tag">Location-based behavior</div>
+      </div>
+    </div>
+    <div class="segment">
+      <span class="seg-label">Segment B — <span class="badge">HIGH PRIORITY</span></span>
+      <div class="seg-name">Budtenders</div>
+      <div class="seg-tags">
+        <div class="seg-tag">Influence layer</div>
+        <div class="seg-tag">Education + early access</div>
+        <div class="seg-tag">Advocacy drivers</div>
+      </div>
+    </div>
+    <div class="segment">
+      <span class="seg-label">Segment C — Phase 3</span>
+      <div class="seg-name">VIP / High-Intent</div>
+      <div class="seg-tags">
+        <div class="seg-tag">Frequent buyers</div>
+        <div class="seg-tag">Drop responders</div>
+        <div class="seg-tag">Engaged users</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section id="newsletter">
+  <div class="section-num reveal">04 — NEWSLETTER STRATEGY</div>
+  <h2 class="section-title reveal reveal-delay-1"><em>CURADOR</em><br>Signal</h2>
+  <div class="newsletter-grid">
+    <div class="nl-meta reveal reveal-delay-1">
+      <div class="nl-stat">
+        <span class="nl-stat-label">Ideal Cadence</span>
+        <div class="nl-stat-val">1× per week</div>
+      </div>
+      <div class="nl-stat">
+        <span class="nl-stat-label">Minimum</span>
+        <div class="nl-stat-val">2× per month</div>
+      </div>
+      <div class="nl-stat">
+        <span class="nl-stat-label">Tone</span>
+        <div class="nl-stat-val" style="font-size:18px; line-height:1.5;">Minimal.<br>Confident.<br>Not salesy.</div>
+      </div>
+    </div>
+    <div class="nl-sections reveal reveal-delay-2">
+      <div class="nl-item">
+        <span class="nl-num">01</span>
+        <div>
+          <div class="nl-item-title">Drop / Availability</div>
+          <div class="nl-item-desc">This week's release — framed as discovery, not hard sell</div>
+        </div>
+      </div>
+      <div class="nl-item">
+        <span class="nl-num">02</span>
+        <div>
+          <div class="nl-item-title">Education</div>
+          <div class="nl-item-desc">Terpenes, effects (non-medical), product profiles</div>
+        </div>
+      </div>
+      <div class="nl-item">
+        <span class="nl-num">03</span>
+        <div>
+          <div class="nl-item-title">Cultural Layer</div>
+          <div class="nl-item-desc">Music, art, influence — aligned with brand DNA</div>
+        </div>
+      </div>
+      <div class="nl-item">
+        <span class="nl-num">04</span>
+        <div>
+          <div class="nl-item-title">Budtender Voice</div>
+          <div class="nl-item-desc">"From the counter" — builds trust and compliance safety</div>
+        </div>
+      </div>
+      <div class="nl-item">
+        <span class="nl-num">05</span>
+        <div>
+          <div class="nl-item-title">Brand Depth</div>
+          <div class="nl-item-desc">Process, philosophy, behind-the-scenes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SMS -->
+<section id="sms">
+  <div class="section-num reveal">05 — SMS STRATEGY</div>
+  <h2 class="section-title reveal reveal-delay-1">Controlled +<br><em>High Impact</em></h2>
+  <div class="sms-grid">
+    <div>
+      <div class="sms-messages reveal reveal-delay-1">
+        <div class="sms-msg">
+          <span class="sms-type">Drop Alert</span>
+          <div class="sms-text">"New Head Change release just landed near you"</div>
+        </div>
+        <div class="sms-msg">
+          <span class="sms-type">Early Access</span>
+          <div class="sms-text">"You're on the early list — tap to see what just dropped"</div>
+        </div>
+        <div class="sms-msg">
+          <span class="sms-type">Location-Based</span>
+          <div class="sms-text">"Available today at [dispensary]"</div>
+        </div>
+        <div class="sms-msg">
+          <span class="sms-type">Limited Window</span>
+          <div class="sms-text">"Small batch release — limited availability"</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="cadence-box">
+        <span class="cadence-label">Monthly Cadence</span>
+        <div class="cadence-val">2–4 messages MAX</div>
+      </div>
+      <div class="sms-rules">
+        <div class="sms-rule-group">
+          <span class="sms-rule-title">SMS IS FOR</span>
+          <div class="sms-rule-item"><span class="dot"></span>Drop alerts</div>
+          <div class="sms-rule-item"><span class="dot"></span>Early access windows</div>
+          <div class="sms-rule-item"><span class="dot"></span>Location-based nudges</div>
+          <div class="sms-rule-item"><span class="dot"></span>Limited availability</div>
+        </div>
+        <div class="sms-rule-group" style="margin-top:20px;">
+          <span class="sms-rule-title">SMS IS NOT</span>
+          <div class="sms-rule-item not"><span class="dot"></span>A discount engine</div>
+          <div class="sms-rule-item not"><span class="dot"></span>High frequency</div>
+          <div class="sms-rule-item not"><span class="dot"></span>Aggressive sales</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section id="journey">
+  <div class="section-num reveal">06 — CUSTOMER JOURNEY</div>
+  <h2 class="section-title reveal reveal-delay-1">How It<br><em>All Connects</em></h2>
+  <div class="journey reveal reveal-delay-2">
+    <div class="journey-step">
+      <span class="step-num">01</span>
+      <div class="step-name">Discovery</div>
+      <div class="step-desc">Dispensary → Alpine IQ campaign</div>
+    </div>
+    <div class="journey-step">
+      <span class="step-num">02</span>
+      <div class="step-name">Capture</div>
+      <div class="step-desc">User clicks → landing page → email/SMS opt-in</div>
+    </div>
+    <div class="journey-step">
+      <span class="step-num">03</span>
+      <div class="step-name">Nurture</div>
+      <div class="step-desc">Weekly email content builds the relationship</div>
+    </div>
+    <div class="journey-step">
+      <span class="step-num">04</span>
+      <div class="step-name">Activation</div>
+      <div class="step-desc">Drop hits → SMS triggers action</div>
+    </div>
+    <div class="journey-step">
+      <span class="step-num">05</span>
+      <div class="step-name">Loop</div>
+      <div class="step-desc">Purchase → retention → deeper segmentation</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section id="compliance">
+  <div class="section-num reveal">07 — COMPLIANCE GUARDRAILS</div>
+  <h2 class="section-title reveal reveal-delay-1">Non-<em>Negotiable</em></h2>
+  <div class="compliance-grid">
+    <div class="comp-card reveal reveal-delay-1">
+      <span class="comp-title">ALWAYS</span>
+      <div class="comp-item"><span class="mark">✓</span> Age-gated (21+)</div>
+      <div class="comp-item"><span class="mark">✓</span> Clear opt-in for SMS</div>
+      <div class="comp-item"><span class="mark">✓</span> Easy opt-out</div>
+    </div>
+    <div class="comp-card reveal reveal-delay-2">
+      <span class="comp-title">NEVER</span>
+      <div class="comp-item"><span class="mark no">✗</span> Medical claims</div>
+      <div class="comp-item"><span class="mark no">✗</span> Over-promotional SMS</div>
+      <div class="comp-item"><span class="mark no">✗</span> Excessive frequency</div>
+      <div class="comp-item"><span class="mark no">✗</span> Misleading language</div>
+    </div>
+    <div class="comp-card reveal reveal-delay-3">
+      <span class="comp-title">KPI FRAMEWORK</span>
+      <div class="comp-item"><span class="mark">→</span> Open rate (email)</div>
+      <div class="comp-item"><span class="mark">→</span> Click-through rate</div>
+      <div class="comp-item"><span class="mark">→</span> SMS click rate</div>
+      <div class="comp-item"><span class="mark">→</span> Opt-out rate</div>
+      <div class="comp-item"><span class="mark">→</span> List growth ★</div>
+    </div>
+    <div class="lang-shift reveal reveal-delay-1">
+      <div class="lang-col">
+        <span class="lang-label">INSTEAD OF</span>
+        <div class="lang-item old">"Buy now"</div>
+        <div class="lang-item old">"Best high ever"</div>
+      </div>
+      <div class="lang-arrow">→</div>
+      <div class="lang-col">
+        <span class="lang-label">USE</span>
+        <div class="lang-item new">"Explore"</div>
+        <div class="lang-item new">"Available"</div>
+        <div class="lang-item new">"Profile"</div>
+        <div class="lang-item new">"Release"</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-num reveal">08 — 6-MONTH ROADMAP</div>
+  <h2 class="section-title reveal reveal-delay-1">Crawl. Walk.<br><em>Run.</em></h2>
+
+  <div class="roadmap-intro reveal reveal-delay-2">
+    We don't start by talking to consumers directly. We start by leveraging the relationships dispensaries already have — then gradually earn the right to own the conversation ourselves.
+  </div>
+
+  <div class="roadmap-full">
+
+    <!-- CRAWL -->
+    <div class="phase-full reveal reveal-delay-1">
+      <div class="phase-full-bar"><div class="phase-full-bar-fill" style="width:33%"></div></div>
+      <div class="phase-full-inner">
+        <div class="phase-full-left">
+          <span class="phase-label">Phase 01 — Months 1–2</span>
+          <div class="phase-months">Crawl</div>
+          <div class="phase-tagline">Borrow the audience.<br>Build the foundation.</div>
+        </div>
+        <div class="phase-full-right">
+          <div class="phase-flow">
+            <div class="flow-step">
+              <span class="flow-num">01</span>
+              <div>
+                <div class="flow-title">Alpine IQ Dispensary Campaigns</div>
+                <div class="flow-desc">Partner with dispensaries through Alpine IQ to reach their existing customer base. These are warm, high-intent consumers already in the store ecosystem.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">02</span>
+              <div>
+                <div class="flow-title">Drive to CURADOR Site</div>
+                <div class="flow-desc">Campaign traffic lands on a CURADOR-branded page — not the dispensary's. We own the destination from day one.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">03</span>
+              <div>
+                <div class="flow-title">Capture Email + Build Awareness</div>
+                <div class="flow-desc">Light opt-in offer. Collect email as the primary asset. Begin sending brand awareness content — not product pushes. The goal is list growth and trust.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WALK -->
+    <div class="phase-full reveal reveal-delay-1">
+      <div class="phase-full-bar"><div class="phase-full-bar-fill" style="width:66%"></div></div>
+      <div class="phase-full-inner">
+        <div class="phase-full-left">
+          <span class="phase-label">Phase 02 — Months 3–4</span>
+          <div class="phase-months">Walk</div>
+          <div class="phase-tagline">Start talking directly.<br>Grow in-house.</div>
+        </div>
+        <div class="phase-full-right">
+          <div class="phase-flow">
+            <div class="flow-step">
+              <span class="flow-num">01</span>
+              <div>
+                <div class="flow-title">Ramp Into Direct-to-Consumer</div>
+                <div class="flow-desc">As the list grows, we reduce reliance on Alpine IQ campaigns and begin communicating directly with our own audience. The brand voice takes over.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">02</span>
+              <div>
+                <div class="flow-title">In-House List Growth</div>
+                <div class="flow-desc">The team activates its own acquisition channels — in-house rewards programs and on-site email capture to grow the list independently of dispensary partnerships.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">03</span>
+              <div>
+                <div class="flow-title">Launch Newsletter + Light SMS</div>
+                <div class="flow-desc">CURADOR Signal launches. Drop alerts begin via SMS. Audience segmentation kicks in — consumers, budtenders, and early VIPs start receiving tailored content.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RUN -->
+    <div class="phase-full reveal reveal-delay-1">
+      <div class="phase-full-bar"><div class="phase-full-bar-fill" style="width:100%"></div></div>
+      <div class="phase-full-inner">
+        <div class="phase-full-left">
+          <span class="phase-label">Phase 03 — Months 5–6</span>
+          <div class="phase-months">Run</div>
+          <div class="phase-tagline">Own the channel.<br>Scale the system.</div>
+        </div>
+        <div class="phase-full-right">
+          <div class="phase-flow">
+            <div class="flow-step">
+              <span class="flow-num">01</span>
+              <div>
+                <div class="flow-title">Full Automation + VIP Flows</div>
+                <div class="flow-desc">Behavior-based automation kicks in. Welcome flows, re-engagement sequences, and VIP early access become self-running systems.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">02</span>
+              <div>
+                <div class="flow-title">Geo-Targeted Messaging</div>
+                <div class="flow-desc">Location-aware SMS and email campaigns tie availability directly to nearby dispensaries. The right message reaches the right person in the right market.</div>
+              </div>
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-step">
+              <span class="flow-num">03</span>
+              <div>
+                <div class="flow-title">Scale Across All CURADOR Brands</div>
+                <div class="flow-desc">The system built on Head Change becomes the template. Every brand in the CURADOR portfolio inherits the infrastructure, the playbook, and the audience.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section id="closing">
+  <div class="section-num reveal">FINAL POSITIONING</div>
+  <div class="closing-not reveal reveal-delay-1">This is not a cannabis promo system</div>
+  <div class="closing-is reveal reveal-delay-2">A controlled, <span>culturally-driven</span> communication channel that converts attention into loyalty</div>
+  <div class="next-steps reveal reveal-delay-3">
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Mock up on-brand, compliant SMS + email examples</span>
+    </div>
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Build a visual flow diagram for pitch decks</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="footer-brand">CURADOR</span>
+  <span class="footer-note">CONFIDENTIAL — INTERNAL STRATEGY DOCUMENT</span>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Nav active state
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.style.color = '');
+        const link = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+        if (link) link.style.color = 'var(--gold)';
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => navObserver.observe(s));
+</script>
+</body>
+</html>
