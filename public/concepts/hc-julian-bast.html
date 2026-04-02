@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Head Change × Julian Bast — Collaboration Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@200;300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0c0a;
+    --surface: #141310;
+    --border: rgba(255,255,255,0.07);
+    --gold: #c9a96e;
+    --gold-dim: rgba(201,169,110,0.12);
+    --gold-mid: rgba(201,169,110,0.4);
+    --text: #e8e4dc;
+    --muted: rgba(232,228,220,0.45);
+    --dim: rgba(232,228,220,0.18);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,12,10,0.93);
+    backdrop-filter: blur(12px);
+  }
+  .nav-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.3em; color: var(--gold);
+  }
+  .nav-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; color: var(--muted);
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 120px 48px 80px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-bottom: 100px; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 55% 70% at 75% 35%, rgba(201,169,110,0.07) 0%, transparent 65%),
+      radial-gradient(ellipse 40% 50% at 15% 75%, rgba(201,169,110,0.04) 0%, transparent 60%);
+  }
+  .hero-top-line {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.35em; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s forwards;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(52px, 8vw, 120px);
+    font-weight: 900; line-height: 0.9;
+    letter-spacing: -0.02em; margin-bottom: 16px;
+    opacity: 0; animation: fadeUp 0.7s 0.4s forwards;
+  }
+  .hero-title .x {
+    color: var(--gold); font-style: italic; font-weight: 400;
+    font-size: 0.65em;
+  }
+  .hero-title .artist {
+    font-style: italic; color: var(--gold);
+  }
+  .hero-meta {
+    display: flex; gap: 32px; margin-top: 36px; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.7s 0.6s forwards;
+  }
+  .hero-meta-item {
+    border: 1px solid var(--border); padding: 14px 20px;
+  }
+  .hero-meta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 6px;
+  }
+  .hero-meta-val {
+    font-size: 15px; font-weight: 400; letter-spacing: 0.05em;
+  }
+  .hero-tag {
+    position: absolute; right: 48px; bottom: 100px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--dim);
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    opacity: 0; animation: fadeIn 1s 1s forwards;
+  }
+
+  /* SECTION HEADERS */
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.3em; color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 4.5vw, 64px);
+    font-weight: 700; line-height: 1.05; margin-bottom: 48px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* OVERVIEW GRID */
+  .overview-grid {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; max-width: 960px;
+  }
+  .overview-body {
+    font-size: 17px; color: var(--muted); line-height: 1.75;
+    border-left: 2px solid var(--gold); padding-left: 28px;
+    font-family: 'Playfair Display', serif; font-style: italic;
+  }
+  .overview-stats { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .o-stat {
+    background: var(--surface); padding: 24px 28px;
+    transition: background 0.3s;
+  }
+  .o-stat:hover { background: var(--gold-dim); }
+  .o-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 8px;
+  }
+  .o-stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+  }
+
+  /* CREATIVE SCOPE */
+  .scope-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 860px;
+  }
+  .scope-card {
+    border: 1px solid var(--border); padding: 36px 32px;
+    position: relative; overflow: hidden; transition: border-color 0.3s;
+  }
+  .scope-card:hover { border-color: var(--gold-mid); }
+  .scope-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--gold); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .scope-card:hover::before { transform: scaleX(1); }
+  .scope-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 16px;
+  }
+  .scope-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px; font-weight: 700; margin-bottom: 20px;
+  }
+  .scope-items { display: flex; flex-direction: column; gap: 0; }
+  .scope-item {
+    font-size: 14px; color: var(--muted); padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .scope-item:last-child { border-bottom: none; }
+  .scope-item .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .scope-item .dot-dim { width: 4px; height: 4px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+  .optional-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px; letter-spacing: 0.2em;
+    border: 1px solid var(--dim); color: var(--dim);
+    padding: 2px 6px; margin-left: auto;
+  }
+
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; gap: 1px; max-width: 800px; background: var(--border); }
+  .tl-row {
+    background: var(--surface); display: grid;
+    grid-template-columns: 180px 1fr; align-items: stretch;
+    transition: background 0.3s;
+  }
+  .tl-row:hover { background: var(--gold-dim); }
+  .tl-date {
+    padding: 24px 28px; border-right: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em; color: var(--gold);
+    display: flex; align-items: center;
+  }
+  .tl-content { padding: 24px 28px; }
+  .tl-event {
+    font-size: 15px; font-weight: 600; letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .tl-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .tl-target {
+    display: inline-block; margin-top: 8px;
+    background: var(--gold); color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em; padding: 3px 8px;
+  }
+
+  /* PRE-SALE */
+  .presale-grid {
+    display: grid; grid-template-columns: 1fr 1.5fr; gap: 48px; max-width: 960px;
+  }
+  .ps-stats { display: flex; flex-direction: column; gap: 16px; }
+  .ps-stat {
+    border: 1px solid var(--border); padding: 28px;
+    transition: border-color 0.3s;
+  }
+  .ps-stat:hover { border-color: var(--gold-mid); }
+  .ps-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 10px;
+  }
+  .ps-stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700;
+  }
+  .ps-rollout { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .ps-item {
+    background: var(--surface); padding: 22px 28px;
+    display: flex; gap: 16px; align-items: flex-start;
+    transition: background 0.3s;
+  }
+  .ps-item:hover { background: var(--gold-dim); }
+  .ps-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--gold); min-width: 22px; padding-top: 1px;
+  }
+  .ps-item-title {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .ps-item-desc { font-size: 13px; color: var(--muted); }
+
+  /* PRODUCTION */
+  .prod-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); max-width: 860px;
+  }
+  .prod-card {
+    background: var(--surface); padding: 32px 28px;
+    transition: background 0.3s;
+  }
+  .prod-card:hover { background: var(--gold-dim); }
+  .prod-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+    display: block; margin-bottom: 14px;
+  }
+  .prod-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; margin-bottom: 16px;
+  }
+  .prod-items { display: flex; flex-direction: column; gap: 0; }
+  .prod-item {
+    font-size: 13px; color: var(--muted); padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px;
+  }
+  .prod-item:last-child { border-bottom: none; }
+  .prod-item .arrow { color: var(--gold); }
+
+  /* PACKAGING */
+  .packaging-layout {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; max-width: 900px;
+  }
+  .pkg-visual {
+    border: 1px solid var(--border); padding: 48px 36px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--surface); position: relative; overflow: hidden;
+    min-height: 280px;
+  }
+  .pkg-visual::before {
+    content: ''; position: absolute; inset: 12px;
+    border: 1px dashed var(--gold-mid); pointer-events: none;
+  }
+  .pkg-bag-icon {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px; line-height: 1; color: var(--gold); opacity: 0.3;
+    margin-bottom: 16px;
+  }
+  .pkg-visual-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.3em; color: var(--gold);
+    text-align: center;
+  }
+  .pkg-contents { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .pkg-item {
+    background: var(--surface); padding: 20px 24px;
+    display: flex; gap: 14px; align-items: center;
+    transition: background 0.3s;
+  }
+  .pkg-item:hover { background: var(--gold-dim); }
+  .pkg-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .pkg-item-text { font-size: 14px; color: var(--muted); }
+
+  /* OBJECTIVES */
+  .obj-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 860px;
+  }
+  .obj-card {
+    border: 1px solid var(--border); padding: 28px 28px;
+    display: flex; gap: 20px; align-items: flex-start;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .obj-card:hover { border-color: var(--gold-mid); background: var(--gold-dim); }
+  .obj-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--gold); min-width: 24px; padding-top: 2px;
+  }
+  .obj-text { font-size: 15px; color: var(--muted); line-height: 1.6; }
+
+  /* NEXT STEPS */
+  .next-steps { display: flex; flex-direction: column; gap: 1px; max-width: 700px; background: var(--border); }
+  .next-step {
+    background: var(--surface); padding: 22px 28px;
+    display: flex; gap: 20px; align-items: center;
+    transition: background 0.3s;
+  }
+  .next-step:hover { background: var(--gold-dim); }
+  .ns-arrow { color: var(--gold); font-size: 16px; }
+  .ns-text { font-size: 15px; color: var(--muted); letter-spacing: 0.04em; }
+
+  /* ARTIST WORK */
+  .work-intro {
+    font-size: 16px; color: var(--muted); line-height: 1.7;
+    max-width: 600px; margin-bottom: 40px;
+    border-left: 2px solid var(--border); padding-left: 24px;
+  }
+  .work-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 860px;
+  }
+  .work-card {
+    border: 1px solid var(--border); padding: 32px 28px;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: border-color 0.3s, background 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .work-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--gold); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .work-card:hover { border-color: var(--gold-mid); background: var(--gold-dim); }
+  .work-card:hover::before { transform: scaleX(1); }
+  .work-card-top {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .work-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em; color: var(--gold);
+  }
+  .work-ext { color: var(--gold); font-size: 18px; }
+  .work-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700; color: var(--text);
+  }
+  .work-card-desc {
+    font-size: 14px; color: var(--muted); line-height: 1.65;
+  }
+  .work-card-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; color: var(--dim);
+    margin-top: auto; padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* CLOSING */
+  #closing {
+    min-height: 60vh; display: flex; flex-direction: column; justify-content: center;
+    background: radial-gradient(ellipse 60% 80% at 30% 50%, rgba(201,169,110,0.06) 0%, transparent 70%);
+  }
+  .closing-statement {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3.5vw, 46px);
+    font-style: italic; line-height: 1.35;
+    max-width: 760px; margin-bottom: 48px; color: var(--text);
+  }
+  .closing-statement span { color: var(--gold); }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .footer-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.3em; color: var(--gold);
+  }
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--dim); letter-spacing: 0.2em;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">HEAD CHANGE × JULIAN BAST</span>
+  <span class="nav-sub">COLLABORATION BRIEF — 2025</span>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-top-line"></div>
+  <div class="hero-eyebrow">Artist Collaboration Series — Vol. 01</div>
+  <h1 class="hero-title">
+    Head Change<br>
+    <span class="x">×</span><br>
+    <span class="artist">Julian Bast</span>
+  </h1>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Artist</span>
+      <div class="hero-meta-val">Julian Bast</div>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Studio</span>
+      <div class="hero-meta-val">Name Brand Tattoo, Ann Arbor MI</div>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Target Launch</span>
+      <div class="hero-meta-val">Early June 2025</div>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Format</span>
+      <div class="hero-meta-val">Limited Pre-Sale Drop</div>
+    </div>
+  </div>
+  <div class="hero-tag">MERCHANDISE COLLABORATION BRIEF</div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="section-num reveal">01 — PROJECT OVERVIEW</div>
+  <h2 class="section-title reveal reveal-delay-1">The <em>Collaboration</em></h2>
+  <div class="overview-grid">
+    <div class="overview-body reveal reveal-delay-2">
+      A limited-run merchandise capsule with multidisciplinary artist Julian Bast — launching the Head Change Artist Collaboration Series and spotlighting unique voices across tattooing and contemporary art.
+    </div>
+    <div class="overview-stats reveal reveal-delay-3">
+      <div class="o-stat">
+        <span class="o-stat-label">Original Graphics</span>
+        <div class="o-stat-val">2 Designs</div>
+      </div>
+      <div class="o-stat">
+        <span class="o-stat-label">Primary Garments</span>
+        <div class="o-stat-val">Long Sleeve + Tee</div>
+      </div>
+      <div class="o-stat">
+        <span class="o-stat-label">Pre-Sale Window</span>
+        <div class="o-stat-val">2 Weeks</div>
+      </div>
+      <div class="o-stat">
+        <span class="o-stat-label">Ship Time Post Pre-Sale</span>
+        <div class="o-stat-val">4–6 Weeks</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREATIVE SCOPE -->
+<section id="scope">
+  <div class="section-num reveal">02 — CREATIVE SCOPE</div>
+  <h2 class="section-title reveal reveal-delay-1">What's Being<br><em>Made</em></h2>
+  <div class="scope-grid">
+    <div class="scope-card reveal reveal-delay-1">
+      <span class="scope-label">Artwork</span>
+      <div class="scope-title">2 Original Graphics</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="dot"></span> Developed by Julian Bast</div>
+        <div class="scope-item"><span class="dot"></span> Designed for garment application</div>
+        <div class="scope-item"><span class="dot"></span> Delivered by Early May</div>
+      </div>
+    </div>
+    <div class="scope-card reveal reveal-delay-2">
+      <span class="scope-label">Garments — Confirmed</span>
+      <div class="scope-title">Core Pieces</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="dot"></span> Long sleeve T-shirt</div>
+        <div class="scope-item"><span class="dot"></span> Standard T-shirt</div>
+      </div>
+    </div>
+    <div class="scope-card reveal reveal-delay-3" style="grid-column: 1/-1;">
+      <span class="scope-label">Garments — Optional Extensions</span>
+      <div class="scope-title">Potential Additions</div>
+      <div class="scope-items" style="flex-direction: row; flex-wrap: wrap; gap: 0;">
+        <div class="scope-item" style="flex: 1; min-width: 200px;"><span class="dot-dim"></span> Hoodies <span class="optional-tag">OPTIONAL</span></div>
+        <div class="scope-item" style="flex: 1; min-width: 200px;"><span class="dot-dim"></span> Additional garments <span class="optional-tag">OPTIONAL</span></div>
+        <div class="scope-item" style="flex: 1; min-width: 200px;"><span class="dot-dim"></span> Additional formats <span class="optional-tag">OPTIONAL</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section id="timeline">
+  <div class="section-num reveal">03 — TIMELINE</div>
+  <h2 class="section-title reveal reveal-delay-1">The <em>Schedule</em></h2>
+  <div class="timeline reveal reveal-delay-2">
+    <div class="tl-row">
+      <div class="tl-date">Early May</div>
+      <div class="tl-content">
+        <div class="tl-event">Final Artwork Delivered</div>
+        <div class="tl-desc">Julian Bast delivers both completed original graphics, ready for garment application.</div>
+      </div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-date">Mid May</div>
+      <div class="tl-content">
+        <div class="tl-event">Blanks + Mockups</div>
+        <div class="tl-desc">Source premium quality blanks. Develop mockups and finalize all garment applications.</div>
+      </div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-date">Late May</div>
+      <div class="tl-content">
+        <div class="tl-event">Samples + Photoshoot</div>
+        <div class="tl-desc">Produce physical samples. Execute photoshoot — lifestyle and product-focused imagery for launch content.</div>
+      </div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-date">Early June</div>
+      <div class="tl-content">
+        <div class="tl-event">Pre-Sale Launch</div>
+        <div class="tl-desc">Open the pre-sale window to the public across all channels.</div>
+        <span class="tl-target">TARGET DATE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRE-SALE -->
+<section id="presale">
+  <div class="section-num reveal">04 — PRE-SALE STRATEGY</div>
+  <h2 class="section-title reveal reveal-delay-1">Build <em>Anticipation,</em><br>Reduce Risk</h2>
+  <div class="presale-grid">
+    <div class="ps-stats reveal reveal-delay-1">
+      <div class="ps-stat">
+        <span class="ps-stat-label">Pre-Sale Window</span>
+        <div class="ps-stat-val">2 Weeks</div>
+      </div>
+      <div class="ps-stat">
+        <span class="ps-stat-label">Primary Goals</span>
+        <div class="ps-stat-val" style="font-size:15px; line-height:1.7;">
+          Gauge demand<br>Reduce inventory risk<br>Build anticipation
+        </div>
+      </div>
+    </div>
+    <div class="ps-rollout reveal reveal-delay-2">
+      <div class="ps-item">
+        <span class="ps-num">01</span>
+        <div>
+          <div class="ps-item-title">Teaser Content</div>
+          <div class="ps-item-desc">Art previews, process shots, artist spotlight — before anything goes on sale</div>
+        </div>
+      </div>
+      <div class="ps-item">
+        <span class="ps-num">02</span>
+        <div>
+          <div class="ps-item-title">Photoshoot Imagery</div>
+          <div class="ps-item-desc">Lifestyle and product photography drives the visual narrative at launch</div>
+        </div>
+      </div>
+      <div class="ps-item">
+        <span class="ps-num">03</span>
+        <div>
+          <div class="ps-item-title">Social Push</div>
+          <div class="ps-item-desc">Coordinated release across platforms timed to the drop window</div>
+        </div>
+      </div>
+      <div class="ps-item">
+        <span class="ps-num">04</span>
+        <div>
+          <div class="ps-item-title">Email Push</div>
+          <div class="ps-item-desc">Direct to the CURADOR list — early access framing for subscribers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTION & FULFILLMENT -->
+<section id="production">
+  <div class="section-num reveal">05 — PRODUCTION + FULFILLMENT</div>
+  <h2 class="section-title reveal reveal-delay-1">After the<br><em>Pre-Sale Closes</em></h2>
+  <div class="prod-grid">
+    <div class="prod-card reveal reveal-delay-1">
+      <span class="prod-label">Production</span>
+      <div class="prod-title">Manufacturing</div>
+      <div class="prod-items">
+        <div class="prod-item"><span class="arrow">→</span> Begins immediately after pre-sale closes</div>
+        <div class="prod-item"><span class="arrow">→</span> Premium quality blanks</div>
+        <div class="prod-item"><span class="arrow">→</span> 4–6 week estimated lead time</div>
+      </div>
+    </div>
+    <div class="prod-card reveal reveal-delay-2">
+      <span class="prod-label">Fulfillment</span>
+      <div class="prod-title">What Ships</div>
+      <div class="prod-items">
+        <div class="prod-item"><span class="arrow">→</span> Garment(s)</div>
+        <div class="prod-item"><span class="arrow">→</span> Stickers + inserts</div>
+        <div class="prod-item"><span class="arrow">→</span> Branded + artist-specific collateral</div>
+      </div>
+    </div>
+    <div class="prod-card reveal reveal-delay-3">
+      <span class="prod-label">Packaging</span>
+      <div class="prod-title">The Bag</div>
+      <div class="prod-items">
+        <div class="prod-item"><span class="arrow">→</span> Custom heavyweight plastic bags</div>
+        <div class="prod-item"><span class="arrow">→</span> Oversized Ziploc-inspired format</div>
+        <div class="prod-item"><span class="arrow">→</span> Durable, collectible, reusable</div>
+        <div class="prod-item"><span class="arrow">→</span> Potential artist card or insert</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OBJECTIVES -->
+<section id="objectives">
+  <div class="section-num reveal">06 — KEY OBJECTIVES</div>
+  <h2 class="section-title reveal reveal-delay-1">Why This<br><em>Matters</em></h2>
+  <div class="obj-grid">
+    <div class="obj-card reveal reveal-delay-1">
+      <span class="obj-num">01</span>
+      <div class="obj-text">Establish a repeatable collaboration model that scales across the Head Change Artist Series</div>
+    </div>
+    <div class="obj-card reveal reveal-delay-2">
+      <span class="obj-num">02</span>
+      <div class="obj-text">Deliver high-quality, artist-driven merchandise that stands apart from standard apparel drops</div>
+    </div>
+    <div class="obj-card reveal reveal-delay-1">
+      <span class="obj-num">03</span>
+      <div class="obj-text">Create scarcity and desirability through limited pre-sale runs — collectible by design</div>
+    </div>
+    <div class="obj-card reveal reveal-delay-2">
+      <span class="obj-num">04</span>
+      <div class="obj-text">Strengthen Head Change's identity as a cultural platform — not just a brand</div>
+    </div>
+  </div>
+</section>
+
+<!-- NEXT STEPS -->
+<section id="nextsteps">
+  <div class="section-num reveal">07 — NEXT STEPS</div>
+  <h2 class="section-title reveal reveal-delay-1">What Happens<br><em>Now</em></h2>
+  <div class="next-steps reveal reveal-delay-2">
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Confirm garment blanks and vendors</span>
+    </div>
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Align on packaging production — custom bags + inserts</span>
+    </div>
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Build content calendar leading into launch</span>
+    </div>
+    <div class="next-step">
+      <span class="ns-arrow">→</span>
+      <span class="ns-text">Lock in photoshoot direction and deliverables</span>
+    </div>
+  </div>
+</section>
+
+<!-- ARTIST WORK -->
+<section id="work">
+  <div class="section-num reveal">— ARTIST REFERENCE</div>
+  <h2 class="section-title reveal reveal-delay-1">See His<br><em>Work</em></h2>
+  <p class="work-intro reveal reveal-delay-2">Julian Bast has designed merchandise for Billy Strings across apparel, pins, and accessories — demonstrating his range across illustration, typography, and garment-ready graphic design.</p>
+  <div class="work-grid reveal reveal-delay-3">
+    <a href="https://billystringsstore.com/products/opening-the-void-tee-julian-bast" target="_blank" class="work-card">
+      <div class="work-card-top">
+        <span class="work-tag">Billy Strings — 2025</span>
+        <span class="work-ext">↗</span>
+      </div>
+      <div class="work-card-title">Opening the Void Tee</div>
+      <div class="work-card-desc">Garment graphic printed on Comfort Colors heavyweight tee — illustrates Bast's ability to translate complex imagery into bold, wearable design.</div>
+      <div class="work-card-url">billystringsstore.com</div>
+    </a>
+    <a href="https://billybase.net/merch/pin-birds-pin-pack-julian-bast/" target="_blank" class="work-card">
+      <div class="work-card-top">
+        <span class="work-tag">Billy Strings Winter Tour — 2024</span>
+        <span class="work-ext">↗</span>
+      </div>
+      <div class="work-card-title">Birds Pin Pack</div>
+      <div class="work-card-desc">Part of a full tour merchandise capsule featuring his signature bird motifs — shows his versatility across accessories and limited collectible formats.</div>
+      <div class="work-card-url">billybase.net</div>
+    </a>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section id="closing">
+  <div class="section-num reveal">SUMMARY</div>
+  <div class="closing-statement reveal reveal-delay-1">
+    A focused, artist-led drop that blends <span>strong visual identity,</span> thoughtful production, and collectible packaging — setting the tone for every Head Change collaboration that follows.
+  </div>
+</section>
+
+<footer>
+  <span class="footer-brand">HEAD CHANGE × JULIAN BAST</span>
+  <span class="footer-note">INTERNAL BRIEF — CONFIDENTIAL</span>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
