@@ -1455,6 +1455,7 @@ export default function MarketingHub({ initialUserName }) {
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border2)", paddingTop: 10, marginTop: 4 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{init.owner}</div>
+                                {init._campaignTitle && <div style={{ fontSize: 9, color: "var(--gold)", letterSpacing: ".04em" }}>🚀 {init._campaignTitle}</div>}
                                 {canEdit && (
                                   <div style={{ display: "flex", gap: 4 }}>
                                     <button onClick={() => { setShowAddInit(init.id); }} title="Edit"
@@ -1464,7 +1465,12 @@ export default function MarketingHub({ initialUserName }) {
                                   </div>
                                 )}
                               </div>
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                                <button onClick={() => setInitToCampaign(init)}
+                                  style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em", transition: "all .13s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,.2)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,.09)"; }}
+                                >🚀 → Campaign</button>
                                 {(hasConcept || isLoadingConcept) ? (
                                   <button onClick={() => hasConcept ? setConceptModal(init.id) : null} style={{
                                     fontSize: 11, padding: "4px 12px", borderRadius: 6,
@@ -1899,8 +1905,14 @@ export default function MarketingHub({ initialUserName }) {
                                     <div className="bi-title">{init.title}</div>
                                     {init.description && <div className="bi-desc">{init.description}</div>}
                                     <div className="bi-foot">
-                                      <div className="bi-owner">{init.owner}</div>
-                                      
+                                      <div>
+                                        <div className="bi-owner">{init.owner}</div>
+                                        {init._campaignTitle && <div style={{ fontSize: 9, color: "var(--gold)", marginTop: 2 }}>🚀 {init._campaignTitle}</div>}
+                                      </div>
+                                      <button onClick={e => { e.stopPropagation(); setInitToCampaign(init); }}
+                                        style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
+                                        🚀 → Campaign
+                                      </button>
                                     </div>
                                   </div>
                                 );
