@@ -767,6 +767,7 @@ export default function MarketingHub({ initialUserName }) {
   const [showAddInit, setShowAddInit] = useState(false);
   const [showEditStrategy, setShowEditStrategy] = useState(false);
   const [ganttHtml, setGanttHtml] = useState(() => { try { return localStorage.getItem("shared_ns_ns-gantt") || null; } catch { return null; } });
+  const [complianceCards, setComplianceCards] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-cards"); if (v) { const p = JSON.parse(v); return p.length > 0 ? p : DEFAULT_COMPLIANCE_CARDS; } return DEFAULT_COMPLIANCE_CARDS; } catch { return DEFAULT_COMPLIANCE_CARDS; } });
   const [complianceDocs, setComplianceDocs] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-docs"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [complianceLinks, setComplianceLinks] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-links"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [complianceOverview, setComplianceOverview] = useState(() => { try { return localStorage.getItem("shared_ns_ns-compliance-overview") || ""; } catch { return ""; } });
@@ -977,6 +978,7 @@ export default function MarketingHub({ initialUserName }) {
   useEffect(() => { if (ready) window.storage.set("ns-orgroles", JSON.stringify(orgRoles), true).catch(() => {}); }, [orgRoles, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-campaigns", JSON.stringify(campaigns), true).catch(() => {}); }, [campaigns, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-camp-timeline", JSON.stringify(campaignTimeline), true).catch(() => {}); }, [campaignTimeline, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-compliance-cards", JSON.stringify(complianceCards), true).catch(() => {}); }, [complianceCards, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-compliance-docs", JSON.stringify(complianceDocs), true).catch(() => {}); }, [complianceDocs, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-compliance-links", JSON.stringify(complianceLinks), true).catch(() => {}); }, [complianceLinks, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-compliance-overview", complianceOverview, true).catch(() => {}); }, [complianceOverview, ready]);
@@ -1644,6 +1646,8 @@ export default function MarketingHub({ initialUserName }) {
                 setDocs={setComplianceDocs}
                 links={complianceLinks}
                 setLinks={setComplianceLinks}
+                cards={complianceCards}
+                setCards={setComplianceCards}
                 currentUser={currentUser}
               />
             )}
@@ -4313,9 +4317,56 @@ function InitiativeToCampaignModal({ init, brands, onClose, onSave }) {
 // ════════════════════════════════════════════════════════════════════════════
 // COMPLIANCE PANEL
 // ════════════════════════════════════════════════════════════════════════════
+const DEFAULT_COMPLIANCE_CARDS = [
+  {
+    id: "cc-packaging", title: "Packaging", icon: "📦", color: "#c9a84c",
+    points: [
+      "All packaging must include state-mandated health & safety warnings",
+      "Child-resistant and tamper-evident closures required on all products",
+      "Net weight, THC/CBD content, and serving size clearly labeled",
+      "Batch/lot number and licensed testing lab name on every label",
+      "No imagery or branding that could appeal to minors",
+      "Dispensary license number required on final retail label",
+    ]
+  },
+  {
+    id: "cc-events", title: "Events", icon: "🎪", color: "#8b7fc0",
+    points: [
+      "Valid event permit required before any public activation",
+      "Age verification (21+) mandatory at all entry points",
+      "No cannabis consumption at non-licensed event venues",
+      "No free product giveaways or sampling at unlicensed events",
+      "Brand ambassador compliance training required prior to event",
+      "All signage must include standard state health warning",
+    ]
+  },
+  {
+    id: "cc-instore", title: "In-Store", icon: "🏪", color: "#4d9e8e",
+    points: [
+      "All display materials must be pre-approved by compliance team",
+      "No promotional pricing that violates state tier regulations",
+      "Budtender talking points must align with approved product claims only",
+      "No unverified health, medical, or therapeutic claims in any materials",
+      "Product placement must comply with dispensary partnership agreements",
+      "Photo/video of product in-store requires prior written consent",
+    ]
+  },
+  {
+    id: "cc-social", title: "Social Media", icon: "📱", color: "#5a9ed4",
+    points: [
+      "Age-gated accounts required — no public-facing cannabis content",
+      "No claims of health benefits, therapeutic effects, or medical use",
+      "Geo-targeting required to restrict reach to legal states (21+)",
+      "Influencer partnerships require proper disclosure (#ad, #sponsored)",
+      "No depictions of consumption in public or non-licensed spaces",
+      "All posts must include the standard legal disclaimer",
+    ]
+  },
+];
+
 const COMPLIANCE_CATEGORIES = ["State License","Federal Regulation","Certificate","SOP / Policy","Insurance","Contract","Lab Result","Other"];
 
-function CompliancePanel({ overview, setOverview, docs, setDocs, links, setLinks, currentUser }) {
+function CompliancePanel({ overview, setOverview, docs, setDocs, links, setLinks, cards, setCards, currentUser }) {
   const [editingOverview, setEditingOverview] = useState(false);
   const [draftOverview, setDraftOverview] = useState(overview);
   const [addingLink, setAddingLink] = useState(false);
@@ -4325,7 +4376,23 @@ function CompliancePanel({ overview, setOverview, docs, setDocs, links, setLinks
   const [linkNotes, setLinkNotes] = useState("");
   const [filterCat, setFilterCat] = useState("All");
   const [docDragging, setDocDragging] = useState(false);
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [addingCard, setAddingCard] = useState(false);
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const [newCardIcon, setNewCardIcon] = useState("📋");
+  const [newCardColor, setNewCardColor] = useState("#c9a84c");
   const fileRef = useRef();
+
+  const updateCard = (id, patch) => setCards(p => p.map(c => c.id === id ? { ...c, ...patch } : c));
+  const deleteCard = (id) => { if (confirm("Delete this compliance section?")) setCards(p => p.filter(c => c.id !== id)); };
+  const addPoint = (cardId) => setCards(p => p.map(c => c.id === cardId ? { ...c, points: [...c.points, "New requirement"] } : c));
+  const updatePoint = (cardId, i, val) => setCards(p => p.map(c => c.id === cardId ? { ...c, points: c.points.map((pt, idx) => idx === i ? val : pt) } : c));
+  const removePoint = (cardId, i) => setCards(p => p.map(c => c.id === cardId ? { ...c, points: c.points.filter((_, idx) => idx !== i) } : c));
+  const saveNewCard = () => {
+    if (!newCardTitle.trim()) return;
+    setCards(p => [...p, { id: `cc-${Date.now()}`, title: newCardTitle.trim(), icon: newCardIcon, color: newCardColor, points: ["Add your first requirement here"] }]);
+    setNewCardTitle(""); setNewCardIcon("📋"); setNewCardColor("#c9a84c"); setAddingCard(false);
+  };
 
   const saveOverview = () => { setOverview(draftOverview); setEditingOverview(false); };
 
@@ -4456,6 +4523,133 @@ function CompliancePanel({ overview, setOverview, docs, setDocs, links, setLinks
             )
           )}
         </div>
+      </div>
+
+      {/* ── Compliance Checklists ── */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", letterSpacing: ".02em" }}>Compliance Checklists</div>
+          <button onClick={() => setAddingCard(true)}
+            style={{ fontSize: 11, padding: "5px 13px", borderRadius: 7, border: "1px dashed rgba(255,255,255,.14)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)", transition: "all .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,.4)"; e.currentTarget.style.color = "var(--gold)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.14)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+            + Add Section
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: 14 }}>
+          {(cards || []).map(card => {
+            const isEditing = editingCardId === card.id;
+            return (
+              <div key={card.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", borderTop: `3px solid ${card.color}` }}>
+                {/* Card header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 16px", borderBottom: "1px solid var(--border2)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    {isEditing ? (
+                      <input value={card.icon} onChange={e => updateCard(card.id, { icon: e.target.value })}
+                        style={{ width: 32, padding: "3px 4px", borderRadius: 5, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 16, textAlign: "center", fontFamily: "var(--bf)" }} />
+                    ) : (
+                      <span style={{ fontSize: 18 }}>{card.icon}</span>
+                    )}
+                    {isEditing ? (
+                      <input value={card.title} onChange={e => updateCard(card.id, { title: e.target.value })}
+                        style={{ flex: 1, padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--bf)" }} />
+                    ) : (
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{card.title}</div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {isEditing ? (
+                      <>
+                        <input type="color" value={card.color} onChange={e => updateCard(card.id, { color: e.target.value })}
+                          title="Card color" style={{ width: 24, height: 24, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", cursor: "pointer", padding: 0 }} />
+                        <button onClick={() => setEditingCardId(null)}
+                          style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "none", background: card.color, color: "#07070f", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600 }}>Done</button>
+                        <button onClick={() => deleteCard(card.id)}
+                          style={{ width: 24, height: 24, borderRadius: 5, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", cursor: "pointer", fontSize: 11, display: "grid", placeItems: "center" }}>🗑</button>
+                      </>
+                    ) : (
+                      <button onClick={() => setEditingCardId(card.id)}
+                        style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)" }}>✏ Edit</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Points list */}
+                <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+                  {card.points.map((pt, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: card.color, flexShrink: 0, marginTop: 6 }} />
+                      {isEditing ? (
+                        <>
+                          <input value={pt} onChange={e => updatePoint(card.id, i, e.target.value)}
+                            style={{ flex: 1, padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)" }} />
+                          <button onClick={() => removePoint(card.id, i)}
+                            style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid rgba(224,123,106,.25)", background: "transparent", color: "rgba(224,123,106,.5)", cursor: "pointer", fontSize: 10, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 2 }}>×</button>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>{pt}</span>
+                      )}
+                    </div>
+                  ))}
+                  {isEditing && (
+                    <button onClick={() => addPoint(card.id)}
+                      style={{ marginTop: 4, padding: "5px 0", borderRadius: 6, border: "1px dashed rgba(255,255,255,.1)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)", fontSize: 11, width: "100%", transition: "all .13s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = card.color + "55"; e.currentTarget.style.color = card.color; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+                      + Add Point
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Add new card modal */}
+        {addingCard && (
+          <div className="overlay" onClick={() => setAddingCard(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+              <div className="mhdr">
+                <div><div className="mtitle">New Compliance Section</div><div className="msub">Add a custom checklist category</div></div>
+                <button className="mclose" onClick={() => setAddingCard(false)}>×</button>
+              </div>
+              <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "64px 1fr", gap: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Icon</label>
+                    <input value={newCardIcon} onChange={e => setNewCardIcon(e.target.value)} maxLength={2} placeholder="📋"
+                      style={{ width: "100%", padding: "8px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 22, textAlign: "center", fontFamily: "var(--bf)", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Section Title *</label>
+                    <input value={newCardTitle} onChange={e => setNewCardTitle(e.target.value)} placeholder="e.g. Lab Testing" autoFocus
+                      style={{ width: "100%", padding: "8px 11px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", boxSizing: "border-box" }}
+                      onKeyDown={e => e.key === "Enter" && saveNewCard()} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Accent Color</label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    {["#c9a84c","#8b7fc0","#4d9e8e","#5a9ed4","#e07b6a","#a0624a","#4d9e8e"].map(c => (
+                      <button key={c} onClick={() => setNewCardColor(c)}
+                        style={{ width: 24, height: 24, borderRadius: "50%", background: c, border: newCardColor === c ? `2px solid #fff` : "2px solid transparent", cursor: "pointer" }} />
+                    ))}
+                    <input type="color" value={newCardColor} onChange={e => setNewCardColor(e.target.value)}
+                      style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", padding: 0, background: "transparent" }} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button className="btn" onClick={() => setAddingCard(false)}>Cancel</button>
+                <button disabled={!newCardTitle.trim()} onClick={saveNewCard}
+                  style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: newCardTitle.trim() ? newCardColor : "rgba(255,255,255,.06)", color: newCardTitle.trim() ? "#07070f" : "var(--text-muted)", fontSize: 12, fontWeight: 700, cursor: newCardTitle.trim() ? "pointer" : "not-allowed", fontFamily: "var(--bf)" }}>
+                  Create Section
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Drop zone */}
