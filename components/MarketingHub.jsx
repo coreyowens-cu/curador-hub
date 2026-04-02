@@ -921,8 +921,24 @@ export default function MarketingHub({ initialUserName }) {
   }, []);
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
+  // One-time dedup: remove initiatives with duplicate titles, keep first occurrence
+  useEffect(() => {
+    if (!ready) return;
+    const seen = new Set();
+    const deduped = initiatives.filter(i => {
+      const key = (i.title || "").trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (deduped.length < initiatives.length) {
+      console.log(`🧹 Removed ${initiatives.length - deduped.length} duplicate initiative(s)`);
+      setInitiatives(deduped);
+    }
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Save initiatives on every change (strip htmlConcept — fetched fresh from _conceptUrl)
-  useEffect(() => { 
+  useEffect(() => {
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
     console.log("💾 Saving", toSave.length, "initiatives");
