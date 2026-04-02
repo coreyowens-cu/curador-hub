@@ -4023,7 +4023,21 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
                   )}
                 </div>
               )}
-              {!campaign.concept && !campaign._briefFile && (
+              {campaignHtml && (
+                <div style={{ marginTop: 20 }}>
+                  <button
+                    onClick={() => setShowHtml(o => !o)}
+                    style={{ width: "100%", padding: "16px 20px", borderRadius: 10, border: `1px solid ${showHtml ? "rgba(201,168,76,.5)" : "rgba(201,168,76,.25)"}`, background: showHtml ? "rgba(201,168,76,.12)" : "rgba(201,168,76,.06)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontSize: 14, fontWeight: 600, letterSpacing: ".04em", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all .15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,.16)"; e.currentTarget.style.borderColor = "rgba(201,168,76,.5)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = showHtml ? "rgba(201,168,76,.12)" : "rgba(201,168,76,.06)"; e.currentTarget.style.borderColor = showHtml ? "rgba(201,168,76,.5)" : "rgba(201,168,76,.25)"; }}
+                  >
+                    <span style={{ fontSize: 18 }}>📄</span>
+                    <span>{showHtml ? "Hide HTML Preview" : "View HTML Concept"}</span>
+                    <span style={{ marginLeft: "auto", fontSize: 12, opacity: .6 }}>{showHtml ? "▲" : "▼"}</span>
+                  </button>
+                </div>
+              )}
+              {!campaign.concept && !campaign._briefFile && !campaignHtml && (
                 <div style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", padding: "16px 0" }}>No details yet for this campaign.</div>
               )}
             </div>
