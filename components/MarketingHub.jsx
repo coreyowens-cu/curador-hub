@@ -4468,6 +4468,66 @@ const MO_CANNABIS_COMPLIANCE_KB = `
 - Solvent-based/combustible gas extractions only by licensed facility (patients may create home extractions WITHOUT combustible gases — no solvent-based home extraction)
 - Cannot promote unlicensed product or activities
 
+## MANUFACTURING COMPLIANCE (Marketing-Relevant Rules)
+### Licensing & Operations
+- Comprehensive Manufacturing Facility: Licensed by DCR to produce marijuana-infused products (edibles, concentrates, vapes, topicals, etc.)
+- Microbusiness Wholesale: May cultivate (up to 250 flowering plants) AND manufacture — sells ONLY to microbusiness dispensary facilities
+- Manufacturing facilities cannot sell directly to consumers — all product must flow through licensed dispensary
+- Marijuana Testing Facility must be independent — cannot be owned by the same entity as a cultivation, manufacturing, or dispensary facility
+
+### Product Standards (What You Can & Can't Claim in Marketing)
+- ALL manufactured products must be certified by a licensed marijuana testing facility before sale or marketing
+- No health benefit, therapeutic effect, or medical use claims on any product — not on packaging, not in marketing
+- Products must be free from contaminants — lab certification is the only acceptable basis for safety claims
+- Active AND inactive ingredients must be disclosed — no hidden additives or undisclosed ingredients
+- Cannot imply government approval for medical treatment purposes
+
+### Branding & Packaging for Manufactured Products
+- Packaging and branding must NOT appeal to minors: no cartoon characters, candy-like designs, bright colors targeting children
+- All manufactured products require: net weight, total THC/CBD in mg, THC per serving in mg, number of servings, batch/lot number, testing lab name, active/inactive ingredients, dosage/instructions, manufacturer/dispensary license number
+- Child-resistant AND tamper-evident closures required on ALL manufactured products
+- Resealable packaging required
+
+### Batch Tracking & Accountability
+- Every manufactured batch must carry a batch/lot number tracked in the statewide seed-to-sale system
+- No marijuana may be transferred or sold except through a licensed facility
+- Records must be available for DCR inspection at all times
+- Co-branding and white-label arrangements: all products must still meet full DCR labeling standards regardless of brand arrangement
+
+### Extractions & Processing
+- Solvent-based and combustible-gas extractions are ONLY permitted at licensed manufacturing facilities
+- Patients may create home extractions without combustible gases for personal, non-commercial use
+- No home solvent-based extraction — licensed facility only
+
+## CONSUMPTION RULES (Article XIV Sec 1 & 2)
+### Where Consumption Is Prohibited
+- Public places: consumption is prohibited in any public place UNLESS a local government has specifically designated it as a permitted area
+- Motor vehicles: no consumption while driving or operating any motor vehicle
+- School grounds, school buses, and correctional facilities: strictly prohibited
+- Anywhere tobacco smoking is prohibited, marijuana smoking is also prohibited
+- Dispensaries: patients and consumers may NOT consume on dispensary premises
+
+### Where Consumption May Be Permitted
+- Private residences: consumption is generally permitted
+- Locally designated areas: some local governments may create designated public consumption zones — verify with local government before including in any event/activation plan
+- Never assume consumption is permitted at an event venue — confirm local law first
+
+### Consumption in Marketing Materials
+- No depictions of consumption in public spaces or non-licensed locations in any marketing, social, or advertising content
+- No depictions of consumption in a motor vehicle
+- Cannot show or imply underage consumption
+- Geo-target all content to 21+ audiences in legal states
+
+### Patient Home Extraction (Consumption-Adjacent)
+- Qualifying patients ARE allowed to extract at home for personal use
+- NO combustible gases, solvents, or dangerous materials allowed in home extraction
+- Non-combustible home extraction methods are permitted for personal use only — not for resale
+
+### Personal Cultivation & Possession in Context of Consumption
+- Consumer personal cultivators: any marijuana above the 3oz possession limit must remain at their residence in an enclosed, locked facility
+- Patients with cultivation authorization: excess above 60-day supply must remain in an enclosed, locked facility
+- Individuals on probation/parole: consult attorney or P.O. — cannabis use protections are outside DCR's authority and subject to courts/supervising agencies
+
 ## HOME EXTRACTION (Patients Only)
 - Qualifying patients ARE allowed to create their own extractions at home
 - Restriction: NO combustible gases or other dangerous materials may be used in home extraction
@@ -4555,44 +4615,60 @@ const DEFAULT_COMPLIANCE_CARDS = [
     id: "cc-packaging", title: "Packaging", icon: "📦", color: "#c9a84c",
     points: [
       "All packaging must include state-mandated health & safety warnings",
-      "Child-resistant and tamper-evident closures required on all products",
-      "Net weight, THC/CBD content, and serving size clearly labeled",
-      "Batch/lot number and licensed testing lab name on every label",
-      "No imagery or branding that could appeal to minors",
-      "Dispensary license number required on final retail label",
+      "Child-resistant AND tamper-evident closures required on every product",
+      "Net weight, total THC/CBD in mg, and THC per serving clearly labeled",
+      "Batch/lot number and licensed testing lab name required on every label",
+      "No imagery, branding, or design elements that could appeal to minors",
+      "Dispensary license number required on the final retail label",
+      "Active and inactive ingredients, dosage, and instructions for use required",
+      "Edibles: possession limit is based on total THC in mg — not package weight",
+      "No unverified health, medical, or therapeutic claims on any packaging",
+      "Products must pass licensed testing facility certification before sale",
+    ]
+  },
+  {
+    id: "cc-manufacturing", title: "Manufacturing", icon: "🏭", color: "#e07b6a",
+    points: [
+      "All manufactured products must be tested by a licensed testing facility before sale or marketing",
+      "No health, therapeutic, or medical benefit claims on any manufactured product",
+      "Manufacturing facilities cannot sell directly to consumers — sales only through licensed dispensaries",
+      "Microbusiness wholesale facilities may cultivate up to 250 flowering plants and manufacture, but sell ONLY to microbusiness dispensaries",
+      "Every manufactured batch must have a batch/lot number tracked in the statewide seed-to-sale system",
+      "Branding and naming on manufactured products must not appeal to minors (no cartoon characters, candy-like designs)",
+      "Co-branding or white-label arrangements require all products to still meet DCR labeling standards",
+      "Home solvent-based or combustible-gas extraction is prohibited — licensed facilities only",
+      "Patients may create home extractions without combustible gases for personal use only",
+      "All ingredients (active and inactive) must be disclosed on label — no hidden additives",
     ]
   },
   {
     id: "cc-events", title: "Events", icon: "🎪", color: "#8b7fc0",
     points: [
-      "Valid event permit required before any public activation",
-      "Age verification (21+) mandatory at all entry points",
-      "No cannabis consumption at non-licensed event venues",
+      "Valid event permit required before any public activation or brand presence",
+      "Age verification (21+) mandatory at ALL entry points — government-issued photo ID",
+      "No cannabis consumption at non-licensed event venues — public consumption is prohibited by default",
       "No free product giveaways or sampling at unlicensed events",
-      "Brand ambassador compliance training required prior to event",
-      "All signage must include standard state health warning",
+      "Brand ambassador compliance training required before any event",
+      "All event signage must include the standard state health warning",
+      "No events on school grounds, school buses, or correctional facilities",
+      "No events where tobacco smoking is prohibited",
+      "Local governments may designate public consumption areas — verify locally before activating",
+      "No events targeting or accessible to persons under 21",
     ]
   },
   {
-    id: "cc-instore", title: "In-Store", icon: "🏪", color: "#4d9e8e",
+    id: "cc-consumption", title: "Consumption", icon: "🚫", color: "#4d9e8e",
     points: [
-      "All display materials must be pre-approved by compliance team",
-      "No promotional pricing that violates state tier regulations",
-      "Budtender talking points must align with approved product claims only",
-      "No unverified health, medical, or therapeutic claims in any materials",
-      "Product placement must comply with dispensary partnership agreements",
-      "Photo/video of product in-store requires prior written consent",
-    ]
-  },
-  {
-    id: "cc-social", title: "Social Media", icon: "📱", color: "#5a9ed4",
-    points: [
-      "Age-gated accounts required — no public-facing cannabis content",
-      "No claims of health benefits, therapeutic effects, or medical use",
-      "Geo-targeting required to restrict reach to legal states (21+)",
-      "Influencer partnerships require proper disclosure (#ad, #sponsored)",
-      "No depictions of consumption in public or non-licensed spaces",
-      "All posts must include the standard legal disclaimer",
+      "Public consumption is prohibited unless a local government has designated the area",
+      "Consumption while driving or operating any motor vehicle is prohibited under Article XIV",
+      "No consumption on school grounds, school buses, or correctional facilities",
+      "No smoking marijuana in any location where tobacco smoking is prohibited",
+      "Local governments may choose to allow consumption in certain designated areas — check locally",
+      "Patients/consumers on probation or parole should consult their attorney or P.O. before use",
+      "Patients may extract at home — but NO combustible gases or dangerous solvents allowed",
+      "Consumer personal cultivators must keep marijuana above their 3oz limit in an enclosed, locked facility at their residence",
+      "No depictions of consumption in public spaces or non-licensed locations in any marketing material",
+      "Dispensaries must make educational materials available about risks and side effects of use",
     ]
   },
 ];
