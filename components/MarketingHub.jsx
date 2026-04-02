@@ -4995,8 +4995,7 @@ ${MO_CANNABIS_COMPLIANCE_KB}`,
                         <div style={{ fontSize: 32, marginBottom: 10, opacity: .35 }}>🤖</div>
                         <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 6 }}>Ask me anything about {card.title} compliance</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 14 }}>
-                          {([
-                            card.title === "Packaging" ? [
+                          {(card.title === "Packaging" ? [
                               "What must appear on every product label?",
                               "What packaging is banned for being attractive to minors?",
                               "Which regulation covers labeling requirements?",
@@ -5017,7 +5016,7 @@ ${MO_CANNABIS_COMPLIANCE_KB}`,
                               "What are common violations to avoid?",
                               "What does Missouri law say about this?",
                             ]
-                          ][0].map(q => (
+                          ).map(q => (
                             <button key={q} onClick={() => { setChatInput(q); }}
                               style={{ fontSize: 11, padding: "6px 12px", borderRadius: 20, border: `1px solid ${card.color}44`, background: card.color + "0d", color: card.color, cursor: "pointer", fontFamily: "var(--bf)", transition: "all .13s" }}
                               onMouseEnter={e => e.currentTarget.style.background = card.color + "22"}
