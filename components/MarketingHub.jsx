@@ -102,7 +102,6 @@ const DEFAULT_INITIATIVES = [
   {id:"init-hc-social",title:"Headchange Social Strategy", description:"A comprehensive social media strategy for Headchange — defining the brand voice, content pillars, posting cadence, and platform approach for Instagram-first connoisseur culture.",                                                                                                    owner:"Brand Team", channel:"06 · Social Media Strategy",            startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"HC Social Strategy", _conceptUrl:"/concepts/hc-social.html"},
   {id:"init-hc-drop",  title:"Head Change Drop Program",  description:"A limited-release merchandise and product ecosystem inspired by streetwear culture, scarcity marketing, and collectible design. Each drop is treated as a cultural moment — not a product release. Drop access is tied directly into Head Change loyalty, making early access the reward.", owner:"Brand Team", channel:"13 · Brand Merchandise Programs",       startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Head Change Drop Program", _conceptUrl:"/concepts/hc-drop-program.html"},
   {id:"init-hc-sesh",  title:"Quarterly Sesh Playbook",   description:"Full operations and content strategy SOP for the HeadChange Sesh — a quarterly brand event treated as a cultural asset. Covers the discovery gate, admin lockdown, inventory pull, final sprint, content capture shot list, and post-event recycling workflow.", owner:"Brand Team", channel:"07 · Reimagined Events",               startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Quarterly Sesh Playbook",   _conceptUrl:"/concepts/hc-sesh-playbook.html"},
-  {id:"init-hc-sms",   title:"SMS + Newsletter Strategy",  description:"Head Change pilot SMS and newsletter strategy, scalable across the full Curador portfolio. Two-channel system — CURADOR Signal newsletter paired with targeted SMS — built around audience segmentation, high-impact content cadence, and a crawl-walk-run rollout framework.", owner:"Brand Team", channel:"03 · Email & SMS Marketing",              startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"SMS + Newsletter Strategy", _conceptUrl:"/concepts/hc-sms-newsletter.html"},
 ];
 
 const DEFAULT_CAMPAIGNS = [
@@ -755,7 +754,15 @@ export default function MarketingHub({ initialUserName }) {
     try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
   });
   const [initiatives, setInitiatives] = useState(() => {
-    try { const v = localStorage.getItem("shared_ns_ns-initiatives"); return v ? JSON.parse(v) : DEFAULT_INITIATIVES; } catch { return DEFAULT_INITIATIVES; }
+    const PURGE_IDS = ["init-hc-sms", "init-sb-sms", "init-bub-sms"];
+    try {
+      const v = localStorage.getItem("shared_ns_ns-initiatives");
+      if (!v) return DEFAULT_INITIATIVES;
+      const parsed = JSON.parse(v).filter(i => !PURGE_IDS.includes(i.id));
+      // Write cleaned version back immediately so load effect reads clean data
+      localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(parsed));
+      return parsed;
+    } catch { return DEFAULT_INITIATIVES; }
   });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
