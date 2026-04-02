@@ -2160,7 +2160,7 @@ export default function MarketingHub({ initialUserName }) {
 // MARKETING VISION SECTION — replaces hero on the Marketing Vision tab
 // ════════════════════════════════════════════════════════════════════════════
 function MvSec({ label }) {
-  return <div style={{ fontSize: 9, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 8, marginTop: 2 }}>{label}</div>;
+  return <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 10, marginTop: 2 }}>{label}</div>;
 }
 function MvDivider() {
   return <div style={{ height: 1, background: "var(--border)", margin: "32px 0" }} />;
@@ -2248,7 +2248,7 @@ function MarketingVisionSection({ strategy, initiatives, campaigns, teamMembers,
   ];
 
   const statusColor = { critical: "#e07b6a", partial: "#c9a84c", strong: "#4d9e8e" };
-  const Sec = ({ label }) => <div style={{ fontSize: 9, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 8 }}>{label}</div>;
+  const Sec = ({ label }) => <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 10 }}>{label}</div>;
   const Divider = () => <div style={{ height: 1, background: "var(--border)", margin: "32px 0" }} />;
   const ChannelCard = ({ item }) => (
     <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid var(--border)", borderTop: "2px solid var(--gold)", borderRadius: 11 }}>
@@ -2268,10 +2268,11 @@ function MarketingVisionSection({ strategy, initiatives, campaigns, teamMembers,
       {/* COVER */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
-          <div style={{ fontSize: 9, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 10, fontWeight: 600 }}>Marketing & Creative Division · Missouri Market · 2026–2027</div>
-          <div style={{ fontFamily: "var(--df)", fontSize: 52, fontWeight: 300, lineHeight: .92, color: "var(--text)", marginBottom: 14 }}>
-            CÚRADOR<br /><span style={{ fontSize: 22, letterSpacing: ".18em", color: "var(--gold)" }}>HOUSE OF BRANDS</span>
+          <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 10, fontWeight: 600 }}>Marketing & Creative Division · Missouri Market · 2026–2027</div>
+          <div style={{ fontFamily: "var(--df)", fontSize: 48, fontWeight: 300, lineHeight: .92, color: "var(--text)", marginBottom: 10 }}>
+            CÚRADOR
           </div>
+          <div style={{ fontSize: 13, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 14 }}>House of Brands</div>
           <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.75, maxWidth: 560, marginBottom: 16 }}>
             Brand Repositioning & Go-To-Market Strategy — a scalable blueprint for Missouri and every market that follows.
           </div>
