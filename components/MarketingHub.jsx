@@ -855,6 +855,8 @@ export default function MarketingHub({ initialUserName }) {
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
   const conceptHtmlCache = useRef({});
   const [conceptCacheVersion, setConceptCacheVersion] = useState(0);
+  const campaignHtmlCache = useRef({});
+  const [campaignCacheVersion, setCampaignCacheVersion] = useState(0);
   useEffect(() => {
     if (!ready) return;
     initiatives.forEach(init => {
@@ -872,6 +874,18 @@ export default function MarketingHub({ initialUserName }) {
       }
     });
   }, [ready]);
+  // Load campaign HTML concepts from storage on startup
+  useEffect(() => {
+    if (!ready) return;
+    campaigns.forEach(c => {
+      if (c._htmlName && !campaignHtmlCache.current[c.id]) {
+        window.storage.get(`ns-camp-html-${c.id}`, true)
+          .then(res => { if (res?.value) { campaignHtmlCache.current[c.id] = res.value; setCampaignCacheVersion(v => v + 1); } })
+          .catch(() => {});
+      }
+    });
+  }, [ready]);
+
   useEffect(() => { if (ready) window.storage.set("ns-notes", JSON.stringify(notes), true).catch(() => {}); }, [notes, ready]);
   useEffect(() => { if (ready && ganttHtml) window.storage.set("ns-gantt", ganttHtml, true).catch(() => {}); }, [ganttHtml, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-timeline", JSON.stringify(timelineItems), true).catch(() => {}); }, [timelineItems, ready]);
@@ -972,6 +986,14 @@ export default function MarketingHub({ initialUserName }) {
       {showCampaignModal && <CampaignModal currentUser={currentUser} pillars={strategy.pillars} onClose={() => setShowCampaignModal(false)} onSave={(c) => { setCampaigns(p => [c, ...p]); setShowCampaignModal(false); }} onSaveAsInit={saveCampaignAsInit} />}
       {selectedCampaign && <CampaignDetailModal campaign={selectedCampaign} pillars={strategy.pillars} onClose={() => setSelectedCampaign(null)} onNote={(ctx) => addNoteWithContext(ctx)} onSaveAsInit={(init) => { saveCampaignAsInit(init); setCampaigns(p => p.map(c => c.id === selectedCampaign.id ? { ...c, status: "approved" } : c)); setSelectedCampaign(null); }}
         onViewConcept={selectedCampaign._fromConcept ? () => { setLeftTab("concepts"); setActiveBrand(null); setActiveConceptId(selectedCampaign._fromConcept); setSelectedCampaign(null); } : null}
+        campaignHtml={campaignCacheVersion >= 0 ? campaignHtmlCache.current[selectedCampaign.id] : null}
+        onHtmlAttach={(id, html, name) => {
+          campaignHtmlCache.current[id] = html;
+          setCampaignCacheVersion(v => v + 1);
+          window.storage.set(`ns-camp-html-${id}`, html, true).catch(() => {});
+          setCampaigns(p => p.map(c => c.id === id ? { ...c, _htmlName: name } : c));
+          setSelectedCampaign(prev => ({ ...prev, _htmlName: name }));
+        }}
       />}
 
       <div className="page">
@@ -3606,13 +3628,22 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
   );
 }
 
-function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote, onViewConcept }) {
+function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote, onViewConcept, campaignHtml, onHtmlAttach }) {
   const [pillar, setPillar] = useState(pillars[0] || "");
   const [quarter, setQuarter] = useState("Q2 2026");
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [showFile, setShowFile] = useState(false);
+  const [showHtml, setShowHtml] = useState(false);
+  const htmlInputRef = useRef(null);
   const submitNote = () => { if (onNote && noteText.trim()) { onNote({ section:"Campaigns", type:"Campaign", label:campaign.title, id:campaign.id, prefill:noteText.trim() }); setNoteText(""); setNoteOpen(false); } };
+  const handleHtmlFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { if (onHtmlAttach) onHtmlAttach(campaign.id, ev.target.result, file.name); setShowHtml(true); };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -3624,6 +3655,10 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             {onViewConcept && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={onViewConcept}>🎨 View Concept</button>}
+            {campaignHtml && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => setShowHtml(o => !o)}>{showHtml ? "Hide HTML" : "📄 View HTML"}</button>}
+            {campaignHtml && <button className="btn btn-sm" onClick={() => { const w = window.open("","_blank"); if(w){w.document.open();w.document.write(campaignHtml);w.document.close();} }}>↗ Full Screen</button>}
+            {onHtmlAttach && <button className="btn btn-sm" onClick={() => htmlInputRef.current?.click()}>📎 {campaign._htmlName ? "Replace HTML" : "Attach HTML"}</button>}
+            <input ref={htmlInputRef} type="file" accept=".html,text/html" style={{ display:"none" }} onChange={handleHtmlFile} />
             <button className="btn btn-sm" onClick={() => setNoteOpen(o => !o)} style={{ borderColor: noteOpen ? "var(--gold)":"var(--border)", color: noteOpen ? "var(--gold)":"var(--text-muted)" }}>✎ Note</button>
             <button className="mclose" onClick={onClose}>×</button>
           </div>
@@ -3727,6 +3762,11 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
                   <select className="fsel" value={quarter} onChange={e => setQuarter(e.target.value)}>{QUARTERS.map(q => <option key={q}>{q}</option>)}</select>
                 </div>
               </div>
+            </div>
+          )}
+          {showHtml && campaignHtml && (
+            <div style={{ marginTop: 16, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 520 }}>
+              <iframe srcDoc={campaignHtml} title={campaign._htmlName || campaign.title} sandbox="allow-scripts allow-same-origin allow-forms" style={{ width: "100%", height: "100%", border: "none", background: "#fff" }} />
             </div>
           )}
         </div>
