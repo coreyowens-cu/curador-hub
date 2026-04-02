@@ -2439,25 +2439,6 @@ function MarketingVisionSection({ strategy, initiatives, campaigns, teamMembers,
       </div>
       <Divider />
 
-      {/* TIMELINE */}
-      <div style={{ marginBottom: 32 }}>
-        <Sec label="Execution Roadmap — Phased Timeline" />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
-          {PHASES.map(p => (
-            <div key={p.num} style={{ padding: "16px", background: "var(--surface)", border: `1px solid ${p.color}22`, borderTop: `2px solid ${p.color}`, borderRadius: 11 }}>
-              <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: p.color, lineHeight: 1, marginBottom: 4 }}>{p.num}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>{p.title}</div>
-              <div style={{ fontSize: 10, color: p.color, fontWeight: 600, marginBottom: 10 }}>{p.timing}</div>
-              {p.bullets.map(b => (
-                <div key={b} style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5, paddingLeft: 10, position: "relative", marginBottom: 4 }}>
-                  <span style={{ position: "absolute", left: 0, color: p.color, opacity: .5 }}>—</span>{b}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-      <Divider />
 
       {/* TEAM */}
       <div style={{ marginBottom: 32 }}>
