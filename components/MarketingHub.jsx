@@ -687,40 +687,40 @@ input[type="date"].fi{color-scheme:dark;}
 /* ── CAMPAIGN TIMELINE PANEL ── */
 .ctl-wrap{display:flex;flex-direction:column;gap:0;}
 .ctl-grid-hdr{display:flex;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:5;}
-.ctl-label-col{width:260px;flex-shrink:0;padding:9px 14px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-weight:500;border-right:1px solid var(--border);}
-.ctl-cost-col{width:120px;flex-shrink:0;padding:9px 14px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-weight:500;text-align:right;border-right:1px solid var(--border);}
+.ctl-label-col{width:290px;flex-shrink:0;padding:10px 16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-weight:500;border-right:1px solid var(--border);}
+.ctl-cost-col{width:140px;flex-shrink:0;padding:10px 14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);font-weight:500;text-align:right;border-right:1px solid var(--border);}
 .ctl-bar-area{flex:1;display:flex;}
-.ctl-month-cell{flex:1;padding:9px 0;font-size:9px;text-align:center;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;border-right:1px solid var(--border2);font-weight:500;}
+.ctl-month-cell{flex:1;padding:10px 0;font-size:11px;text-align:center;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;border-right:1px solid var(--border2);font-weight:500;}
 .ctl-month-cell:last-child{border-right:none;}
-.ctl-row{display:flex;align-items:center;border-bottom:1px solid var(--border2);min-height:44px;}
+.ctl-row{display:flex;align-items:center;border-bottom:1px solid var(--border2);min-height:56px;}
 .ctl-row:hover{background:rgba(255,255,255,.012);}
-.ctl-row.el-row{min-height:36px;background:rgba(255,255,255,.005);}
-.ctl-row-label{width:260px;flex-shrink:0;padding:8px 14px;border-right:1px solid var(--border);display:flex;align-items:center;gap:7px;min-height:inherit;}
-.ctl-row.el-row .ctl-row-label{padding-left:28px;}
-.ctl-row-cost{width:120px;flex-shrink:0;border-right:1px solid var(--border);padding:4px 10px;text-align:right;}
-.ctl-cost-input{width:100%;background:transparent;border:none;outline:none;color:var(--gold);font-family:var(--bf);font-size:12px;font-weight:600;text-align:right;cursor:text;}
+.ctl-row.el-row{min-height:46px;background:rgba(255,255,255,.005);}
+.ctl-row-label{width:290px;flex-shrink:0;padding:10px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:8px;min-height:inherit;}
+.ctl-row.el-row .ctl-row-label{padding-left:32px;}
+.ctl-row-cost{width:140px;flex-shrink:0;border-right:1px solid var(--border);padding:5px 12px;text-align:right;}
+.ctl-cost-input{width:100%;background:transparent;border:none;outline:none;color:var(--gold);font-family:var(--bf);font-size:13px;font-weight:600;text-align:right;cursor:text;}
 .ctl-cost-input::placeholder{color:var(--text-muted);font-weight:400;}
 .ctl-bar-track{flex:1;position:relative;height:100%;min-height:inherit;cursor:default;overflow:hidden;}
 .ctl-month-grid{position:absolute;inset:0;display:flex;pointer-events:none;}
 .ctl-month-stripe{flex:1;border-right:1px solid var(--border2);}
 .ctl-month-stripe:nth-child(even){background:rgba(255,255,255,.008);}
 .ctl-month-stripe:last-child{border-right:none;}
-.ctl-bar{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:4px;display:flex;align-items:center;user-select:none;}
-.ctl-row.el-row .ctl-bar{height:12px;border-radius:3px;opacity:.85;}
-.ctl-handle{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;z-index:2;}
-.ctl-handle-l{left:-1px;border-radius:3px 0 0 3px;}
-.ctl-handle-r{right:-1px;border-radius:0 3px 3px 0;}
-.ctl-handle-pip{width:2px;height:10px;background:rgba(255,255,255,.55);border-radius:1px;}
-.ctl-date-label{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 2px);font-size:9px;color:var(--text-muted);white-space:nowrap;pointer-events:none;}
-.ctl-row-name{font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ctl-row.el-row .ctl-row-name{font-size:11px;color:var(--text-dim);font-weight:400;}
-.ctl-el-label-input{background:transparent;border:none;outline:none;color:var(--text-dim);font-family:var(--bf);font-size:11px;width:100%;cursor:text;}
+.ctl-bar{position:absolute;top:50%;transform:translateY(-50%);height:24px;border-radius:5px;display:flex;align-items:center;user-select:none;}
+.ctl-row.el-row .ctl-bar{height:16px;border-radius:4px;opacity:.85;}
+.ctl-handle{position:absolute;top:0;bottom:0;width:10px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;z-index:2;}
+.ctl-handle-l{left:-1px;border-radius:4px 0 0 4px;}
+.ctl-handle-r{right:-1px;border-radius:0 4px 4px 0;}
+.ctl-handle-pip{width:2px;height:12px;background:rgba(255,255,255,.55);border-radius:1px;}
+.ctl-date-label{position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 2px);font-size:10px;color:var(--text-muted);white-space:nowrap;pointer-events:none;}
+.ctl-row-name{font-size:14px;font-weight:500;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ctl-row.el-row .ctl-row-name{font-size:13px;color:var(--text-dim);font-weight:400;}
+.ctl-el-label-input{background:transparent;border:none;outline:none;color:var(--text-dim);font-family:var(--bf);font-size:13px;width:100%;cursor:text;}
 .ctl-el-label-input:focus{color:var(--text);}
-.ctl-add-el-btn{font-size:10px;padding:2px 7px;border-radius:5px;border:1px dashed rgba(255,255,255,.1);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--bf);transition:all .13s;flex-shrink:0;}
+.ctl-add-el-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1px dashed rgba(255,255,255,.1);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--bf);transition:all .13s;flex-shrink:0;}
 .ctl-add-el-btn:hover{border-color:rgba(201,168,76,.35);color:var(--gold);}
-.ctl-del-btn{width:18px;height:18px;border-radius:4px;border:1px solid rgba(224,123,106,.25);background:transparent;color:rgba(224,123,106,.5);cursor:pointer;font-size:10px;display:grid;place-items:center;flex-shrink:0;transition:all .12s;line-height:1;}
+.ctl-del-btn{width:20px;height:20px;border-radius:4px;border:1px solid rgba(224,123,106,.25);background:transparent;color:rgba(224,123,106,.5);cursor:pointer;font-size:11px;display:grid;place-items:center;flex-shrink:0;transition:all .12s;line-height:1;}
 .ctl-del-btn:hover{border-color:rgba(224,123,106,.6);color:#e07b6a;background:rgba(224,123,106,.06);}
-.ctl-brand-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ctl-brand-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 /* GANTT */
 .gv-wrap{display:flex;flex-direction:column;height:calc(100vh - 57px);}
 .gv-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 44px 9px;border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -1447,13 +1447,21 @@ export default function MarketingHub({ initialUserName }) {
                   {canAddContent && <button className="btn btn-gold" style={{ marginTop: 8 }} onClick={() => setShowCampaignModal(true)}>+ New Brief</button>}
                 </div>
                 {/* View tabs */}
-                <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+                <div style={{ display: "flex", gap: 4, marginBottom: 24, alignItems: "center" }}>
                   {[["briefs","📋 Briefs"],["timeline","📅 Timeline"]].map(([v, label]) => (
                     <button key={v} onClick={() => setCampaignView(v)}
                       style={{ padding: "6px 16px", borderRadius: 7, border: `1px solid ${campaignView === v ? "rgba(201,168,76,.4)" : "var(--border)"}`, background: campaignView === v ? "var(--gold-dim)" : "transparent", color: campaignView === v ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 12, fontWeight: campaignView === v ? 600 : 400, cursor: "pointer", letterSpacing: ".04em", transition: "all .15s" }}>
                       {label}
                     </button>
                   ))}
+                  {campaignView === "timeline" && (
+                    <button
+                      title="Open timeline in new window"
+                      onClick={() => window.open("/campaign-timeline", "_blank", "width=1500,height=800,resizable=yes,scrollbars=yes")}
+                      style={{ marginLeft: "auto", padding: "6px 13px", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", letterSpacing: ".04em", transition: "all .15s", display: "flex", alignItems: "center", gap: 5 }}>
+                      ↗ Pop Out
+                    </button>
+                  )}
                 </div>
                 {campaignView === "briefs" && <CampaignsPanel campaigns={campaigns} onNew={() => setShowCampaignModal(true)} onSelect={setSelectedCampaign} onDelete={canEdit ? deleteCampaign : null} fullWidth />}
                 {campaignView === "timeline" && <CampaignTimelinePanel campaignTimeline={campaignTimeline} setCampaignTimeline={setCampaignTimeline} campaigns={campaigns} brands={brands} />}
