@@ -767,6 +767,9 @@ export default function MarketingHub({ initialUserName }) {
   const [showAddInit, setShowAddInit] = useState(false);
   const [showEditStrategy, setShowEditStrategy] = useState(false);
   const [ganttHtml, setGanttHtml] = useState(() => { try { return localStorage.getItem("shared_ns_ns-gantt") || null; } catch { return null; } });
+  const [complianceDocs, setComplianceDocs] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-docs"); return v ? JSON.parse(v) : []; } catch { return []; } });
+  const [complianceLinks, setComplianceLinks] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-links"); return v ? JSON.parse(v) : []; } catch { return []; } });
+  const [complianceOverview, setComplianceOverview] = useState(() => { try { return localStorage.getItem("shared_ns_ns-compliance-overview") || ""; } catch { return ""; } });
   const [timelineItems, setTimelineItems] = useState(() => { try { const d = localStorage.getItem("shared_ns_ns-timeline"); return d ? JSON.parse(d) : []; } catch { return []; } });
   const [ready, setReady] = useState(true);
 
@@ -974,6 +977,9 @@ export default function MarketingHub({ initialUserName }) {
   useEffect(() => { if (ready) window.storage.set("ns-orgroles", JSON.stringify(orgRoles), true).catch(() => {}); }, [orgRoles, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-campaigns", JSON.stringify(campaigns), true).catch(() => {}); }, [campaigns, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-camp-timeline", JSON.stringify(campaignTimeline), true).catch(() => {}); }, [campaignTimeline, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-compliance-docs", JSON.stringify(complianceDocs), true).catch(() => {}); }, [complianceDocs, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-compliance-links", JSON.stringify(complianceLinks), true).catch(() => {}); }, [complianceLinks, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-compliance-overview", complianceOverview, true).catch(() => {}); }, [complianceOverview, ready]);
   useEffect(() => {
     if (!ready) return;
     // Save metadata only (no html) to shared storage
@@ -1277,6 +1283,13 @@ export default function MarketingHub({ initialUserName }) {
                     {lsbOpen && <span className="lsb-lbl">Asset Library</span>}
                   </button>
 
+                  {/* Compliance */}
+                  <div style={{ height: 1, background: "var(--border2)", margin: "4px 0" }} />
+                  <button className={`lsb-tab ${leftTab === "compliance" ? "on" : ""}`} onClick={() => { setLeftTab("compliance"); setActiveBrand(null); }}>
+                    <span className="lsb-icon">🛡</span>
+                    {lsbOpen && <span className="lsb-lbl">Compliance</span>}
+                  </button>
+
                   {/* Rebrand Timeline — external link */}
                   <div style={{ height: 1, background: "var(--border2)", margin: "4px 0" }} />
                   <a
@@ -1293,7 +1306,7 @@ export default function MarketingHub({ initialUserName }) {
                 </nav>
 
                 {/* Channels / Campaigns hint */}
-                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam") && (
+                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance") && (
                   <div style={{ padding: "6px 16px 10px", fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                     Content shown on the right →
                   </div>
@@ -1619,6 +1632,19 @@ export default function MarketingHub({ initialUserName }) {
                   setNotes(p => [{ id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: text.trim(), ts: new Date().toISOString(), context: `Concept: ${label}` }, ...p]);
                   setNotesOpen(true);
                 }}
+              />
+            )}
+
+            {/* ── COMPLIANCE ── */}
+            {leftTab === "compliance" && !activeBrand && (
+              <CompliancePanel
+                overview={complianceOverview}
+                setOverview={setComplianceOverview}
+                docs={complianceDocs}
+                setDocs={setComplianceDocs}
+                links={complianceLinks}
+                setLinks={setComplianceLinks}
+                currentUser={currentUser}
               />
             )}
 
@@ -4284,6 +4310,302 @@ function InitiativeToCampaignModal({ init, brands, onClose, onSave }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// COMPLIANCE PANEL
+// ════════════════════════════════════════════════════════════════════════════
+const COMPLIANCE_CATEGORIES = ["State License","Federal Regulation","Certificate","SOP / Policy","Insurance","Contract","Lab Result","Other"];
+
+function CompliancePanel({ overview, setOverview, docs, setDocs, links, setLinks, currentUser }) {
+  const [editingOverview, setEditingOverview] = useState(false);
+  const [draftOverview, setDraftOverview] = useState(overview);
+  const [addingLink, setAddingLink] = useState(false);
+  const [linkLabel, setLinkLabel] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkCat, setLinkCat] = useState("Other");
+  const [linkNotes, setLinkNotes] = useState("");
+  const [filterCat, setFilterCat] = useState("All");
+  const [docDragging, setDocDragging] = useState(false);
+  const fileRef = useRef();
+
+  const saveOverview = () => { setOverview(draftOverview); setEditingOverview(false); };
+
+  const handleFiles = (files) => {
+    Array.from(files).forEach(file => {
+      const r = new FileReader();
+      r.onload = e => {
+        setDocs(p => [...p, {
+          id: `doc-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: e.target.result,
+          category: "Other",
+          notes: "",
+          addedBy: currentUser?.name || "Team",
+          addedAt: new Date().toISOString(),
+        }]);
+      };
+      r.readAsDataURL(file);
+    });
+  };
+
+  const addLink = () => {
+    if (!linkUrl.trim()) return;
+    const url = linkUrl.trim().startsWith("http") ? linkUrl.trim() : "https://" + linkUrl.trim();
+    setLinks(p => [...p, {
+      id: `lnk-${Date.now()}`,
+      label: linkLabel.trim() || url,
+      url,
+      category: linkCat,
+      notes: linkNotes.trim(),
+      addedBy: currentUser?.name || "Team",
+      addedAt: new Date().toISOString(),
+    }]);
+    setLinkLabel(""); setLinkUrl(""); setLinkCat("Other"); setLinkNotes(""); setAddingLink(false);
+  };
+
+  const removeDoc = (id) => { if (confirm("Remove this document?")) setDocs(p => p.filter(d => d.id !== id)); };
+  const removeLink = (id) => { if (confirm("Remove this link?")) setLinks(p => p.filter(l => l.id !== id)); };
+  const updateDocCat = (id, category) => setDocs(p => p.map(d => d.id === id ? { ...d, category } : d));
+  const updateLinkCat = (id, category) => setLinks(p => p.map(l => l.id === id ? { ...l, category } : l));
+
+  const allItems = [...docs.map(d => ({ ...d, _type: "doc" })), ...links.map(l => ({ ...l, _type: "link" }))];
+  const filtered = filterCat === "All" ? allItems : allItems.filter(i => i.category === filterCat);
+
+  const fmtSize = (bytes) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(0) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  };
+
+  const fmtAgo = (iso) => {
+    if (!iso) return "";
+    const diff = Date.now() - new Date(iso).getTime();
+    const d = Math.floor(diff / 86400000);
+    if (d === 0) return "Today";
+    if (d === 1) return "Yesterday";
+    if (d < 30) return `${d}d ago`;
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+  };
+
+  const CAT_COLORS = {
+    "State License": "#4d9e8e", "Federal Regulation": "#5a9ed4", "Certificate": "#8b7fc0",
+    "SOP / Policy": "#c9a84c", "Insurance": "#a0624a", "Contract": "#e07b6a",
+    "Lab Result": "#4d9e8e", "Other": "#666",
+  };
+
+  const INP = { width: "100%", padding: "8px 11px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface2)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", boxSizing: "border-box", outline: "none" };
+
+  return (
+    <div style={{ padding: "32px 44px", minHeight: "100vh" }}>
+      {/* Page header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 10 }}>Legal & Regulatory</div>
+          <div style={{ fontFamily: "var(--df)", fontSize: 38, fontWeight: 300, lineHeight: .95, color: "var(--text)", marginBottom: 10 }}>Compliance</div>
+          <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.7, maxWidth: 520 }}>
+            Centralize licenses, certifications, SOPs, and regulatory links. Drop in files or paste URLs to keep everything in one place.
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button onClick={() => fileRef.current.click()}
+            style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", transition: "all .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,.4)"; e.currentTarget.style.color = "var(--gold)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+            ↑ Upload Doc
+          </button>
+          <input ref={fileRef} type="file" multiple style={{ display: "none" }} onChange={e => handleFiles(e.target.files)} />
+          <button onClick={() => setAddingLink(true)}
+            style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", fontFamily: "var(--bf)", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all .15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.18)"}
+            onMouseLeave={e => e.currentTarget.style.background = "rgba(201,168,76,.09)"}>
+            + Add Link
+          </button>
+        </div>
+      </div>
+
+      {/* Overview card */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, marginBottom: 24, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "1px solid var(--border2)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 16 }}>🛡</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Compliance Overview</div>
+          </div>
+          {!editingOverview
+            ? <button onClick={() => { setDraftOverview(overview); setEditingOverview(true); }}
+                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)" }}>✏ Edit</button>
+            : <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => setEditingOverview(false)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)" }}>Cancel</button>
+                <button onClick={saveOverview} style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, border: "none", background: "var(--gold)", color: "var(--bg)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600 }}>Save</button>
+              </div>
+          }
+        </div>
+        <div style={{ padding: "18px 20px" }}>
+          {editingOverview ? (
+            <textarea value={draftOverview} onChange={e => setDraftOverview(e.target.value)} rows={6} autoFocus
+              placeholder="Add a compliance overview — current license status, key requirements, renewal dates, notes for the team…"
+              style={{ ...INP, resize: "vertical", lineHeight: 1.75, fontSize: 13 }} />
+          ) : (
+            overview ? (
+              <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.85, whiteSpace: "pre-wrap" }}>{overview}</div>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", cursor: "pointer" }} onClick={() => { setDraftOverview(""); setEditingOverview(true); }}>
+                Click Edit to add a compliance overview — license status, renewal dates, key requirements, team notes…
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={e => { e.preventDefault(); setDocDragging(true); }}
+        onDragLeave={() => setDocDragging(false)}
+        onDrop={e => { e.preventDefault(); setDocDragging(false); handleFiles(e.dataTransfer.files); }}
+        onClick={() => fileRef.current.click()}
+        style={{ border: `2px dashed ${docDragging ? "var(--gold)" : "rgba(255,255,255,.08)"}`, borderRadius: 12, padding: "24px 20px", textAlign: "center", cursor: "pointer", transition: "all .2s", marginBottom: 24, background: docDragging ? "rgba(201,168,76,.04)" : "transparent" }}>
+        <div style={{ fontSize: 22, marginBottom: 6, opacity: docDragging ? 1 : .4 }}>📁</div>
+        <div style={{ fontSize: 13, color: docDragging ? "var(--gold)" : "var(--text-muted)" }}>Drop files here or click to upload</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, opacity: .7 }}>PDF, DOCX, PNG, JPG — any file type</div>
+      </div>
+
+      {/* Filter bar */}
+      {(docs.length > 0 || links.length > 0) && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
+          {["All", ...COMPLIANCE_CATEGORIES].map(cat => (
+            <button key={cat} onClick={() => setFilterCat(cat)}
+              style={{ fontSize: 11, padding: "4px 11px", borderRadius: 100, border: `1px solid ${filterCat === cat ? (CAT_COLORS[cat] || "var(--gold)") : "var(--border)"}`, background: filterCat === cat ? (CAT_COLORS[cat] || "var(--gold)") + "20" : "transparent", color: filterCat === cat ? (CAT_COLORS[cat] || "var(--gold)") : "var(--text-muted)", cursor: "pointer", fontFamily: "var(--bf)", transition: "all .13s" }}>
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Items grid */}
+      {filtered.length === 0 && (docs.length > 0 || links.length > 0) && (
+        <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 13 }}>No items in this category</div>
+      )}
+      {filtered.length === 0 && docs.length === 0 && links.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 0" }}>
+          <div style={{ fontSize: 40, marginBottom: 14, opacity: .2 }}>🛡</div>
+          <div style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 6 }}>No compliance documents yet</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Upload files or add links to get started</div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+        {filtered.map(item => {
+          const catColor = CAT_COLORS[item.category] || "#666";
+          const isDoc = item._type === "doc";
+          const ext = isDoc ? (item.name || "").split(".").pop().toUpperCase() : null;
+          return (
+            <div key={item.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", borderTop: `2px solid ${catColor}`, transition: "box-shadow .15s" }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,0,0,.3)"}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}>
+              <div style={{ padding: "14px 16px" }}>
+                {/* Category badge */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <select value={item.category} onChange={e => isDoc ? updateDocCat(item.id, e.target.value) : updateLinkCat(item.id, e.target.value)}
+                    style={{ fontSize: 9, padding: "2px 6px", borderRadius: 100, border: `1px solid ${catColor}44`, background: catColor + "18", color: catColor, fontFamily: "var(--bf)", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", cursor: "pointer", outline: "none" }}>
+                    {COMPLIANCE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtAgo(item.addedAt)}</div>
+                </div>
+
+                {/* Icon + Name */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                  {isDoc ? (
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor + "22", border: `1px solid ${catColor}33`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <div style={{ fontSize: 7, fontWeight: 700, color: catColor, letterSpacing: ".05em" }}>{ext}</div>
+                    </div>
+                  ) : (
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor + "22", border: `1px solid ${catColor}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>🔗</div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{isDoc ? item.name : item.label}</div>
+                    {isDoc && item.size && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{fmtSize(item.size)} · Added by {item.addedBy}</div>}
+                    {!isDoc && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.url}</div>}
+                    {item.notes && <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4, lineHeight: 1.5 }}>{item.notes}</div>}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 6, borderTop: "1px solid var(--border2)", paddingTop: 10 }}>
+                  <button onClick={() => {
+                    if (isDoc) {
+                      const w = window.open();
+                      if (item.data.startsWith("data:")) { w.document.write(`<iframe src="${item.data}" style="width:100%;height:100vh;border:none;"></iframe>`); }
+                      else { w.location = item.data; }
+                    } else { window.open(item.url, "_blank"); }
+                  }} style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 11, cursor: "pointer", transition: "all .13s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = catColor + "55"; e.currentTarget.style.color = catColor; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+                    {isDoc ? "Open ↗" : "Visit ↗"}
+                  </button>
+                  {isDoc && (
+                    <button onClick={() => { const a = document.createElement("a"); a.href = item.data; a.download = item.name; a.click(); }}
+                      style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 11, cursor: "pointer", transition: "all .13s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,.4)"; e.currentTarget.style.color = "var(--gold)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+                      ↓ Download
+                    </button>
+                  )}
+                  <button onClick={() => isDoc ? removeDoc(item.id) : removeLink(item.id)}
+                    style={{ width: 32, padding: "6px 0", borderRadius: 7, border: "1px solid rgba(224,123,106,.25)", background: "transparent", color: "rgba(224,123,106,.5)", fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", transition: "all .13s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(224,123,106,.6)"; e.currentTarget.style.color = "#e07b6a"; e.currentTarget.style.background = "rgba(224,123,106,.06)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(224,123,106,.25)"; e.currentTarget.style.color = "rgba(224,123,106,.5)"; e.currentTarget.style.background = "transparent"; }}>
+                    🗑
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Link Modal */}
+      {addingLink && (
+        <div className="overlay" onClick={() => setAddingLink(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="mhdr">
+              <div><div className="mtitle">Add Compliance Link</div><div className="msub">Paste a URL to a regulation, portal, or resource</div></div>
+              <button className="mclose" onClick={() => setAddingLink(false)}>×</button>
+            </div>
+            <div className="mbody" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>URL *</label>
+                <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://…" autoFocus style={INP} onKeyDown={e => e.key === "Enter" && addLink()} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Label</label>
+                <input value={linkLabel} onChange={e => setLinkLabel(e.target.value)} placeholder="e.g. MO State License Portal" style={INP} />
+              </div>
+              <div>
+                <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Category</label>
+                <select value={linkCat} onChange={e => setLinkCat(e.target.value)} style={INP}>
+                  {COMPLIANCE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, display: "block", marginBottom: 5 }}>Notes</label>
+                <textarea value={linkNotes} onChange={e => setLinkNotes(e.target.value)} placeholder="Optional notes…" rows={2} style={{ ...INP, resize: "vertical", lineHeight: 1.6 }} />
+              </div>
+            </div>
+            <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="btn" onClick={() => setAddingLink(false)}>Cancel</button>
+              <button disabled={!linkUrl.trim()} onClick={addLink}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: linkUrl.trim() ? "var(--gold)" : "rgba(255,255,255,.06)", color: linkUrl.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: 12, fontWeight: 700, cursor: linkUrl.trim() ? "pointer" : "not-allowed", fontFamily: "var(--bf)" }}>
+                Add Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // DETAIL MODAL
 // ════════════════════════════════════════════════════════════════════════════
 function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign }) {
