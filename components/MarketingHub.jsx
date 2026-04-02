@@ -757,12 +757,11 @@ export default function MarketingHub({ initialUserName }) {
     const PURGE_IDS = ["init-hc-sms", "init-sb-sms", "init-bub-sms"];
     try {
       const v = localStorage.getItem("shared_ns_ns-initiatives");
-      if (!v) return DEFAULT_INITIATIVES;
+      if (!v) { console.log("🔴 INIT: no LS key found, using defaults"); return DEFAULT_INITIATIVES; }
       const parsed = JSON.parse(v).filter(i => !PURGE_IDS.includes(i.id));
-      // Write cleaned version back immediately so load effect reads clean data
-      localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(parsed));
+      console.log("🟢 INIT: loaded", parsed.length, "initiatives:", parsed.map(x=>x.title));
       return parsed;
-    } catch { return DEFAULT_INITIATIVES; }
+    } catch (e) { console.log("🔴 INIT error:", e); return DEFAULT_INITIATIVES; }
   });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
@@ -1051,14 +1050,15 @@ export default function MarketingHub({ initialUserName }) {
   };
   const addInit = (init) => { setInitiatives(p => [...p, init]); setShowAddInit(false); };
   const deleteInit = (id) => {
-    // Compute new list immediately using current closure value
+    console.log("🗑️ DELETE called for id:", id, "| current list:", initiatives.map(x=>x.id));
     const updated = initiatives.filter(x => x.id !== id);
-    // Write to localStorage RIGHT NOW in the same synchronous call stack as the click
-    // — this cannot be interrupted by a tab refresh
     const PURGE = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
     const toSave = updated.filter(i => !PURGE.has(i.id)).map(i => ({...i, htmlConcept: null}));
-    try { localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave)); } catch {}
-    // Then tell React to update the UI
+    try {
+      localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave));
+      const verify = localStorage.getItem("shared_ns_ns-initiatives");
+      console.log("✅ SAVED", toSave.length, "initiatives. LS verify:", JSON.parse(verify).map(x=>x.title));
+    } catch(e) { console.log("🔴 SAVE ERROR:", e); }
     setInitiatives(updated);
   };
   const updateInit = (id, updates) => setInitiatives(p => p.map(x => x.id === id ? { ...x, ...updates } : x));
