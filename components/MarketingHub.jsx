@@ -4336,14 +4336,25 @@ function InitiativeToCampaignModal({ init, brands, onClose, onSave }) {
 // ════════════════════════════════════════════════════════════════════════════
 const MO_CANNABIS_COMPLIANCE_KB = `
 # Missouri Cannabis Compliance Reference — CÚRADOR Brands
-*Source: 19 CSR 100-1, Article XIV MO Constitution Sec 1 & 2, DCR FAQs, Final Rules July 2023*
+*Source: 19 CSR 100-1, Article XIV MO Constitution Sec 1 & 2, DCR General FAQs, DCR Adult Use FAQs, Final Rules July 2023*
 
 ## LEGAL FRAMEWORK
 - Adult-use marijuana legal for consumers 21+ as of December 8, 2022 (Amendment 3, Article XIV Section 2)
 - Medical marijuana legal under Article XIV Section 1 (effective 2018, amended 2022)
 - Regulated by Missouri Dept of Health & Senior Services (DHSS), Division of Cannabis Regulation (DCR)
-- DCR Contact: Cannabisinfo@health.mo.gov | 866-219-0165 | cannabis.mo.gov
+- DCR Contact: Cannabisinfo@health.mo.gov | 866-219-0165 | cannabis.mo.gov | PO Box 570, Jefferson City, MO 65102
+- Call center hours: 9am–4pm CST Mon–Fri (closed last Friday of each month 9–10am for staff meeting)
 - 2026 Rule Updates (approved March 2026): ownership review moved pre-issuance; fines up to $100,000; product recall procedures for unregulated THC; microbusiness license transfer pathway
+
+## PROGRAM TIMELINE (Key Dates)
+- November 8, 2022: Citizens voted on Amendment 3 ballot measure
+- December 8, 2022: Patient/caregiver allotment increased to 6oz/month; adult-use possession legal; license conversion applications accepted
+- February 3, 2023: First comprehensive licenses approved; adult-use sales began
+- February 6, 2023: Consumer personal cultivation applications accepted
+- May 3, 2023: Mandatory patient/caregiver ID scanning at point of sale took effect
+- June 1, 2023: Microbusiness license application forms posted
+- July 27 – August 10, 2023: First round of microbusiness applications accepted
+- October 2, 2023: 48 microbusiness facility licenses issued
 
 ## ADVERTISING & MARKETING (Article XIV Sec 2.4(n); Sec 1.3(2)(g))
 - Advertising regulations SHALL BE NO MORE STRINGENT than comparable state alcohol advertising rules
@@ -4377,11 +4388,13 @@ const MO_CANNABIS_COMPLIANCE_KB = `
 - No unverified, unapproved health or medical claims on packaging
 - Marijuana testing facility must certify all products before sale
 - Products must not contain contaminants injurious to health (lab tested)
+- For edibles: the possession-relevant number is total THC in mg on the label — NOT the package weight or design number
 
 ## EVENTS & ACTIVATIONS
 - Valid event permit required before any public activation
 - Age verification (21+) mandatory at ALL entry points — valid government-issued photo ID
-- Acceptable IDs: Missouri driver's license, MO ID card, valid/expired undamaged US passport, US military ID, valid non-MO driver's license
+- Acceptable IDs (consumers): MO driver's license, MO ID card, valid/expired undamaged US passport (book or card), US military or military dependent ID, valid non-MO driver's license
+- Acceptable IDs (patients/caregivers): Same as above plus government employee ID (city, county, state, or federal); passport must NOT be expired for patients/caregivers
 - No cannabis consumption at non-licensed event venues (public consumption prohibited unless local government designates area)
 - No free product giveaways or sampling at unlicensed events (no dispensing outside licensed facility)
 - Brand ambassador compliance training required prior to event
@@ -4395,34 +4408,55 @@ const MO_CANNABIS_COMPLIANCE_KB = `
 - No promotional pricing that violates state tier regulations
 - Budtender talking points must align with approved product claims ONLY — no unverified health/medical claims
 - Agents must be trained on differences in strains, effects, and methods of use (19 CSR 100-1.080(1)(H)2)
+- Dispensaries must make educational materials available to all customers about potential risks and side effects (19 CSR 100-1.180(2)(H)2) — no requirement to actively educate or notify DCR about customer purchases
 - No unverified health, medical, or therapeutic claims in any in-store materials
 - Product placement must comply with dispensary partnership agreements
 - Photo/video of product in-store requires prior written consent
 - Consumer age verification: valid government-issued photo ID showing 21+ required for every sale
-- Patient ID card holders must scan IDs at point of sale (required since May 3, 2023)
+- Patient ID card holders must have IDs scanned at point of sale (required since May 3, 2023)
 - Must record every sale against patient's 30-day allotment in statewide track-and-trace system
-- Non-marijuana products must not be displayed in limited access area and must clearly not be DCR-regulated
-- Drive-through sales permitted if compliant with 19 CSR 100-1.180(2)(A)4
-- Delivery permitted if pre-approved by DCR; follows 19 CSR 100-1.180(2)(D) and 100-1.140(3)
-- Curbside pickup NOT permitted (only drive-through and delivery if approved)
-- Gift cards are permitted as long as purchases are made by qualifying patients, caregivers, or consumers
-- Minors may only enter dispensary if accompanied by a qualifying patient, caregiver, or consumer
-- Tipping budtenders is not prohibited or endorsed by DCR — facility's discretion
+- Caregiver purchasing for patient: must provide patient's ID NUMBER (not physical card) so sale can be logged against patient's allotment
+- Non-marijuana products: may be sold, but NOT displayed or sold in the limited access area; must be clearly marked as not DCR-regulated (19 CSR 100-1.180(2)(M))
+- Floor plan: No physical separation required between access point and waiting room — only between waiting room and limited access area where marijuana is accessible
+- Drive-through sales permitted (including with two-way video screens) if compliant with 19 CSR 100-1.180(2)(A)4; facility must have SOPs for video system failure
+- Delivery: permitted if pre-approved by DCR; follows 19 CSR 100-1.180(2)(D) and 100-1.140(3); transportation licensees may also deliver on behalf of dispensary
+- Delivery payment: may be collected at time of delivery; if payment not received in advance, max 2 deliveries at same address on same day
+- Curbside pickup NOT permitted — only drive-through and delivery if DCR-approved
+- Gift cards: permitted as long as purchases are made by qualifying patients, caregivers, or consumers
+- Minors: may enter dispensary ONLY if accompanied by a qualifying patient, primary caregiver, or consumer; non-emancipated minor patients must be accompanied by parent/guardian who holds caregiver ID
+- Tipping budtenders: not prohibited or endorsed by DCR — facility's discretion
 
 ## POSSESSION & PURCHASE LIMITS
 - Consumer (21+): Purchase up to 3 oz per transaction; possess up to 3 oz at any time
-- Patient (with ID card): Purchase up to 6 oz per 30-day period (more if physician certifies); possess up to 12 oz (60-day supply)
-- Patient with cultivation authorization: May possess up to 18 oz (90-day supply), excess above 12 oz must remain in enclosed locked facility
-- Caregiver: Separate legal limit for each patient (up to 6 patients); store separately, label with patient name
+- Consumer personal cultivator: Any cultivated marijuana above 3 oz possession limit must remain at residence in an enclosed locked facility
+- Patient (with ID card): Purchase up to 6 oz per 30-day period (more if physician/NP certifies a compelling reason); possess up to 12 oz (60-day supply)
+- Patient with cultivation authorization: May possess up to 18 oz (90-day supply); amount exceeding 60-day supply must stay in enclosed locked facility
+- Caregiver: Separate legal limit for each patient (up to 6 patients); all marijuana must be stored separately per patient and labeled with that patient's name
+- A patient/consumer may only hold ONE cultivation authorization (not both patient and consumer cultivation)
 - Out-of-state patient cards: Licensed dispensaries may accept (19 CSR 100-1.180)
 - Edibles: Possession limit based on total THC in mg on label, NOT total package weight
+
+## PATIENT & CAREGIVER ID CARDS
+- Patient ID card valid for 3 years if approved on or after December 8, 2022 (previously 1 year)
+- Consumer personal cultivation card: valid 12 months, renewable
+- No Missouri residency required to apply for a patient ID card (requirement removed Dec 8, 2022)
+- New physician/nurse practitioner certification required with every renewal application
+- Certification form must be submitted to DCR within 30 days of the medical professional's signature date
+- Physical ID cards are NOT mailed — card holders must download and print from the registry portal
+- Applications processed within 30 days, in order received
+- Certifying professionals: MD, DO, or nurse practitioner licensed and in good standing in Missouri
+- Patient/caregiver cultivation application fee reduced to $50 (adjusted with CPI changes)
+- Patient cultivation ID requires an approved patient ID first — cannot apply without one
+- Prior convictions do NOT disqualify an individual from obtaining a patient ID card; however, a card may be revoked for certain criminal conduct that occurs AFTER the card is issued (see 19 CSR 100-1.040(6)(C))
 
 ## TAXATION
 - Medical purchases: 4% state tax (Missouri Veterans' Health and Care Fund)
 - Adult-use purchases: 6% state tax (Veterans, Health, and Community Reinvestment Fund)
 - Local governments may impose additional sales tax up to 3% on adult-use
 - All standard state and local sales/use taxes also apply
-- Tax proceeds: DHSS operations → expungement of marijuana offenses → MO Veterans Commission → MO Public Defender → local governments → grant recipients
+- Medical tax proceeds: DHSS operations → MO Veterans Commission (Veterans' Health and Care Fund)
+- Adult-use tax proceeds: DHSS operations → expungement of marijuana offenses → MO Veterans Commission → MO Public Defender → local governments → grant recipients
+- Department of Revenue gets up to 2% of total taxes collected for actual tax collection costs
 
 ## PROHIBITED ACTIVITIES (Marketing Relevance)
 - No cannabis consumption in public places (unless locally designated)
@@ -4431,28 +4465,37 @@ const MO_CANNABIS_COMPLIANCE_KB = `
 - No smoking marijuana where tobacco smoking is prohibited
 - No marketing to or targeting persons under 21 in any materials
 - Cannot claim cannabis treats/cures specific medical conditions without approval
-- Solvent-based extractions only by licensed facility (not home use, not event)
+- Solvent-based/combustible gas extractions only by licensed facility (patients may create home extractions WITHOUT combustible gases — no solvent-based home extraction)
 - Cannot promote unlicensed product or activities
+
+## HOME EXTRACTION (Patients Only)
+- Qualifying patients ARE allowed to create their own extractions at home
+- Restriction: NO combustible gases or other dangerous materials may be used in home extraction
+- Non-combustible extraction methods at home are permitted for personal use
 
 ## EMPLOYMENT & WORKPLACE
 - Employers may prohibit or restrict cannabis use in the workplace
 - Employers may discipline employees for working under the influence
 - Employers may refuse to hire/discharge employees for cannabis workplace violations
 - Article XIV does NOT require employers to accommodate cannabis use
-- All dispensary, cultivation, and manufacturing employees must be 21+ (for new hires after Feb 3, 2023)
-- Agent ID required for facility employees (fingerprints not required for new applicants since Dec 8, 2022)
+- All dispensary, cultivation, and manufacturing NEW employees must be 21+ (applies to new hires after Feb 3, 2023; current under-21 employees hired before that date may continue)
+- Agent ID required for facility employees (fingerprints NOT required for new applicants since Dec 8, 2022)
 - Owners with 10%+ financial or voting interest still need fingerprint criminal background check
+- Probation/Parole: Cannabis use protections for patients/consumers on supervision are outside DCR's authority — individuals should consult their attorney or P.O.
 
 ## LICENSE TYPES & STRUCTURE
 - Comprehensive Dispensary Facility: Sells to patients, caregivers, and consumers (21+)
 - Comprehensive Cultivation Facility: Grows and supplies marijuana
 - Comprehensive Manufacturing Facility: Makes infused products
 - Marijuana Testing Facility: Independent testing and certification (cannot be owned by same entity as cultivation/manufacturing/dispensary)
-- Microbusiness Dispensary: Smaller-scale dispensary (majority-owned by eligible individuals, e.g., net worth <$250K)
-- Microbusiness Wholesale: Cultivates up to 250 flowering plants, manufactures, sells to microbusiness dispensaries only
+- Marijuana Transportation Licensee: May complete deliveries on behalf of dispensary facilities
+- Microbusiness Dispensary: Dispensary designed for individuals who may not otherwise access ownership (e.g., net worth <$250K, veterans with service-connected disability); majority-owned by qualifying individuals per the Constitution; may ONLY sell product produced by microbusiness wholesale facilities
+- Microbusiness Wholesale: Cultivates up to 250 flowering plants at a time; may manufacture; sells ONLY to microbusiness dispensary facilities; combines concepts of cultivation + manufacturing
 - Licenses valid for 3 years, renewable
 - No entity may own more than 10% of total cultivation, dispensary, or manufacturing licenses outstanding
 - No entity may own both a microbusiness AND a comprehensive/medical license simultaneously
+- No new medical or comprehensive license applications accepted (existing medical licenses can convert to comprehensive)
+- Application periods for future licenses publicly announced at least 6 months in advance
 
 ## SEED-TO-SALE TRACKING
 - Required for ALL marijuana from seed/immature plant through final consumer sale
@@ -4460,6 +4503,40 @@ const MO_CANNABIS_COMPLIANCE_KB = `
 - No marijuana may be sold or transferred except through licensed facility
 - Every dispensary sale must be recorded against patient/consumer allotment
 - All transactions must be logged; records must be available for inspection
+
+## CBD & UNREGULATED CANNABIS PRODUCTS
+- DCR does NOT regulate CBD products produced from industrial hemp — only marijuana from licensed facilities
+- Delta-8 THC, Delta-10 THC, THCA, and similar products sold outside licensed dispensaries are NOT regulated by DCR under Article XIV
+- Unregulated psychoactive cannabis products have NOT been tested for content or contaminants by a licensed testing facility
+- Governor Parson issued Executive Order 24-10 (August 1, 2024) regarding unregulated psychoactive cannabis products — see health.mo.gov/report
+- Marketing CÚRADOR products must not be confused with unregulated products; always emphasize licensed, tested, DCR-regulated status
+
+## GUN OWNERSHIP / FIREARMS FOR CARDHOLDERS
+- Article XIV does NOT reference or prohibit possession or purchase of firearms
+- HOWEVER: Federal law may still prohibit firearm possession or purchase by individuals who use marijuana, regardless of state legalization
+- DCR does not regulate firearms and cannot advise on how federal prohibition will be enforced in Missouri
+- Cardholders with firearm questions should consult their attorney or appropriate law enforcement agency
+- Note: This is a legally sensitive topic — always direct customers to legal counsel, not dispensary staff
+
+## DISQUALIFYING FELONY OFFENSES (Ownership / License Applicants)
+- Article XIV prohibits anyone with a disqualifying felony offense from owning 10%+ of a comprehensive, microbusiness, or medical marijuana facility
+- A "disqualifying felony offense" = conviction or guilty plea (state or federal) that is/would have been a felony under MO law, regardless of sentence imposed (including SIS/SES)
+- Pending charges or arrests WITHOUT a conviction or guilty plea do NOT count as disqualifying
+- EXCEPTIONS — a felony is NOT disqualifying if:
+  1. The conviction/plea was for a marijuana offense that has been expunged or is currently eligible for expungement under Article XIV Section 2 (MO offenses only — out-of-state marijuana convictions are NOT eligible for this exception)
+  2. The conviction/plea was for a NON-VIOLENT crime for which the individual was NOT incarcerated AND the conviction is more than 5 years old
+  3. More than 5 years have passed since release from parole/probation AND no subsequent felony conviction or guilty plea since then
+- A felony is "violent" if it involves force or threat of force (e.g., 1st-degree burglary, arson, assault, manslaughter, murder, unlawful use of a weapon, robbery)
+- "Subsequent felony" means any felony committed AFTER the disqualifying offense — even if before parole/probation was completed
+- Incarceration for even a short period disqualifies the non-violent non-incarceration exception; must use Exception 3 instead
+
+## APPEALS
+- Any person/entity entitled to appeal under 19 CSR 100-1.020 must file a petition with the Missouri Administrative Hearing Commission (AHC) within 30 days of the date the Department decision is sent
+- Filing information: Missouri Administrative Hearing Commission website
+
+## DECRIMINALIZATION & EXPUNGEMENT
+- Article XIV includes provisions for persons with certain marijuana-related, non-violent offenses to petition for release from incarceration/parole/probation and have records expunged
+- Consult legal counsel to determine eligibility
 
 ## 2026 PROPOSED RULE UPDATES (Joint Committee approved March 2026)
 - Ownership review now occurs pre-issuance (before licenses granted)
