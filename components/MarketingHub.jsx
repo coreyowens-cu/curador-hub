@@ -955,12 +955,12 @@ export default function MarketingHub({ initialUserName }) {
     }
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save initiatives on every change (strip htmlConcept + purge stale IDs)
+  // Save initiatives on every change — write synchronously to localStorage
   useEffect(() => {
     if (!ready) return;
     const PURGE_IDS = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
     const toSave = initiatives.filter(i => !PURGE_IDS.has(i.id)).map(i => ({...i, htmlConcept: null}));
-    window.storage.set("ns-initiatives", JSON.stringify(toSave), true).catch(() => {});
+    try { localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave)); } catch {}
   }, [initiatives, ready]);
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
@@ -1075,14 +1075,14 @@ export default function MarketingHub({ initialUserName }) {
   };
   const addInit = (init) => { setInitiatives(p => [...p, init]); setShowAddInit(false); };
   const deleteInit = (id) => {
-    setInitiatives(p => p.filter(x => x.id !== id));
-    // If deleting a default initiative, record it so the load merge never re-adds it
-    if (DEFAULT_INITIATIVES.find(d => d.id === id)) {
-      try {
-        const prev = JSON.parse(localStorage.getItem("shared_ns_ns-deleted-defaults") || "[]");
-        localStorage.setItem("shared_ns_ns-deleted-defaults", JSON.stringify([...new Set([...prev, id])]));
-      } catch {}
-    }
+    setInitiatives(p => {
+      const updated = p.filter(x => x.id !== id);
+      // Write to localStorage SYNCHRONOUSLY right now — don't wait for useEffect
+      const PURGE = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
+      const toSave = updated.filter(i => !PURGE.has(i.id)).map(i => ({...i, htmlConcept: null}));
+      try { localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave)); } catch {}
+      return updated;
+    });
   };
   const updateInit = (id, updates) => setInitiatives(p => p.map(x => x.id === id ? { ...x, ...updates } : x));
   const deleteCampaign = (id) => setCampaigns(p => p.filter(x => x.id !== id));
