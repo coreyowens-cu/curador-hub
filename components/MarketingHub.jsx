@@ -881,13 +881,14 @@ export default function MarketingHub({ initialUserName }) {
           window.storage.get("ns-timeline", true),
         ]);
         if (s) setStrategy(JSON.parse(s.value));
+        const PURGE_IDS = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
         if (i) {
-          const loaded = JSON.parse(i.value);
+          const loaded = JSON.parse(i.value).filter(x => !PURGE_IDS.has(x.id));
           // Merge: add any default initiatives missing from saved data, unless explicitly deleted
           const deletedDefaults = JSON.parse(localStorage.getItem("shared_ns_ns-deleted-defaults") || "[]");
           const merged = [...loaded];
           DEFAULT_INITIATIVES.forEach(def => {
-            if (!merged.find(x => x.id === def.id) && !deletedDefaults.includes(def.id)) merged.push(def);
+            if (!PURGE_IDS.has(def.id) && !merged.find(x => x.id === def.id) && !deletedDefaults.includes(def.id)) merged.push(def);
           });
           // Deduplicate by title — keep first occurrence of each title
           const seen = new Set();
@@ -967,14 +968,12 @@ export default function MarketingHub({ initialUserName }) {
     }
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save initiatives on every change (strip htmlConcept — fetched fresh from _conceptUrl)
+  // Save initiatives on every change (strip htmlConcept + purge stale IDs)
   useEffect(() => {
     if (!ready) return;
-    const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
-    console.log("💾 Saving", toSave.length, "initiatives");
-    window.storage.set("ns-initiatives", JSON.stringify(toSave), true)
-      .then(() => console.log("✅ Saved"))
-      .catch(e => console.error("❌ Failed:", e));
+    const PURGE_IDS = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
+    const toSave = initiatives.filter(i => !PURGE_IDS.has(i.id)).map(i => ({...i, htmlConcept: null}));
+    window.storage.set("ns-initiatives", JSON.stringify(toSave), true).catch(() => {});
   }, [initiatives, ready]);
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
