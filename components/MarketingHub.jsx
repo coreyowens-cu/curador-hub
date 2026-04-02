@@ -1159,6 +1159,7 @@ export default function MarketingHub({ initialUserName }) {
                   {[
                     { id: "company",     icon: "✦",  label: "Marketing Vision" },
                     { id: "initiatives", icon: "📌", label: "Initiatives" },
+                    { id: "campaigns",   icon: "🚀", label: "Campaigns" },
                     { id: "concepts",    icon: "🎨", label: "Concepts" },
                     { id: "timeline",    icon: "📅", label: "Timeline" },
                   ].map(t => (
@@ -1167,26 +1168,6 @@ export default function MarketingHub({ initialUserName }) {
                       {lsbOpen && <span className="lsb-lbl">{t.label}</span>}
                     </button>
                   ))}
-
-                  {/* Campaigns — with inline dropdown */}
-                  <button className={`lsb-tab ${leftTab === "campaigns" ? "on" : ""}`} onClick={() => { setLeftTab("campaigns"); setCampaignView("briefs"); setActiveBrand(null); }}>
-                    <span className="lsb-icon">🚀</span>
-                    {lsbOpen && <span className="lsb-lbl">Campaigns</span>}
-                    {lsbOpen && (
-                      <span style={{ marginLeft: "auto", fontSize: 10, opacity: .5, transition: "transform .18s", display: "inline-block", transform: leftTab === "campaigns" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
-                    )}
-                  </button>
-                  {leftTab === "campaigns" && lsbOpen && (
-                    <div style={{ paddingLeft: 16 }}>
-                      {[["briefs","📋","Briefs"],["timeline","📅","Timeline"]].map(([v, icon, label]) => (
-                        <button key={v} className={`lsb-tab ${campaignView === v ? "on" : ""}`}
-                          onClick={() => { setCampaignView(v); setActiveBrand(null); }}>
-                          <span className="lsb-icon">{icon}</span>
-                          <span className="lsb-lbl">{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
 
                   {/* Team — with inline dropdown */}
                   <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { setLeftTab("team"); setActiveBrand(null); }}>
@@ -1465,7 +1446,16 @@ export default function MarketingHub({ initialUserName }) {
                   </div>
                   {canAddContent && <button className="btn btn-gold" style={{ marginTop: 8 }} onClick={() => setShowCampaignModal(true)}>+ New Brief</button>}
                 </div>
-{campaignView === "briefs" && <CampaignsPanel campaigns={campaigns} onNew={() => setShowCampaignModal(true)} onSelect={setSelectedCampaign} onDelete={canEdit ? deleteCampaign : null} fullWidth />}
+                {/* View tabs */}
+                <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+                  {[["briefs","📋 Briefs"],["timeline","📅 Timeline"]].map(([v, label]) => (
+                    <button key={v} onClick={() => setCampaignView(v)}
+                      style={{ padding: "6px 16px", borderRadius: 7, border: `1px solid ${campaignView === v ? "rgba(201,168,76,.4)" : "var(--border)"}`, background: campaignView === v ? "var(--gold-dim)" : "transparent", color: campaignView === v ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 12, fontWeight: campaignView === v ? 600 : 400, cursor: "pointer", letterSpacing: ".04em", transition: "all .15s" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {campaignView === "briefs" && <CampaignsPanel campaigns={campaigns} onNew={() => setShowCampaignModal(true)} onSelect={setSelectedCampaign} onDelete={canEdit ? deleteCampaign : null} fullWidth />}
                 {campaignView === "timeline" && <CampaignTimelinePanel campaignTimeline={campaignTimeline} setCampaignTimeline={setCampaignTimeline} campaigns={campaigns} brands={brands} />}
               </div>
             )}
