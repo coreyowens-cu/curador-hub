@@ -883,23 +883,10 @@ export default function MarketingHub({ initialUserName }) {
         if (s) setStrategy(JSON.parse(s.value));
         const PURGE_IDS = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
         if (i) {
+          // Saved data is the source of truth — no merging defaults back in
           const loaded = JSON.parse(i.value).filter(x => !PURGE_IDS.has(x.id));
-          // Merge: add any default initiatives missing from saved data, unless explicitly deleted
-          const deletedDefaults = JSON.parse(localStorage.getItem("shared_ns_ns-deleted-defaults") || "[]");
-          const merged = [...loaded];
-          DEFAULT_INITIATIVES.forEach(def => {
-            if (!PURGE_IDS.has(def.id) && !merged.find(x => x.id === def.id) && !deletedDefaults.includes(def.id)) merged.push(def);
-          });
-          // Deduplicate by title — keep first occurrence of each title
-          const seen = new Set();
-          const deduped = merged.filter(x => {
-            const key = (x.title || "").trim().toLowerCase();
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          console.log("📦 Loaded", deduped.length, "initiatives from storage");
-          setInitiatives(deduped);
+          console.log("📦 Loaded", loaded.length, "initiatives from storage");
+          setInitiatives(loaded);
         } else {
           console.log("📦 No saved initiatives found, using defaults");
         }
