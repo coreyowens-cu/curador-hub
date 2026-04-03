@@ -2988,15 +2988,8 @@ function OrgChartView({ teamMembers, currentUser, orgRoles: initialRoles, onSele
                       style={{ background: "transparent", border: "none", outline: "none", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", width: "100%", textAlign: "center" }} />
                   ) : (
                     <>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: isMe ? "var(--gold)" : filled ? "var(--text)" : "var(--text-muted)", textAlign: "center", lineHeight: 1.3 }}>{role.title}</div>
-                      {filled && <div style={{ fontSize: 9, color: isMe ? "var(--gold)" : "var(--text-muted)", textAlign: "center", marginTop: 2 }}>{isMe ? "YOU" : mems[0].name}</div>}
-                      {filled && (
-                        <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
-                          {mems.slice(0, 3).map(m => (
-                            <div key={m.name} style={{ width: 13, height: 13, borderRadius: "50%", background: m.color.bg, color: m.color.text, border: "1px solid var(--surface)", display: "grid", placeItems: "center", fontSize: 6, fontWeight: 700, marginLeft: -2 }}>{initials(m.name)}</div>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ fontSize: 11, fontWeight: 600, color: filled ? "var(--text)" : "var(--text-muted)", textAlign: "center", lineHeight: 1.3 }}>{role.title}</div>
+                      {filled && <div style={{ display: "flex", justifyContent: "center", marginTop: 4, gap: 3 }}>{mems.map(m => (<div key={m.name} style={{ width: 7, height: 7, borderRadius: "50%", background: m.color?.bg || "var(--gold)", border: "1px solid var(--surface)" }} />))}</div>}
                     </>
                   )}
                 </div>
