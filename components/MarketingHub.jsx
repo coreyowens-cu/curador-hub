@@ -102,6 +102,7 @@ const DEFAULT_INITIATIVES = [
   {id:"init-hc-social",title:"Headchange Social Strategy", description:"A comprehensive social media strategy for Headchange — defining the brand voice, content pillars, posting cadence, and platform approach for Instagram-first connoisseur culture.",                                                                                                    owner:"Brand Team", channel:"06 · Social Media Strategy",            startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"HC Social Strategy", _conceptUrl:"/concepts/hc-social.html"},
   {id:"init-hc-drop",  title:"Head Change Drop Program",  description:"A limited-release merchandise and product ecosystem inspired by streetwear culture, scarcity marketing, and collectible design. Each drop is treated as a cultural moment — not a product release. Drop access is tied directly into Head Change loyalty, making early access the reward.", owner:"Brand Team", channel:"13 · Brand Merchandise Programs",       startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Head Change Drop Program", _conceptUrl:"/concepts/hc-drop-program.html"},
   {id:"init-hc-sesh",  title:"Quarterly Sesh Playbook",   description:"Full operations and content strategy SOP for the HeadChange Sesh — a quarterly brand event treated as a cultural asset. Covers the discovery gate, admin lockdown, inventory pull, final sprint, content capture shot list, and post-event recycling workflow.", owner:"Brand Team", channel:"07 · Reimagined Events",               startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Quarterly Sesh Playbook",   _conceptUrl:"/concepts/hc-sesh-playbook.html"},
+  {id:"init-email-sms", title:"Email & SMS Marketing",      description:"Direct-to-consumer and B2B email and SMS marketing across all three CÚRADOR brands. Covers product drops, loyalty updates, events, dispensary sell-through communications, and brand newsletters. Segmented by brand, customer tier, and purchase behavior. Positions CÚRADOR as a communication partner with both consumers and dispensary partners — not just a vendor.", owner:"Brand Team", channel:"03 · Email & SMS Marketing", startDate:"2026-01-01", endDate:"", revolving:true, fileUrl:null, fileName:null, _brief:null, brandId:null, htmlConcept:null, htmlConceptName:null},
 ];
 
 const DEFAULT_CAMPAIGNS = [
@@ -754,14 +755,15 @@ export default function MarketingHub({ initialUserName }) {
     try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
   });
   const [initiatives, setInitiatives] = useState(() => {
-    const PURGE_IDS = ["init-hc-sms", "init-sb-sms", "init-bub-sms"];
     try {
       const v = localStorage.getItem("shared_ns_ns-initiatives");
-      if (!v) { console.log("🔴 INIT: no LS key found, using defaults"); return DEFAULT_INITIATIVES; }
-      const parsed = JSON.parse(v).filter(i => !PURGE_IDS.includes(i.id));
-      console.log("🟢 INIT: loaded", parsed.length, "initiatives:", parsed.map(x=>x.title));
-      return parsed;
-    } catch (e) { console.log("🔴 INIT error:", e); return DEFAULT_INITIATIVES; }
+      if (!v) { return DEFAULT_INITIATIVES; }
+      const parsed = JSON.parse(v);
+      // Restore any DEFAULT initiatives that were previously purged but are now wanted back
+      const RESTORE_IDS = ["init-email-sms"];
+      const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
+      return [...parsed, ...restored];
+    } catch (e) { return DEFAULT_INITIATIVES; }
   });
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
@@ -844,21 +846,6 @@ export default function MarketingHub({ initialUserName }) {
   const [concepts, setConcepts] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-concepts"); return v ? JSON.parse(v) : []; } catch { return []; } }); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
 
-  // One-time localStorage surgery: remove known stale duplicate initiative IDs
-  // that were removed from DEFAULT_INITIATIVES but may still exist in saved storage
-  useEffect(() => {
-    const STALE_IDS = ["init-sb-sms", "init-bub-sms"];
-    try {
-      const raw = localStorage.getItem("shared_ns_ns-initiatives");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const cleaned = parsed.filter(i => !STALE_IDS.includes(i.id));
-        if (cleaned.length < parsed.length) {
-          localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(cleaned));
-        }
-      }
-    } catch {}
-  }, []);
 
   // Load
   useEffect(() => {
@@ -933,8 +920,7 @@ export default function MarketingHub({ initialUserName }) {
   // Save initiatives — backup write on any state change (primary write is synchronous in deleteInit)
   useEffect(() => {
     if (!ready) return;
-    const PURGE_IDS = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
-    const toSave = initiatives.filter(i => !PURGE_IDS.has(i.id)).map(i => ({...i, htmlConcept: null}));
+    const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
     try { localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave)); } catch {}
   }, [initiatives, ready]);
 
@@ -1050,15 +1036,11 @@ export default function MarketingHub({ initialUserName }) {
   };
   const addInit = (init) => { setInitiatives(p => [...p, init]); setShowAddInit(false); };
   const deleteInit = (id) => {
-    console.log("🗑️ DELETE called for id:", id, "| current list:", initiatives.map(x=>x.id));
     const updated = initiatives.filter(x => x.id !== id);
-    const PURGE = new Set(["init-hc-sms", "init-sb-sms", "init-bub-sms"]);
-    const toSave = updated.filter(i => !PURGE.has(i.id)).map(i => ({...i, htmlConcept: null}));
+    const toSave = updated.map(i => ({...i, htmlConcept: null}));
     try {
       localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave));
-      const verify = localStorage.getItem("shared_ns_ns-initiatives");
-      console.log("✅ SAVED", toSave.length, "initiatives. LS verify:", JSON.parse(verify).map(x=>x.title));
-    } catch(e) { console.log("🔴 SAVE ERROR:", e); }
+    } catch(e) {}
     setInitiatives(updated);
   };
   const updateInit = (id, updates) => setInitiatives(p => p.map(x => x.id === id ? { ...x, ...updates } : x));
