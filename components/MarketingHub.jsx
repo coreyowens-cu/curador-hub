@@ -1029,7 +1029,7 @@ export default function MarketingHub({ initialUserName }) {
           .catch(() => {});
       }
     });
-  }, [ready]);
+  }, [ready, initiatives]);
   // Load campaign HTML concepts from storage or _conceptUrl on startup
   useEffect(() => {
     if (!ready) return;
