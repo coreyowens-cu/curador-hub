@@ -581,7 +581,7 @@ input[type="date"].fi{color-scheme:dark;}
 .notes-count{font-size:10px;background:var(--gold);color:var(--bg);border-radius:100px;padding:1px 6px;font-weight:700;line-height:1.4;}
 
 /* NOTES PANEL */
-.notes-panel{position:fixed;top:0;right:0;width:var(--nw);height:100vh;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:65;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);}
+.notes-panel{position:fixed;top:52px;right:0;width:var(--nw);height:calc(100vh - 52px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:65;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);}
 .notes-panel.open{transform:translateX(0);}
 .notes-hdr{padding:14px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .notes-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
