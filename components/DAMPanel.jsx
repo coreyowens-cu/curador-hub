@@ -134,7 +134,9 @@ const ASSET_CATS = [
   { id: "print-video",    label: "Video",               icon: "🎬", sub: true, parent: "print" },
   { id: "education",  label: "Budtender Education", icon: "◎" },
   { id: "menu",       label: "Menu Assets",         icon: "≡" },
-  { id: "web",        label: "Website / Digital",   icon: "⬡" },
+  { id: "web",            label: "Website / Digital",   icon: "⬡" },
+  { id: "web-newsletter", label: "Newsletter",          icon: "📧", sub: true, parent: "web" },
+  { id: "web-ads",        label: "Digital Ads",          icon: "📢", sub: true, parent: "web" },
   { id: "brief",      label: "Briefs & Docs",       icon: "▤" },
   { id: "concept",    label: "HTML Concepts",       icon: "✦" },
 ];
@@ -153,7 +155,7 @@ const ALL_TYPES = [
   { id:"logo",label:"Logos & Brand ID"},{id:"photo",label:"Photography"},
   {id:"social-img",label:"Social Media Images"},{id:"social-vid",label:"Social / Video"},
   {id:"print",label:"Retail Assets"},{id:"print-display",label:"Displays"},{id:"print-sticker",label:"Stickers"},{id:"print-info",label:"Product Info Cards"},{id:"print-poster",label:"Posters"},{id:"print-video",label:"Video"},{id:"education",label:"Budtender Education"},
-  {id:"menu",label:"Menu Assets"},{id:"web",label:"Website / Digital"},
+  {id:"menu",label:"Menu Assets"},{id:"web",label:"Website / Digital"},{id:"web-newsletter",label:"Newsletter"},{id:"web-ads",label:"Digital Ads"},
   {id:"brief",label:"Briefs & Docs"},{id:"concept",label:"HTML Concepts"},
   {id:"merch-tee",label:"Tee"},{id:"merch-hoodie",label:"Hoodie"},
   {id:"merch-hat",label:"Hat"},{id:"merch-sticker",label:"Sticker"},
@@ -163,7 +165,7 @@ const ALL_TYPES = [
 const TYPE_EMOJI = {
   logo:"🎨",photo:"🖼️","social-img":"📸","social-vid":"🎬",print:"🏪",
   "print-display":"🖼","print-sticker":"🏷","print-info":"📇","print-poster":"📰","print-video":"🎬",
-  education:"📚",menu:"🍃",web:"🌐",brief:"📄",concept:"✦",merch:"🛍",
+  education:"📚",menu:"🍃",web:"🌐","web-newsletter":"📧","web-ads":"📢",brief:"📄",concept:"✦",merch:"🛍",
   "merch-tee":"👕","merch-hoodie":"🧥","merch-hat":"🧢",
   "merch-sticker":"🏷","merch-lanyard":"🪪","merch-other":"✦",
 };
