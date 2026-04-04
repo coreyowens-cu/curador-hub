@@ -1955,7 +1955,7 @@ export default function MarketingHub({ initialUserName }) {
                   </div>
 
                   {/* Hero strip */}
-                  <div style={{ position: "relative", padding: "52px 44px 44px", borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
+                  <div data-tag-type="Brand" data-tag-label={b.name} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ position: "relative", padding: "52px 44px 44px", borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
                     <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 20% 50%, ${b.color}12 0%, transparent 60%)`, pointerEvents: "none" }} />
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: b.color }} />
                     <div style={{ position: "relative" }}>
@@ -1968,11 +1968,11 @@ export default function MarketingHub({ initialUserName }) {
 
                   {/* Mission + Audience */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--border)" }}>
-                    <div style={{ padding: "28px 36px", borderRight: "1px solid var(--border)" }}>
+                    <div data-tag-type="Mission" data-tag-label={`${b.name} Mission`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "28px 36px", borderRight: "1px solid var(--border)" }}>
                       <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 10, fontWeight: 500 }}>Mission</div>
                       <div style={{ fontFamily: "var(--df)", fontSize: 20, fontStyle: "italic", color: "var(--text)", lineHeight: 1.55 }}>{b.mission}</div>
                     </div>
-                    <div style={{ padding: "28px 36px" }}>
+                    <div data-tag-type="Audience" data-tag-label={`${b.name} Target Audience`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "28px 36px" }}>
                       <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 10, fontWeight: 500 }}>Target Audience</div>
                       <div style={{ fontSize: 14, color: "var(--text-dim)", lineHeight: 1.8 }}>{b.audience}</div>
                     </div>
@@ -1980,7 +1980,7 @@ export default function MarketingHub({ initialUserName }) {
 
                   {/* Values + Guidelines */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                    <div style={{ padding: "28px 36px", borderRight: "1px solid var(--border)" }}>
+                    <div data-tag-type="Values" data-tag-label={`${b.name} Core Values`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "28px 36px", borderRight: "1px solid var(--border)" }}>
                       <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 14, fontWeight: 500 }}>Core Values</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {b.values.map((v, i) => (
@@ -1991,7 +1991,7 @@ export default function MarketingHub({ initialUserName }) {
                         ))}
                       </div>
                     </div>
-                    <div style={{ padding: "28px 36px" }}>
+                    <div data-tag-type="Guidelines" data-tag-label={`${b.name} Brand Guidelines`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "28px 36px" }}>
                       <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 14, fontWeight: 500 }}>Brand Guidelines</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         {[{ label: "Tone of Voice", value: b.tone }, { label: "Typography", value: b.typography }].map(row => (
@@ -2020,7 +2020,7 @@ export default function MarketingHub({ initialUserName }) {
                   {(b.products || b.positioning) && (
                     <div style={{ display: "grid", gridTemplateColumns: b.products && b.positioning ? "1fr 1fr" : "1fr", borderTop: "1px solid var(--border)" }}>
                       {b.products && (
-                        <div style={{ padding: "24px 36px", borderRight: b.positioning ? "1px solid var(--border)" : "none" }}>
+                        <div data-tag-type="Products" data-tag-label={`${b.name} Product SKUs`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "24px 36px", borderRight: b.positioning ? "1px solid var(--border)" : "none" }}>
                           <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 12, fontWeight: 500 }}>Product SKUs</div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                             {b.products.split("·").map(p => p.trim()).filter(Boolean).map(p => (
@@ -2033,7 +2033,7 @@ export default function MarketingHub({ initialUserName }) {
                         </div>
                       )}
                       {b.positioning && (
-                        <div style={{ padding: "24px 36px" }}>
+                        <div data-tag-type="Positioning" data-tag-label={`${b.name} Portfolio Role`} data-tag-section="Brand Profile" data-tag-brand={b.name} style={{ padding: "24px 36px" }}>
                           <div style={{ fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 12, fontWeight: 500 }}>Portfolio Role</div>
                           <div style={{ padding: "14px 16px", background: b.color + "0a", border: `1px solid ${b.color}22`, borderRadius: 10 }}>
                             <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.75 }}>{b.positioning}</div>
