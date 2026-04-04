@@ -1116,7 +1116,7 @@ export default function MarketingHub({ initialUserName }) {
     if (pendingTag) {
       setNotes(p => [{
         id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color,
-        text: noteText.trim(), detail: "", ts: new Date().toISOString(),
+        text: noteText.trim(), detail: pendingTag.snippet || "", ts: new Date().toISOString(),
         context: pendingTag.label ? `${pendingTag.type || pendingTag.section || "Note"}: ${pendingTag.label}` : null,
         section: pendingTag.section || null, brand: pendingTag.brand || null,
       }, ...p]);
@@ -1139,7 +1139,10 @@ export default function MarketingHub({ initialUserName }) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      const tag = { type: el.dataset.tagType, label: el.dataset.tagLabel, section: el.dataset.tagSection, brand: el.dataset.tagBrand || "" };
+      // Grab a snippet of the element's text for auto-detail
+      const rawText = (el.textContent || "").replace(/\s+/g, " ").trim();
+      const snippet = rawText.length > 200 ? rawText.slice(0, 200) + "…" : rawText;
+      const tag = { type: el.dataset.tagType, label: el.dataset.tagLabel, section: el.dataset.tagSection, brand: el.dataset.tagBrand || "", snippet };
       setPendingTag(tag);
       setMarkerMode(false);
       setNotesOpen(true);
@@ -2194,7 +2197,6 @@ export default function MarketingHub({ initialUserName }) {
                     <div className="note-marker" style={{ background: note.color.bg, color: note.color.text, width: 22, height: 22, fontSize: 9 }}>{initials(note.author)}</div>
                     <div className="note-author">{note.author}</div>
                     <div className="note-time">{relativeTime(note.ts)}</div>
-                    {currentUser && <button className="note-reply-btn" title="Reply" onClick={e => { e.stopPropagation(); setReplyingToId(replyingToId === note.id ? null : note.id); setReplyText(""); }}>↩</button>}
                     <button className="note-expand-btn" title="Add / view detail" onClick={e => { e.stopPropagation(); if (isExpanded) { setExpandedNoteId(null); } else { setExpandedNoteId(note.id); setNoteDetailDraft(note.detail || ""); } }}>{isExpanded ? "▲" : "▼"}</button>
                     {isAuthor && <button className="note-del" onClick={e => { e.stopPropagation(); setNotes(p => p.filter(n => n.id !== note.id)); if (isExpanded) setExpandedNoteId(null); }}>✕</button>}
                   </div>
@@ -2206,6 +2208,18 @@ export default function MarketingHub({ initialUserName }) {
                     </div>
                   )}
                   <div className="note-body" style={{ cursor: "pointer" }} onClick={() => { if (isExpanded) { setExpandedNoteId(null); } else { setExpandedNoteId(note.id); setNoteDetailDraft(note.detail || ""); } }}>{note.text}</div>
+                  {note.detail && !isExpanded && (
+                    <div style={{ paddingLeft: 28, marginTop: 4, fontSize: 11, color: "var(--text-muted)", lineHeight: 1.5, borderLeft: "2px solid rgba(201,168,76,.2)", paddingTop: 2, paddingBottom: 2, paddingRight: 4, marginBottom: 2 }}>
+                      {note.detail.length > 120 ? note.detail.slice(0, 120) + "…" : note.detail}
+                    </div>
+                  )}
+                  <div style={{ paddingLeft: 28, marginTop: 4, display: "flex", gap: 12, alignItems: "center" }}>
+                    {currentUser && replyingToId !== note.id && (
+                      <button onClick={() => { setReplyingToId(note.id); setReplyText(""); }} style={{ background: "none", border: "none", padding: 0, fontFamily: "var(--bf)", fontSize: 10, color: "var(--text-muted)", cursor: "pointer", letterSpacing: ".04em" }} onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"} onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}>
+                        Reply {(note.replies || []).length > 0 && <span style={{ color: "var(--gold)", fontWeight: 600 }}>({note.replies.length})</span>}
+                      </button>
+                    )}
+                  </div>
                   {isExpanded && (
                     <div style={{ paddingLeft: 28, marginTop: 8 }} onClick={e => e.stopPropagation()}>
                       {currentUser ? (
