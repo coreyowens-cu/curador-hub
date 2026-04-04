@@ -947,7 +947,7 @@ export default function MarketingHub({ initialUserName }) {
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
           const parsed = JSON.parse(i.value);
-          const RESTORE_IDS = ["init-email-sms"];
+          const RESTORE_IDS = ["init-email-sms","init-hc-sesh"];
           const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
           setInitiatives([...parsed, ...restored]);
         }
@@ -1000,11 +1000,12 @@ export default function MarketingHub({ initialUserName }) {
   }, []);
 
   useEffect(() => { if (ready) window.storage.set("ns-strategy", JSON.stringify(strategy), true).catch(() => {}); }, [strategy, ready]);
-  // Save initiatives — backup write on any state change (primary write is synchronous in deleteInit)
+  // Save initiatives — write to both localStorage and Supabase
   useEffect(() => {
     if (!ready) return;
     const toSave = initiatives.map(i => ({...i, htmlConcept: null}));
     try { localStorage.setItem("shared_ns_ns-initiatives", JSON.stringify(toSave)); } catch {}
+    window.storage.set("ns-initiatives", JSON.stringify(toSave), true).catch(() => {});
   }, [initiatives, ready]);
 
   // Concept HTML cache — stored separately so it never triggers the initiatives save effect
