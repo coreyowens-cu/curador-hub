@@ -607,6 +607,18 @@ input[type="date"].fi{color-scheme:dark;}
 .note-expand-btn{opacity:0;font-size:10px;color:var(--text-muted);cursor:pointer;background:none;border:none;font-family:var(--bf);transition:opacity .15s,color .15s;padding:0 0 0 4px;}
 .note-item:hover .note-expand-btn{opacity:1;}
 .note-expand-btn:hover{color:var(--gold);}
+.note-reply-btn{opacity:0;font-size:10px;color:var(--text-muted);cursor:pointer;background:none;border:none;font-family:var(--bf);transition:opacity .15s,color .15s;padding:0 0 0 4px;}
+.note-item:hover .note-reply-btn{opacity:1;}
+.note-reply-btn:hover{color:var(--gold);}
+.note-replies{margin-top:6px;padding-left:28px;display:flex;flex-direction:column;gap:6px;}
+.note-reply{display:flex;gap:8px;align-items:flex-start;}
+.note-reply-body{font-size:12px;color:var(--text-dim);line-height:1.5;}
+.note-reply-author{font-size:10px;font-weight:600;color:var(--text-muted);}
+.note-reply-time{font-size:9px;color:var(--text-muted);}
+.note-reply-input{display:flex;gap:6px;margin-top:4px;padding-left:28px;}
+.note-reply-input input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-family:var(--bf);font-size:12px;outline:none;}
+.note-reply-input input:focus{border-color:rgba(201,168,76,.35);}
+.note-reply-input button{padding:6px 12px;border-radius:7px;border:none;background:var(--gold);color:var(--bg);font-family:var(--bf);font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
 .note-detail{margin-top:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-left:2px solid rgba(201,168,76,.25);border-radius:0 6px 6px 0;font-size:12px;color:var(--text-dim);line-height:1.65;white-space:pre-wrap;}
 .note-detail-ta{width:100%;background:var(--surface2);border:1px solid rgba(201,168,76,.3);border-radius:7px;padding:7px 10px;color:var(--text);font-family:var(--bf);font-size:12px;line-height:1.6;resize:none;outline:none;min-height:72px;margin-top:6px;}
 .note-detail-ta:focus{border-color:rgba(201,168,76,.55);}
@@ -627,6 +639,23 @@ input[type="date"].fi{color-scheme:dark;}
 .marker-bubble{width:22px;height:22px;border-radius:50%;border:2px solid var(--bg);display:grid;place-items:center;font-size:8px;font-weight:700;margin-left:-5px;transition:transform .15s;cursor:default;}
 .marker-bubble:first-child{margin-left:0;}
 .marker-bubble:hover{transform:scale(1.15) translateY(-2px);z-index:2;}
+
+/* MARKER MODE */
+.main.marker-active{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E") 12 24, crosshair;}
+.main.marker-active [data-tag-type]{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23c9a84c' stroke='%23c9a84c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3' fill='%2307070f'/%3E%3C/svg%3E") 12 24, crosshair;transition:box-shadow .15s,border-color .15s;}
+.main.marker-active [data-tag-type]:hover{box-shadow:0 0 0 2px rgba(201,168,76,.5);border-color:rgba(201,168,76,.4) !important;border-radius:10px;}
+.marker-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:12px;padding:10px 20px;border-radius:10px;background:rgba(201,168,76,.12);backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,.3);color:var(--gold);font-family:var(--bf);font-size:12px;font-weight:500;letter-spacing:.04em;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:markerHintIn .25s ease;}
+.marker-hint button{padding:4px 12px;border-radius:6px;border:1px solid rgba(201,168,76,.3);background:transparent;color:var(--gold);font-family:var(--bf);font-size:11px;cursor:pointer;transition:all .15s;}
+.marker-hint button:hover{background:rgba(201,168,76,.15);}
+@keyframes markerHintIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.pending-tag{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:8px;border-radius:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);}
+.pending-tag-label{font-size:11px;color:var(--gold);font-weight:600;}
+.pending-tag-sub{font-size:10px;color:var(--text-muted);}
+.pending-tag-clear{margin-left:auto;padding:2px 8px;border-radius:5px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer;font-family:var(--bf);transition:all .15s;}
+.pending-tag-clear:hover{color:var(--gold);border-color:rgba(201,168,76,.4);}
+.marker-btn{display:flex;align-items:center;gap:5px;font-family:var(--bf);font-size:11px;font-weight:500;padding:7px 11px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .18s;}
+.marker-btn:hover{border-color:rgba(255,255,255,.14);color:var(--text);}
+.marker-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 
 /* MODALS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px;}
@@ -812,6 +841,10 @@ export default function MarketingHub({ initialUserName }) {
   const [noteText, setNoteText] = useState("");
   const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [noteDetailDraft, setNoteDetailDraft] = useState("");
+  const [replyingToId, setReplyingToId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [markerMode, setMarkerMode] = useState(false);
+  const [pendingTag, setPendingTag] = useState(null);
   const [currentUser, setCurrentUser] = useState(() => { try { const v = localStorage.getItem("ns_ns-user"); return v ? JSON.parse(v) : null; } catch { return null; } });
   const isAdmin = currentUser?.name?.toLowerCase() === "sean";
   const canEdit = isAdmin;
@@ -1058,6 +1091,12 @@ export default function MarketingHub({ initialUserName }) {
     setExpandedNoteId(null);
     setNoteDetailDraft("");
   };
+  const addReply = (noteId) => {
+    if (!replyText.trim() || !currentUser) return;
+    setNotes(p => p.map(n => n.id === noteId ? { ...n, replies: [...(n.replies || []), { id: `r-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: replyText.trim(), ts: new Date().toISOString() }] } : n));
+    setReplyText("");
+    setReplyingToId(null);
+  };
   const addNoteWithContext = (ctx) => {
     if (!ctx || !currentUser) return;
     const text = ctx.prefill || ctx.text || "";
@@ -1070,6 +1109,48 @@ export default function MarketingHub({ initialUserName }) {
     }, ...p]);
     setNotesOpen(true);
   };
+
+  // Marker mode: post note with or without pending tag
+  const postNote = () => {
+    if (!noteText.trim() || !currentUser) return;
+    if (pendingTag) {
+      setNotes(p => [{
+        id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color,
+        text: noteText.trim(), detail: "", ts: new Date().toISOString(),
+        context: pendingTag.label ? `${pendingTag.type || pendingTag.section || "Note"}: ${pendingTag.label}` : null,
+        section: pendingTag.section || null, brand: pendingTag.brand || null,
+      }, ...p]);
+      setPendingTag(null);
+    } else {
+      setNotes(p => [{ id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: noteText.trim(), detail: "", ts: new Date().toISOString() }, ...p]);
+    }
+    setNoteText("");
+  };
+
+  // Marker mode: native capture-phase click handler on <main>
+  const mainRef = useRef(null);
+  useEffect(() => {
+    if (!markerMode) return;
+    const main = mainRef.current;
+    if (!main) return;
+    const handler = (e) => {
+      const el = e.target.closest("[data-tag-type]");
+      if (!el) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const tag = { type: el.dataset.tagType, label: el.dataset.tagLabel, section: el.dataset.tagSection, brand: el.dataset.tagBrand || "" };
+      setPendingTag(tag);
+      setMarkerMode(false);
+      setNotesOpen(true);
+      el.style.boxShadow = "0 0 0 3px rgba(201,168,76,.6)";
+      setTimeout(() => { el.style.boxShadow = ""; }, 800);
+    };
+    main.addEventListener("click", handler, true);
+    const keyHandler = (e) => { if (e.key === "Escape") setMarkerMode(false); };
+    window.addEventListener("keydown", keyHandler);
+    return () => { main.removeEventListener("click", handler, true); window.removeEventListener("keydown", keyHandler); };
+  }, [markerMode]);
 
   const saveFile = (id, url, name) => { setInitiatives(p => p.map(x => x.id !== id ? x : { ...x, fileUrl: url, fileName: name })); setFileModal(null); };
   const saveConceptHtml = (id, html, name) => {
@@ -1203,7 +1284,7 @@ export default function MarketingHub({ initialUserName }) {
                 View Only
               </div>
             )}
-            <button className={`notes-toggle ${notesOpen ? "open" : ""}`} onClick={() => setNotesOpen(o => !o)}>
+            <button className={`notes-toggle ${notesOpen ? "open" : ""}`} onClick={() => { if (notesOpen) { setNotesOpen(false); setMarkerMode(false); } else { setNotesOpen(true); if (currentUser) setMarkerMode(true); } }}>
               ✏ Notes {notes.length > 0 && <span className="notes-count">{notes.length}</span>}
             </button>
             {currentUser && (
@@ -1365,7 +1446,7 @@ export default function MarketingHub({ initialUserName }) {
           </aside>
 
           {/* MAIN */}
-          <main className={`main ${notesOpen ? "nr" : ""}`}>
+          <main ref={mainRef} className={`main ${notesOpen ? "nr" : ""} ${markerMode ? "marker-active" : ""}`}>
             <div className="hub">
 
             {/* ── TEAM VIEW ── */}
@@ -1460,7 +1541,7 @@ export default function MarketingHub({ initialUserName }) {
                       const isLoadingConcept = hasConceptUrl && !hasConcept;
                       const pct = dateProgress(init.startDate, init.endDate);
                       return (
-                        <div key={init.id} style={{
+                        <div key={init.id} data-tag-type="Initiative" data-tag-label={init.title} data-tag-section="Initiatives" data-tag-brand={init.brandId && brands[init.brandId] ? brands[init.brandId].name : ""} style={{
                           background: "var(--surface)", borderRadius: 14,
                           border: `1px solid ${hasConcept ? color + "33" : "var(--border)"}`,
                           borderTop: `2px solid ${color}`,
@@ -1755,7 +1836,7 @@ export default function MarketingHub({ initialUserName }) {
                   </div>
 
                   {/* Hero */}
-                  <div style={{ position: "relative", padding: "56px 44px 48px", borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
+                  <div data-tag-type="Section" data-tag-label="Marketing Vision" data-tag-section="Company" style={{ position: "relative", padding: "56px 44px 48px", borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
                     <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 20% 50%, rgba(201,168,76,.08) 0%, transparent 60%)", pointerEvents: "none" }} />
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, var(--gold), #a07030)" }} />
                     <div style={{ position: "relative" }}>
@@ -1973,7 +2054,7 @@ export default function MarketingHub({ initialUserName }) {
                               {brandInits.map(init => {
                                 const acc = PILLAR_ACCENTS[strategy.pillars.indexOf(init.channel) % PILLAR_ACCENTS.length] || PILLAR_ACCENTS[0];
                                 return (
-                                  <div key={init.id} className={`bi-card ${init._briefSource ? "from-brief" : ""}`} style={{ borderLeftColor: acc.solid }} onClick={() => setDetail(init)}>
+                                  <div key={init.id} className={`bi-card ${init._briefSource ? "from-brief" : ""}`} data-tag-type="Initiative" data-tag-label={init.title} data-tag-section="Initiatives" style={{ borderLeftColor: acc.solid }} onClick={() => setDetail(init)}>
                                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
                                       <div className="bi-pillar" style={{ color: acc.solid }}>{init.channel}</div>
                                       {init._briefSource && <span className="bi-brief-badge">📎 Brief</span>}
@@ -2113,6 +2194,7 @@ export default function MarketingHub({ initialUserName }) {
                     <div className="note-marker" style={{ background: note.color.bg, color: note.color.text, width: 22, height: 22, fontSize: 9 }}>{initials(note.author)}</div>
                     <div className="note-author">{note.author}</div>
                     <div className="note-time">{relativeTime(note.ts)}</div>
+                    {currentUser && <button className="note-reply-btn" title="Reply" onClick={e => { e.stopPropagation(); setReplyingToId(replyingToId === note.id ? null : note.id); setReplyText(""); }}>↩</button>}
                     <button className="note-expand-btn" title="Add / view detail" onClick={e => { e.stopPropagation(); if (isExpanded) { setExpandedNoteId(null); } else { setExpandedNoteId(note.id); setNoteDetailDraft(note.detail || ""); } }}>{isExpanded ? "▲" : "▼"}</button>
                     {isAuthor && <button className="note-del" onClick={e => { e.stopPropagation(); setNotes(p => p.filter(n => n.id !== note.id)); if (isExpanded) setExpandedNoteId(null); }}>✕</button>}
                   </div>
@@ -2142,18 +2224,59 @@ export default function MarketingHub({ initialUserName }) {
                       {note.detail && currentUser && <div className="note-detail" style={{ marginTop: 8 }}><strong style={{ fontSize: 10, color: "var(--text-muted)", letterSpacing: ".06em", textTransform: "uppercase" }}>Current detail:</strong><br />{note.detail}</div>}
                     </div>
                   )}
+                  {(note.replies || []).length > 0 && (
+                    <div className="note-replies">
+                      {note.replies.map(r => (
+                        <div key={r.id} className="note-reply">
+                          <div className="note-marker" style={{ background: r.color.bg, color: r.color.text, width: 18, height: 18, fontSize: 7, flexShrink: 0 }}>{initials(r.author)}</div>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span className="note-reply-author">{r.author}</span>
+                              <span className="note-reply-time">{relativeTime(r.ts)}</span>
+                            </div>
+                            <div className="note-reply-body">{r.text}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {replyingToId === note.id && (
+                    <div className="note-reply-input">
+                      <input autoFocus placeholder="Reply…" value={replyText} onChange={e => setReplyText(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && replyText.trim()) addReply(note.id); if (e.key === "Escape") { setReplyingToId(null); setReplyText(""); } }} />
+                      <button disabled={!replyText.trim()} onClick={() => addReply(note.id)}>Reply</button>
+                    </div>
+                  )}
                 </div>
                 );
               })}
             </div>
             <div className="notes-ia">
-              <textarea className="note-ta" placeholder="Add a note for the team…" value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) addNote(); }} />
+              {pendingTag && (
+                <div className="pending-tag">
+                  <span className="pending-tag-label">{pendingTag.type}: {pendingTag.label}</span>
+                  {pendingTag.brand && <span className="pending-tag-sub">{pendingTag.brand}</span>}
+                  <button className="pending-tag-clear" onClick={() => setPendingTag(null)}>✕</button>
+                </div>
+              )}
+              {markerMode && !pendingTag && (
+                <div className="pending-tag" style={{ background: "rgba(255,255,255,.04)", borderColor: "rgba(255,255,255,.1)" }}>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>📌 Click on the element you want to note</span>
+                  <button className="pending-tag-clear" onClick={() => setMarkerMode(false)} style={{ color: "var(--text-dim)" }}>Skip</button>
+                </div>
+              )}
+              <textarea className="note-ta" placeholder={pendingTag ? `Note about ${pendingTag.label}…` : "Add a note for the team…"} value={noteText} onChange={e => setNoteText(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) postNote(); }} onFocus={() => { if (markerMode && !pendingTag) setMarkerMode(false); }} />
               <div className="note-sr">
-                <div className="note-hint">⌘↵ to post</div>
-                <button className="note-submit" disabled={!noteText.trim()} onClick={addNote}>Post</button>
+                <div className="note-hint">{pendingTag ? `Tagged: ${pendingTag.label}` : "⌘↵ to post"}</div>
+                <button className="note-submit" disabled={!noteText.trim()} onClick={postNote}>Post</button>
               </div>
             </div>
           </aside>
+          {markerMode && (
+            <div className="marker-hint">
+              📌 Click any item to tag your note
+              <button onClick={() => setMarkerMode(false)}>Cancel</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2401,7 +2524,7 @@ function MarketingVisionSection({ strategy, initiatives, campaigns, teamMembers,
         <div style={{ fontSize: 14, color: "var(--text-dim)", lineHeight: 1.75, marginBottom: 20 }}>The most dynamic suite of cannabis brands in Missouri — and a scalable blueprint for expansion.</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
           {[{name:"Head Change",color:"#A31C1C",desc:"Premium craft concentrate. The connoisseur's brand. Built for the serious consumer who demands quality and provenance above all."},{name:"Safe Bet",color:"#C97820",desc:"Approachable, reliable, accessible. The everyday brand for the broad Missouri market — consistent quality without compromise."},{name:"Bubbles",color:"#7B68B5",desc:"Distinct identity. Specific consumer. Creative positioning refined through brand development — expressive and differentiated."}].map(b => (
-            <div key={b.name} style={{ padding: "18px 20px", background: "var(--surface)", border: `1px solid ${b.color}33`, borderTop: `2px solid ${b.color}`, borderRadius: 11 }}>
+            <div key={b.name} data-tag-type="Brand" data-tag-label={b.name} data-tag-section="Company" style={{ padding: "18px 20px", background: "var(--surface)", border: `1px solid ${b.color}33`, borderTop: `2px solid ${b.color}`, borderRadius: 11 }}>
               <div style={{ fontFamily: "var(--df)", fontSize: 20, fontWeight: 600, color: b.color, marginBottom: 8 }}>{b.name}</div>
               <div style={{ width: 32, height: 1, background: b.color, opacity: .5, marginBottom: 10 }} />
               <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>{b.desc}</div>
@@ -3132,7 +3255,7 @@ function MembersGridView({ teamMembers, currentUser, orgRoles, onSelect, onChang
         const roleLabel = orgRoles.find(r => r.id === m.role)?.title || "Team Member";
         const isMe = currentUser?.name?.toLowerCase() === m.name?.toLowerCase();
         return (
-          <div key={m.name} onClick={() => onSelect(m)} style={{
+          <div key={m.name} data-tag-type="Team Member" data-tag-label={m.name} data-tag-section="Team" onClick={() => onSelect(m)} style={{
             padding: "18px 18px 16px", borderRadius: 13, cursor: "pointer",
             background: "var(--surface)", transition: "all .15s",
             border: `1px solid ${isMe ? "rgba(201,168,76,.3)" : "var(--border)"}`,
@@ -3507,7 +3630,7 @@ function CampaignsPanel({ campaigns, onNew, onSelect, onDelete, fullWidth }) {
             {campaigns.map(c => {
               const sc = { idea: "#c9a84c", brief: "#8b7fc0", approved: "#4d9e8e" }[c.status] || "var(--text-muted)";
               return (
-                <div key={c.id} style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderLeft: `2px solid ${sc}`, borderRadius: 11, padding: "14px 16px", cursor: "pointer", transition: "all .15s" }}
+                <div key={c.id} data-tag-type="Campaign" data-tag-label={c.title} data-tag-section="Campaigns" data-tag-brand={c.brand || ""} style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderLeft: `2px solid ${sc}`, borderRadius: 11, padding: "14px 16px", cursor: "pointer", transition: "all .15s" }}
                   onClick={() => onSelect(c)}
                   onMouseEnter={e => { e.currentTarget.style.background = "var(--surface2)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.1)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.borderColor = "var(--border2)"; }}>
@@ -3559,7 +3682,7 @@ function CampaignsPanel({ campaigns, onNew, onSelect, onDelete, fullWidth }) {
             const statusColors = { idea: "#c9a84c", brief: "#8b7fc0", approved: "#4d9e8e" };
             const sc = statusColors[c.status] || "var(--text-muted)";
             return (
-              <div key={c.id} className="cmp-card" style={{ borderLeftColor: sc }} onClick={() => onSelect(c)}>
+              <div key={c.id} className="cmp-card" data-tag-type="Campaign" data-tag-label={c.title} data-tag-section="Campaigns" data-tag-brand={c.brand || ""} style={{ borderLeftColor: sc }} onClick={() => onSelect(c)}>
                 <div className="cmp-card-top">
                   <div className="cmp-card-title">{c.title}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
