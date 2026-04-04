@@ -804,7 +804,7 @@ export default function MarketingHub({ initialUserName }) {
   const [complianceLinks, setComplianceLinks] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-links"); return v ? JSON.parse(v) : []; } catch { return []; } });
   const [complianceOverview, setComplianceOverview] = useState(() => { try { return localStorage.getItem("shared_ns_ns-compliance-overview") || ""; } catch { return ""; } });
   const [timelineItems, setTimelineItems] = useState(() => { try { const d = localStorage.getItem("shared_ns_ns-timeline"); return d ? JSON.parse(d) : []; } catch { return []; } });
-  const [ready, setReady] = useState(true);
+  const [ready, setReady] = useState(false);
 
   // Notes
   const [notesOpen, setNotesOpen] = useState(false);
