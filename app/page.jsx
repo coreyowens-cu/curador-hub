@@ -51,12 +51,25 @@ function PasswordGate({ onUnlock }) {
   const [newRole, setNewRole]     = useState("content");
   const [otherTitle, setOtherTitle] = useState("");
 
-  const attempt = () => {
+  const attempt = async () => {
     if (val.trim().toLowerCase() === SITE_PASSWORD) {
       sessionStorage.setItem("ch-auth", "1");
       try {
+        // Check localStorage first, then fall back to Supabase
+        let saved = [];
         const raw = localStorage.getItem("shared_ns_ns-team");
-        const saved = raw ? JSON.parse(raw) : [];
+        if (raw) {
+          saved = JSON.parse(raw);
+        } else {
+          try {
+            const res = await fetch("/api/store?key=ns-team");
+            const data = await res.json();
+            if (data.value) {
+              saved = JSON.parse(data.value);
+              localStorage.setItem("shared_ns_ns-team", JSON.stringify(saved));
+            }
+          } catch {}
+        }
         setMembers(saved);
         setStep(saved.length > 0 ? "select" : "create");
       } catch {
@@ -90,7 +103,7 @@ function PasswordGate({ onUnlock }) {
     const resolvedRole = newRole === "other" ? "other" : newRole;
     const resolvedTitle = newRole === "other" ? otherTitle.trim() : "";
     const member = { name, color, role: resolvedRole, title: resolvedTitle, bio: "", strengths: [], skills: [], keyPoints: [], joinedAt: new Date().toISOString() };
-    // Save to shared team list immediately
+    // Save to shared team list (localStorage + Supabase)
     try {
       const raw = localStorage.getItem("shared_ns_ns-team");
       const existing = raw ? JSON.parse(raw) : [];
@@ -99,6 +112,8 @@ function PasswordGate({ onUnlock }) {
         ? existing.map(m => m.name.toLowerCase() === name.toLowerCase() ? { ...m, color, role: newRole } : m)
         : [...existing, member];
       localStorage.setItem("shared_ns_ns-team", JSON.stringify(updated));
+      // Sync to Supabase so the card is visible to all users
+      fetch("/api/store", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "ns-team", value: JSON.stringify(updated) }) }).catch(() => {});
     } catch {}
     sessionStorage.setItem("ch-user", name);
     // Also save to localStorage so MarketingHub skips its own identity modal
