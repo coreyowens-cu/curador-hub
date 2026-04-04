@@ -804,20 +804,8 @@ input[type="date"].fi{color-scheme:dark;}
 export default function MarketingHub({ initialUserName }) {
 
   // Core state
-  const [strategy, setStrategy] = useState(() => {
-    try { const v = localStorage.getItem("shared_ns_ns-strategy"); return v ? JSON.parse(v) : DEFAULT_STRATEGY; } catch { return DEFAULT_STRATEGY; }
-  });
-  const [initiatives, setInitiatives] = useState(() => {
-    try {
-      const v = localStorage.getItem("shared_ns_ns-initiatives");
-      if (!v) { return DEFAULT_INITIATIVES; }
-      const parsed = JSON.parse(v);
-      // Restore any DEFAULT initiatives that were previously purged but are now wanted back
-      const RESTORE_IDS = ["init-email-sms"];
-      const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
-      return [...parsed, ...restored];
-    } catch (e) { return DEFAULT_INITIATIVES; }
-  });
+  const [strategy, setStrategy] = useState(DEFAULT_STRATEGY);
+  const [initiatives, setInitiatives] = useState(DEFAULT_INITIATIVES);
   const [view, setView] = useState("grid");
   const [filterChannel, setFilterChannel] = useState("All");
   const [detail, setDetail] = useState(null);
@@ -827,17 +815,17 @@ export default function MarketingHub({ initialUserName }) {
   const [conceptUpload, setConceptUpload] = useState(null); // init id to upload HTML concept
   const [showAddInit, setShowAddInit] = useState(false);
   const [showEditStrategy, setShowEditStrategy] = useState(false);
-  const [ganttHtml, setGanttHtml] = useState(() => { try { return localStorage.getItem("shared_ns_ns-gantt") || null; } catch { return null; } });
-  const [complianceCards, setComplianceCards] = useState(() => { try { const PRESET_IDS = new Set(["cc-packaging","cc-manufacturing","cc-events","cc-consumption","cc-instore","cc-social"]); const v = localStorage.getItem("shared_ns_ns-compliance-cards"); if (v) { const p = JSON.parse(v); return p.filter(c => !PRESET_IDS.has(c.id)); } return []; } catch { return []; } });
-  const [complianceDocs, setComplianceDocs] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-docs"); return v ? JSON.parse(v) : []; } catch { return []; } });
-  const [complianceLinks, setComplianceLinks] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-compliance-links"); return v ? JSON.parse(v) : []; } catch { return []; } });
-  const [complianceOverview, setComplianceOverview] = useState(() => { try { return localStorage.getItem("shared_ns_ns-compliance-overview") || ""; } catch { return ""; } });
-  const [timelineItems, setTimelineItems] = useState(() => { try { const d = localStorage.getItem("shared_ns_ns-timeline"); return d ? JSON.parse(d) : []; } catch { return []; } });
+  const [ganttHtml, setGanttHtml] = useState(null);
+  const [complianceCards, setComplianceCards] = useState([]);
+  const [complianceDocs, setComplianceDocs] = useState([]);
+  const [complianceLinks, setComplianceLinks] = useState([]);
+  const [complianceOverview, setComplianceOverview] = useState("");
+  const [timelineItems, setTimelineItems] = useState([]);
   const [ready, setReady] = useState(false);
 
   // Notes
   const [notesOpen, setNotesOpen] = useState(false);
-  const [notes, setNotes] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-notes"); return v ? JSON.parse(v) : []; } catch { return []; } });
+  const [notes, setNotes] = useState([]);
   const [noteText, setNoteText] = useState("");
   const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [noteDetailDraft, setNoteDetailDraft] = useState("");
@@ -875,13 +863,13 @@ export default function MarketingHub({ initialUserName }) {
   const [lsbOpen, setLsbOpen] = useState(true);
   const [leftTab, setLeftTab] = useState("company");
   const [activeBrand, setActiveBrand] = useState(null); // null = company view
-  const [company, setCompany] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-company"); return v ? JSON.parse(v) : DEFAULT_COMPANY; } catch { return DEFAULT_COMPANY; } });
-  const [brands, setBrands] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-brands"); return v ? JSON.parse(v) : DEFAULT_BRANDS; } catch { return DEFAULT_BRANDS; } });
-  const [teamMembers, setTeamMembers] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-team"); return v ? JSON.parse(v) : []; } catch { return []; } }); // shared
-  const [orgRoles, setOrgRoles] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-orgroles"); return v ? JSON.parse(v) : ORG_ROLES; } catch { return ORG_ROLES; } });
+  const [company, setCompany] = useState(DEFAULT_COMPANY);
+  const [brands, setBrands] = useState(DEFAULT_BRANDS);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [orgRoles, setOrgRoles] = useState(ORG_ROLES);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [campaigns, setCampaigns] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-campaigns"); return v ? JSON.parse(v) : []; } catch { return []; } });
-  const [campaignTimeline, setCampaignTimeline] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-camp-timeline"); return v ? JSON.parse(v) : DEFAULT_CAMPAIGN_TIMELINE; } catch { return DEFAULT_CAMPAIGN_TIMELINE; } });
+  const [campaigns, setCampaigns] = useState([]);
+  const [campaignTimeline, setCampaignTimeline] = useState(DEFAULT_CAMPAIGN_TIMELINE);
   const [campaignView, setCampaignView] = useState("briefs"); // "briefs" | "timeline"
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -905,7 +893,7 @@ export default function MarketingHub({ initialUserName }) {
   const [damDriveAssets, setDamDriveAssets] = useState([]);
   const [damSettingsOpen, setDamSettingsOpen] = useState(false);
   const [teamView, setTeamView] = useState(null); // "orgchart" | "members"
-  const [concepts, setConcepts] = useState(() => { try { const v = localStorage.getItem("shared_ns_ns-concepts"); return v ? JSON.parse(v) : []; } catch { return []; } }); // [{id, name, html, createdAt}]
+  const [concepts, setConcepts] = useState([]); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
 
 
@@ -929,7 +917,12 @@ export default function MarketingHub({ initialUserName }) {
           window.storage.get("ns-timeline", true),
         ]);
         if (s) setStrategy(JSON.parse(s.value));
-        // initiatives are loaded synchronously in useState initializer — skip here to avoid race conditions
+        if (i) {
+          const parsed = JSON.parse(i.value);
+          const RESTORE_IDS = ["init-email-sms"];
+          const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
+          setInitiatives([...parsed, ...restored]);
+        }
         if (n) setNotes(JSON.parse(n.value));
         if (g) setGanttHtml(g.value);
         if (tl) setTimelineItems(JSON.parse(tl.value));
