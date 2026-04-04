@@ -3,7 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import AssetLibrary from "./AssetLibrary";
 
 // Storage layer — shared keys go to Supabase via /api/store, local keys use localStorage
-if (typeof window !== 'undefined' && !window.storage) {
+// Always override window.storage so the API-calling version is never blocked by a pre-existing stub
+if (typeof window !== 'undefined') {
   window.storage = {
     get: async (key, shared) => {
       if (shared) {
