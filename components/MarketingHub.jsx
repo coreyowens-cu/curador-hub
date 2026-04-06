@@ -60,7 +60,7 @@ const DEFAULT_BRANDS = {
     secondary:"#F5E6C8",
     products:"Live Rosin Concentrate — award-winning, hand-washed, terpiest dab experience · Live Sugar Concentrate — THCa diamonds in terp sauce · Live Badder Concentrate — hand-whipped, terp-rich cake batter consistency · Live Sauce Carts — liquid diamonds & sauce in a cart · Live Rosin Cart — full-spectrum rosin in a cart · Live Resin AIO — live resin all-in-one · Live Rosin AIO — live rosin all-in-one · Mini Hash Holes — mini hash hole pre-rolls",
     positioning:"Flagship / Connoisseur — Missouri's recognized hash leader. Sets quality ceiling for the CÚRADOR portfolio.",
-    website:"headchange710.com"
+    website:"https://www.headchange710.com"
   },
   safebet:{
     id:"safebet",
@@ -76,7 +76,7 @@ const DEFAULT_BRANDS = {
     secondary:"#FFF4E0",
     products:"Rolls — hand-crafted pre-rolls, top-shelf flower, perfectly ground, smooth even burn · Carts — high-purity distillate, real strain-specific cannabis terpenes (CDTs), consistent potency · FECO — full-spectrum cannabis oil, full-spectrum cannabinoids & terpenes, flexible format, rigorously tested per Missouri DCR · Infused Pre Rolls — premium infused pre-rolls · Bubble Hash Infused — bubble hash infused pre-rolls · Live Resin Infused — live resin infused pre-rolls · Diamond Infused — diamond infused pre-rolls · Safe Bet 1g All in One — 1g all-in-one device · FECO Plus CBN — full-spectrum FECO with added CBN",
     positioning:"Mid-tier / everyday — cannabis-authentic CDT experience at fair price. The dependable daily-driver between Bubbles (flavor/convenience) and Headchange (premium connoisseur).",
-    website:"safebetofficial.com",
+    website:"https://www.safebetofficial.com",
     instagram:"@SafeBet_Rolls"
   },
   bubbles:{
@@ -93,7 +93,7 @@ const DEFAULT_BRANDS = {
     secondary:"#F0EBF8",
     products:"Atomic Burst (Sativa) — cherry, blue raspberry & lime · Blue Raz (Indica) — ripened raspberry with tangy citrus · Sweet Dreamz (Indica) — smooth fruity sweetness, mellow vibes · Tiger's Blood (Hybrid) — juicy watermelon & bright citrus · Watermelon Ice (Hybrid) — fresh juicy watermelon, cooled & refreshing · Breezy Blast (Exotic) — tropical lime, crisp & zesty",
     positioning:"Flavor & convenience — captures discretion-focused and casual vape consumers. Non-CDT distillate contrast to SafeBet's cannabis-authentic positioning.",
-    website:"bubblesvape.com"
+    website:"https://www.bubblesvape.com"
   },
   airo:{
     id:"airo",
@@ -109,7 +109,7 @@ const DEFAULT_BRANDS = {
     secondary:"#E0F7FA",
     products:"Airo Batteries — proprietary magnetic snap-in battery devices · Airo Carts — strain-specific live flower and live resin cartridges in all available flavors",
     positioning:"Licensed Partner — premium vape hardware brand manufactured under CÚRADOR license. Distinct from in-house brands.",
-    website:"airobrands.com",
+    website:"https://www.airobrands.com",
     licensed: true,
   },
 };
@@ -2013,7 +2013,14 @@ export default function MarketingHub({ initialUserName }) {
                     <div style={{ position: "relative" }}>
                       <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: b.color, fontWeight: 600, marginBottom: 10 }}>Brand Profile</div>
                       <div style={{ fontFamily: "var(--df)", fontSize: "clamp(38px,5vw,64px)", fontWeight: 300, color: "var(--text)", lineHeight: .95, marginBottom: 14 }}>{b.name}</div>
-                      <div style={{ fontFamily: "var(--df)", fontSize: 22, fontStyle: "italic", color: b.color, marginBottom: 20 }}>"{b.tagline}"</div>
+                      <div style={{ fontFamily: "var(--df)", fontSize: 22, fontStyle: "italic", color: b.color, marginBottom: 16 }}>"{b.tagline}"</div>
+                      {b.website && (
+                        <a href={b.website} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", color: b.color, fontSize: 12, fontFamily: "var(--mf)", fontWeight: 500, letterSpacing: ".03em", textDecoration: "none", marginBottom: 20, transition: "all .18s", backdropFilter: "blur(8px)" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = b.color + "14"; e.currentTarget.style.borderColor = b.color + "44"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.08)"; }}>
+                          <span style={{ fontSize: 13 }}>🔗</span> {b.website.replace("https://www.", "")} <span style={{ fontSize: 10, opacity: .5 }}>↗</span>
+                        </a>
+                      )}
                       <div style={{ fontSize: 14, color: "var(--text-dim)", lineHeight: 1.9, maxWidth: 680 }}>{b.story}</div>
                     </div>
                   </div>
