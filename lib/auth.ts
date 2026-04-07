@@ -8,7 +8,6 @@ const ALLOWED_DOMAIN = "curadorbrands.com";
 const ALLOWED_EMAILS = ["seanmatw@gmail.com"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  debug: true,
   trustHost: true,
   providers: [
     Google({

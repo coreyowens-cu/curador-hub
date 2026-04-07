@@ -7,7 +7,6 @@ export default auth((req) => {
   // Allow auth routes and login page
   if (
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/debug") ||
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
