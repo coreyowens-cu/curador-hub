@@ -96,7 +96,7 @@ export default function Page() {
 
   return (
     <>
-      <MarketingHub initialUserName={session.user.name} />
+      <MarketingHub initialUserName={session.user.name} isSessionAdmin={session.user.isAdmin} />
       <AIAssistant hubState={hubState} onAction={handleAction} isOpen={aiOpen} onToggle={() => setAiOpen(o => !o)} />
     </>
   );

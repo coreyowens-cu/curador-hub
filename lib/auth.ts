@@ -1,11 +1,10 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, emailAllowlist } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 const ALLOWED_DOMAIN = "curadorbrands.com";
-const ALLOWED_EMAILS = ["seanmatw@gmail.com"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -22,8 +21,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const email = profile.email.toLowerCase();
       const domain = email.split("@")[1];
 
-      if (domain !== ALLOWED_DOMAIN && !ALLOWED_EMAILS.includes(email)) {
-        return false;
+      // Check domain or allowlist table
+      if (domain !== ALLOWED_DOMAIN) {
+        try {
+          const [allowed] = await db
+            .select()
+            .from(emailAllowlist)
+            .where(eq(emailAllowlist.email, email))
+            .limit(1);
+          if (!allowed) return false;
+        } catch (e) {
+          console.error("[auth] allowlist check error:", e);
+          return false;
+        }
       }
 
       // Auto-create user on first login
@@ -79,6 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.dbId = dbUser[0].id;
             token.role = dbUser[0].role;
             token.marketingRole = dbUser[0].marketingRole;
+            token.isAdmin = dbUser[0].isAdmin;
           }
         } catch (e) {
           console.error("[auth] jwt DB error:", e);
@@ -94,6 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.dbId as string;
         session.user.role = (token.role as string) ?? "member";
         session.user.marketingRole = (token.marketingRole as string) ?? null;
+        session.user.isAdmin = (token.isAdmin as boolean) ?? false;
       }
       return session;
     },

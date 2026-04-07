@@ -836,7 +836,7 @@ input[type="date"].fi{color-scheme:dark;}
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
-export default function MarketingHub({ initialUserName }) {
+export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
   // Core state
   const [strategy, setStrategy] = useState(DEFAULT_STRATEGY);
@@ -881,7 +881,7 @@ export default function MarketingHub({ initialUserName }) {
   const [markerMode, setMarkerMode] = useState(false);
   const [pendingTag, setPendingTag] = useState(null);
   const [currentUser, setCurrentUser] = useState(() => { try { const v = localStorage.getItem("ns_ns-user"); return v ? JSON.parse(v) : null; } catch { return null; } });
-  const isAdmin = currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
+  const isAdmin = isSessionAdmin || currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
   const canEdit = isAdmin;
   const canAddContent = true; // everyone can add campaigns, concepts, notes, download
   const [showWhoModal, setShowWhoModal] = useState(() => {
@@ -3841,7 +3841,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
   const [strengthsText, setStrengthsText] = useState((member.strengths || []).join("\n"));
   const [keyPointsText, setKeyPointsText] = useState((member.keyPoints || []).join("\n"));
   const isMe = currentUser?.name?.toLowerCase() === member.name?.toLowerCase();
-  const isAdmin = currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
+  const isAdmin = isSessionAdmin || currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
   const canEditProfile = isMe || isAdmin;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const roleLabel = ORG_ROLES.find(r => r.id === member.role)?.title || member.role || "Team Member";
