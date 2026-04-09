@@ -892,17 +892,18 @@ export default function MarketingHub({ initialUserName }) {
   const [whoName, setWhoName] = useState("");
   const [whoRole, setWhoRole] = useState("content");
   const [showAddMember, setShowAddMember] = useState(false);
-  const [newMemberName, setNewMemberName] = useState("");
-  const [newMemberRole, setNewMemberRole] = useState("content");
-  const [newMemberTitle, setNewMemberTitle] = useState("");
+  const [newMember, setNewMember] = useState({ name: "", role: "content", title: "", bio: "", skills: "", strengths: "", keyPoints: "" });
+  const updateNewMember = (k, v) => setNewMember(prev => ({ ...prev, [k]: v }));
+  const resetNewMember = () => setNewMember({ name: "", role: "content", title: "", bio: "", skills: "", strengths: "", keyPoints: "" });
   const addTeamMember = () => {
-    if (!newMemberName.trim()) return;
-    const color = colorForName(newMemberName.trim());
+    if (!newMember.name.trim()) return;
+    const color = colorForName(newMember.name.trim());
+    const toArr = (s) => s.split(",").map(x => x.trim()).filter(Boolean);
     setTeamMembers(prev => {
-      if (prev.find(m => m.name.toLowerCase() === newMemberName.trim().toLowerCase())) return prev;
-      return [...prev, { name: newMemberName.trim(), color, role: newMemberRole, title: newMemberTitle.trim(), bio: "", strengths: [], skills: [], keyPoints: [], joinedAt: new Date().toISOString() }];
+      if (prev.find(m => m.name.toLowerCase() === newMember.name.trim().toLowerCase())) return prev;
+      return [...prev, { name: newMember.name.trim(), color, role: newMember.role, title: newMember.title.trim(), bio: newMember.bio.trim(), skills: toArr(newMember.skills), strengths: toArr(newMember.strengths), keyPoints: toArr(newMember.keyPoints), joinedAt: new Date().toISOString() }];
     });
-    setNewMemberName(""); setNewMemberRole("content"); setNewMemberTitle(""); setShowAddMember(false);
+    resetNewMember(); setShowAddMember(false);
   };
 
   // Auto-set user from login gate name selection
@@ -1567,29 +1568,57 @@ export default function MarketingHub({ initialUserName }) {
 
                     {/* Add Member Modal */}
                     {showAddMember && (
-                      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 200 }} onClick={() => setShowAddMember(false)}>
-                        <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "28px 32px", width: 380, maxWidth: "90vw" }}>
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 200 }} onClick={() => { setShowAddMember(false); resetNewMember(); }}>
+                        <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "28px 32px", width: 440, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
                           <div style={{ fontSize: 10, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6, fontWeight: 600 }}>New Team Member</div>
                           <div style={{ fontFamily: "var(--df)", fontSize: 20, fontWeight: 300, color: "var(--text)", marginBottom: 20 }}>Add to Team</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                            <div>
-                              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>Name</label>
-                              <input value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Full name" style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none" }} autoFocus />
-                            </div>
-                            <div>
-                              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>Title</label>
-                              <input value={newMemberTitle} onChange={e => setNewMemberTitle(e.target.value)} placeholder="e.g. Marketing Coordinator" style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none" }} />
-                            </div>
-                            <div>
-                              <label style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4, display: "block" }}>Role</label>
-                              <select value={newMemberRole} onChange={e => setNewMemberRole(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none" }}>
-                                {orgRoles.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
-                              </select>
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 20, justifyContent: "flex-end" }}>
-                            <button onClick={() => setShowAddMember(false)} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer" }}>Cancel</button>
-                            <button onClick={addTeamMember} disabled={!newMemberName.trim()} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: newMemberName.trim() ? "var(--gold)" : "var(--surface2)", color: newMemberName.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", fontWeight: 600, cursor: newMemberName.trim() ? "pointer" : "default" }}>Add Member</button>
+                          {(() => {
+                            const lblStyle = { fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4, display: "block" };
+                            const inputStyle = { width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none", boxSizing: "border-box" };
+                            const hintStyle = { fontSize: 10, color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" };
+                            return (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                                  <div>
+                                    <label style={lblStyle}>Name *</label>
+                                    <input value={newMember.name} onChange={e => updateNewMember("name", e.target.value)} placeholder="Full name" style={inputStyle} autoFocus />
+                                  </div>
+                                  <div>
+                                    <label style={lblStyle}>Title</label>
+                                    <input value={newMember.title} onChange={e => updateNewMember("title", e.target.value)} placeholder="e.g. Marketing Coordinator" style={inputStyle} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Org Role</label>
+                                  <select value={newMember.role} onChange={e => updateNewMember("role", e.target.value)} style={inputStyle}>
+                                    {orgRoles.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Bio</label>
+                                  <textarea value={newMember.bio} onChange={e => updateNewMember("bio", e.target.value)} placeholder="Brief background or role description…" rows={3} style={{ ...inputStyle, resize: "vertical" }} />
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Skills</label>
+                                  <input value={newMember.skills} onChange={e => updateNewMember("skills", e.target.value)} placeholder="e.g. Social Media, Copywriting, Analytics" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Strengths</label>
+                                  <input value={newMember.strengths} onChange={e => updateNewMember("strengths", e.target.value)} placeholder="e.g. Creative Direction, Team Leadership" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Key Points</label>
+                                  <input value={newMember.keyPoints} onChange={e => updateNewMember("keyPoints", e.target.value)} placeholder="e.g. Manages dispensary accounts, Leads field team" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <div style={{ display: "flex", gap: 8, marginTop: 22, justifyContent: "flex-end" }}>
+                            <button onClick={() => { setShowAddMember(false); resetNewMember(); }} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer" }}>Cancel</button>
+                            <button onClick={addTeamMember} disabled={!newMember.name.trim()} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: newMember.name.trim() ? "var(--gold)" : "var(--surface2)", color: newMember.name.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", fontWeight: 600, cursor: newMember.name.trim() ? "pointer" : "default" }}>Add Member</button>
                           </div>
                         </div>
                       </div>
