@@ -137,6 +137,7 @@ const DEFAULT_INITIATIVES = [
   {id:"init-hc-drop",  title:"Head Change Drop Program",  description:"A limited-release merchandise and product ecosystem inspired by streetwear culture, scarcity marketing, and collectible design. Each drop is treated as a cultural moment — not a product release. Drop access is tied directly into Head Change loyalty, making early access the reward.", owner:"Brand Team", channel:"13 · Brand Merchandise Programs",       startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Head Change Drop Program", _conceptUrl:"/concepts/hc-drop-program.html"},
   {id:"init-hc-sesh",  title:"Quarterly Sesh Playbook",   description:"Full operations and content strategy SOP for the HeadChange Sesh — a quarterly brand event treated as a cultural asset. Covers the discovery gate, admin lockdown, inventory pull, final sprint, content capture shot list, and post-event recycling workflow.", owner:"Brand Team", channel:"07 · Reimagined Events",               startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Quarterly Sesh Playbook",   _conceptUrl:"/concepts/hc-sesh-playbook.html"},
   {id:"init-email-sms", title:"Email & SMS Marketing",      description:"Direct-to-consumer and B2B email and SMS marketing across all three CÚRADOR brands. Covers product drops, loyalty updates, events, dispensary sell-through communications, and brand newsletters. Segmented by brand, customer tier, and purchase behavior. Positions CÚRADOR as a communication partner with both consumers and dispensary partners — not just a vendor.", owner:"Brand Team", channel:"03 · Email & SMS Marketing", startDate:"2026-01-01", endDate:"", revolving:true, fileUrl:null, fileName:null, _brief:null, brandId:null, htmlConcept:null, htmlConceptName:null},
+  {id:"init-sb-float", title:"Float On. Smoke On.", description:"Summer 2026 giveaway campaign tying Safe Bet to Missouri river float culture. Grand prize is a full float weekend — cabin stay, guided float trip, custom Safe Bet raft, branded gear, and product bundle. Entry via Alpine IQ landing page captures email/SMS for CRM growth. Partnered with dispensary chain for in-store activation and fulfillment. 4-phase rollout: tease, launch, amplify, urgency.", owner:"Brand Team", channel:"07 · Reimagined Events", startDate:"2026-06-01", endDate:"2026-08-31", revolving:false, fileUrl:null, fileName:null, _brief:null, brandId:"safebet", htmlConcept:null, htmlConceptName:"Float On Campaign Brief", _conceptUrl:null},
 ];
 
 const DEFAULT_CAMPAIGNS = [
@@ -963,7 +964,7 @@ export default function MarketingHub({ initialUserName }) {
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
           const parsed = JSON.parse(i.value);
-          const RESTORE_IDS = ["init-email-sms","init-hc-sesh"];
+          const RESTORE_IDS = ["init-email-sms","init-hc-sesh","init-sb-float"];
           const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
           setInitiatives([...parsed, ...restored]);
         }
