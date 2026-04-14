@@ -2224,10 +2224,18 @@ export default function MarketingHub({ initialUserName }) {
                                         <div className="bi-owner">{init.owner}</div>
                                         {init._campaignTitle && <div style={{ fontSize: 9, color: "var(--gold)", marginTop: 2 }}>🚀 {init._campaignTitle}</div>}
                                       </div>
-                                      <button onClick={e => { e.stopPropagation(); setInitToCampaign(init); }}
-                                        style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
-                                        🚀 → Campaign
-                                      </button>
+                                      <div style={{ display: "flex", gap: 5 }}>
+                                        {(conceptHtmlCache.current[init.id] || init.htmlConcept || init.htmlConceptName) && (
+                                          <button onClick={e => { e.stopPropagation(); setConceptModal(init.id); }}
+                                            style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(123,104,181,.35)", background: "rgba(123,104,181,.09)", color: "#8b7fc0", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
+                                            🎨 Concept
+                                          </button>
+                                        )}
+                                        <button onClick={e => { e.stopPropagation(); setInitToCampaign(init); }}
+                                          style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
+                                          🚀 → Campaign
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -2513,7 +2521,7 @@ export default function MarketingHub({ initialUserName }) {
           </div>
         </div>
       )}
-      {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} onCreateCampaign={(init) => { setDetail(null); setInitToCampaign(init); }} />}
+      {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} onCreateCampaign={(init) => { setDetail(null); setInitToCampaign(init); }} onViewConcept={(id) => { setDetail(null); setConceptModal(id); }} conceptHtml={conceptHtmlCache.current[detail.id] || (initiatives.find(i => i.id === detail.id) || detail).htmlConcept} />}
       {initToCampaign && <InitiativeToCampaignModal init={initToCampaign} brands={brands} onClose={() => setInitToCampaign(null)} onSave={(campaignData) => createCampaignFromInit(initToCampaign, campaignData)} />}
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
       {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = (conceptCacheVersion >= 0 && conceptHtmlCache.current[init.id]) || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
@@ -5685,7 +5693,7 @@ ${MO_CANNABIS_COMPLIANCE_KB}`,
 
 // DETAIL MODAL
 // ════════════════════════════════════════════════════════════════════════════
-function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign }) {
+function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign, onViewConcept, conceptHtml }) {
   const acc = getAccent(init.channel);
   return (
     <div className="overlay" onClick={onClose}>
@@ -5750,6 +5758,9 @@ function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign }
           )}
         </div>
         <div className="mfoot">
+          {(conceptHtml || init.htmlConceptName) && onViewConcept && (
+            <button className="btn" style={{ borderColor: "rgba(123,104,181,.4)", color: "#8b7fc0", fontWeight: 600 }} onClick={() => onViewConcept(init.id)}>🎨 View Concept</button>
+          )}
           {!init.fileUrl && <button className="btn" onClick={() => { onClose(); onFileClick(init.id); }}>+ Attach File</button>}
           {onCreateCampaign && (
             <button className="btn" style={{ borderColor: "rgba(201,168,76,.35)", color: "var(--gold)", fontWeight: 600 }} onClick={() => onCreateCampaign(init)}>🚀 → Campaign</button>
