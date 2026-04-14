@@ -137,6 +137,9 @@ const DEFAULT_INITIATIVES = [
   {id:"init-hc-drop",  title:"Head Change Drop Program",  description:"A limited-release merchandise and product ecosystem inspired by streetwear culture, scarcity marketing, and collectible design. Each drop is treated as a cultural moment — not a product release. Drop access is tied directly into Head Change loyalty, making early access the reward.", owner:"Brand Team", channel:"13 · Brand Merchandise Programs",       startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Head Change Drop Program", _conceptUrl:"/concepts/hc-drop-program.html"},
   {id:"init-hc-sesh",  title:"Quarterly Sesh Playbook",   description:"Full operations and content strategy SOP for the HeadChange Sesh — a quarterly brand event treated as a cultural asset. Covers the discovery gate, admin lockdown, inventory pull, final sprint, content capture shot list, and post-event recycling workflow.", owner:"Brand Team", channel:"07 · Reimagined Events",               startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"Quarterly Sesh Playbook",   _conceptUrl:"/concepts/hc-sesh-playbook.html"},
   {id:"init-email-sms", title:"Email & SMS Marketing",      description:"Direct-to-consumer and B2B email and SMS marketing across all three CÚRADOR brands. Covers product drops, loyalty updates, events, dispensary sell-through communications, and brand newsletters. Segmented by brand, customer tier, and purchase behavior. Positions CÚRADOR as a communication partner with both consumers and dispensary partners — not just a vendor.", owner:"Brand Team", channel:"03 · Email & SMS Marketing", startDate:"2026-01-01", endDate:"", revolving:true, fileUrl:null, fileName:null, _brief:null, brandId:null, htmlConcept:null, htmlConceptName:null},
+  {id:"init-sb-float", title:"Float On. Smoke On.", description:"Summer 2026 giveaway campaign tying Safe Bet to Missouri river float culture. Grand prize is a full float weekend — cabin stay, guided float trip, custom Safe Bet raft, branded gear, and product bundle. Entry via Alpine IQ landing page captures email/SMS for CRM growth. Partnered with dispensary chain for in-store activation and fulfillment. 4-phase rollout: tease, launch, amplify, urgency.", owner:"Brand Team", channel:"07 · Reimagined Events", startDate:"2026-06-01", endDate:"2026-08-31", revolving:false, fileUrl:null, fileName:null, _brief:null, brandId:"safebet", htmlConcept:null, htmlConceptName:"Float On Campaign Brief", _conceptUrl:null},
+  {id:"init-bb-social", title:"Bubbles Social Media Strategy", description:"Full 2026 social media strategy for Bubbles — content pillars, 3x feed per week cadence, daily stories, 3 influencer verticals (Athlete, Raver, Rebel), 6 festival activations, and Instagram/TikTok playbook. Positions Bubbles as the sensory-first, flavor-chasing vape brand.", owner:"Brand Team", channel:"06 · Social Media Strategy", startDate:"2026-01-01", endDate:"", revolving:true, fileUrl:null, fileName:null, _brief:null, brandId:"bubbles", htmlConcept:null, htmlConceptName:"Bubbles Social Media Strategy 2026", _conceptUrl:null},
+  {id:"init-bb-charm", title:"The Charm Initiative", description:"Limited production bag charm and wrist strap program — free with purchase at dispensaries, distributed as swag by field team, and seeded in influencer kits. Taps into rave bag and festival charm culture. Includes carabiner + ball charm design, 3 distribution channels, #CharmTheBag UGC content series, and persona-matched activations.", owner:"Brand Team", channel:"13 · Brand Merchandise Programs", startDate:"2026-01-01", endDate:"", revolving:true, fileUrl:null, fileName:null, _brief:null, brandId:"bubbles", htmlConcept:null, htmlConceptName:"The Charm Initiative 2026", _conceptUrl:null},
 ];
 
 const DEFAULT_CAMPAIGNS = [
@@ -890,6 +893,20 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   });
   const [whoName, setWhoName] = useState("");
   const [whoRole, setWhoRole] = useState("content");
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [newMember, setNewMember] = useState({ name: "", role: "content", title: "", bio: "", skills: "", strengths: "", keyPoints: "" });
+  const updateNewMember = (k, v) => setNewMember(prev => ({ ...prev, [k]: v }));
+  const resetNewMember = () => setNewMember({ name: "", role: "content", title: "", bio: "", skills: "", strengths: "", keyPoints: "" });
+  const addTeamMember = () => {
+    if (!newMember.name.trim()) return;
+    const color = colorForName(newMember.name.trim());
+    const toArr = (s) => s.split(",").map(x => x.trim()).filter(Boolean);
+    setTeamMembers(prev => {
+      if (prev.find(m => m.name.toLowerCase() === newMember.name.trim().toLowerCase())) return prev;
+      return [...prev, { name: newMember.name.trim(), color, role: newMember.role, title: newMember.title.trim(), bio: newMember.bio.trim(), skills: toArr(newMember.skills), strengths: toArr(newMember.strengths), keyPoints: toArr(newMember.keyPoints), joinedAt: new Date().toISOString() }];
+    });
+    resetNewMember(); setShowAddMember(false);
+  };
 
   // Auto-set user from login gate name selection
   useEffect(() => {
@@ -969,7 +986,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         if (s) setStrategy(JSON.parse(s.value));
         if (i) {
           const parsed = JSON.parse(i.value);
-          const RESTORE_IDS = ["init-email-sms","init-hc-sesh"];
+          const RESTORE_IDS = ["init-email-sms","init-hc-sesh","init-sb-float","init-bb-social","init-bb-charm"];
           const restored = RESTORE_IDS.flatMap(id => parsed.some(p => p.id === id) ? [] : (DEFAULT_INITIATIVES.find(d => d.id === id) ? [DEFAULT_INITIATIVES.find(d => d.id === id)] : []));
           setInitiatives([...parsed, ...restored]);
         }
@@ -1551,8 +1568,70 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                         </div>
                         <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.6, maxWidth: 480 }}>Everyone on the marketing team in one place. Select who you are to personalize your view and unlock editing. Each member has their own role and profile.</div>
                       </div>
-                      {!currentUser && <button className="btn" onClick={() => setShowWhoModal(true)}>+ Join Team</button>}
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {!currentUser && <button className="btn" onClick={() => setShowWhoModal(true)}>+ Join Team</button>}
+                        {isAdmin && <button className="btn btn-gold" onClick={() => setShowAddMember(true)}>+ Add Member</button>}
+                      </div>
                     </div>
+
+                    {/* Add Member Modal */}
+                    {showAddMember && (
+                      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", zIndex: 200 }} onClick={() => { setShowAddMember(false); resetNewMember(); }}>
+                        <div onClick={e => e.stopPropagation()} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "28px 32px", width: 440, maxWidth: "90vw", maxHeight: "85vh", overflowY: "auto" }}>
+                          <div style={{ fontSize: 10, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 6, fontWeight: 600 }}>New Team Member</div>
+                          <div style={{ fontFamily: "var(--df)", fontSize: 20, fontWeight: 300, color: "var(--text)", marginBottom: 20 }}>Add to Team</div>
+                          {(() => {
+                            const lblStyle = { fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 4, display: "block" };
+                            const inputStyle = { width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none", boxSizing: "border-box" };
+                            const hintStyle = { fontSize: 10, color: "var(--text-muted)", marginTop: 3, fontStyle: "italic" };
+                            return (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                                  <div>
+                                    <label style={lblStyle}>Name *</label>
+                                    <input value={newMember.name} onChange={e => updateNewMember("name", e.target.value)} placeholder="Full name" style={inputStyle} autoFocus />
+                                  </div>
+                                  <div>
+                                    <label style={lblStyle}>Title</label>
+                                    <input value={newMember.title} onChange={e => updateNewMember("title", e.target.value)} placeholder="e.g. Marketing Coordinator" style={inputStyle} />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Org Role</label>
+                                  <select value={newMember.role} onChange={e => updateNewMember("role", e.target.value)} style={inputStyle}>
+                                    {orgRoles.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Bio</label>
+                                  <textarea value={newMember.bio} onChange={e => updateNewMember("bio", e.target.value)} placeholder="Brief background or role description…" rows={3} style={{ ...inputStyle, resize: "vertical" }} />
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Skills</label>
+                                  <input value={newMember.skills} onChange={e => updateNewMember("skills", e.target.value)} placeholder="e.g. Social Media, Copywriting, Analytics" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Strengths</label>
+                                  <input value={newMember.strengths} onChange={e => updateNewMember("strengths", e.target.value)} placeholder="e.g. Creative Direction, Team Leadership" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                                <div>
+                                  <label style={lblStyle}>Key Points</label>
+                                  <input value={newMember.keyPoints} onChange={e => updateNewMember("keyPoints", e.target.value)} placeholder="e.g. Manages dispensary accounts, Leads field team" style={inputStyle} />
+                                  <div style={hintStyle}>Comma-separated</div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <div style={{ display: "flex", gap: 8, marginTop: 22, justifyContent: "flex-end" }}>
+                            <button onClick={() => { setShowAddMember(false); resetNewMember(); }} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer" }}>Cancel</button>
+                            <button onClick={addTeamMember} disabled={!newMember.name.trim()} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: newMember.name.trim() ? "var(--gold)" : "var(--surface2)", color: newMember.name.trim() ? "var(--bg)" : "var(--text-muted)", fontSize: 12, fontFamily: "var(--bf)", fontWeight: 600, cursor: newMember.name.trim() ? "pointer" : "default" }}>Add Member</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <MembersGridView teamMembers={teamMembers} currentUser={currentUser} orgRoles={orgRoles} onSelect={setSelectedMember} onChangeUser={() => setShowWhoModal(true)} />
                   </>
                 )}
@@ -2151,10 +2230,18 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                                         <div className="bi-owner">{init.owner}</div>
                                         {init._campaignTitle && <div style={{ fontSize: 9, color: "var(--gold)", marginTop: 2 }}>🚀 {init._campaignTitle}</div>}
                                       </div>
-                                      <button onClick={e => { e.stopPropagation(); setInitToCampaign(init); }}
-                                        style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
-                                        🚀 → Campaign
-                                      </button>
+                                      <div style={{ display: "flex", gap: 5 }}>
+                                        {(conceptHtmlCache.current[init.id] || init.htmlConcept || init.htmlConceptName) && (
+                                          <button onClick={e => { e.stopPropagation(); setConceptModal(init.id); }}
+                                            style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(123,104,181,.35)", background: "rgba(123,104,181,.09)", color: "#8b7fc0", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
+                                            🎨 Concept
+                                          </button>
+                                        )}
+                                        <button onClick={e => { e.stopPropagation(); setInitToCampaign(init); }}
+                                          style={{ fontSize: 10, padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,168,76,.35)", background: "rgba(201,168,76,.09)", color: "var(--gold)", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em" }}>
+                                          🚀 → Campaign
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -2440,7 +2527,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           </div>
         </div>
       )}
-      {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} onCreateCampaign={(init) => { setDetail(null); setInitToCampaign(init); }} />}
+      {detail && <DetailModal init={initiatives.find(i => i.id === detail.id) || detail} getAccent={getAccent} onClose={() => setDetail(null)} onFileClick={(id) => { setDetail(null); setFileModal(id); }} onCreateCampaign={(init) => { setDetail(null); setInitToCampaign(init); }} onViewConcept={(id) => { setDetail(null); setConceptModal(id); }} conceptHtml={conceptHtmlCache.current[detail.id] || (initiatives.find(i => i.id === detail.id) || detail).htmlConcept} />}
       {initToCampaign && <InitiativeToCampaignModal init={initToCampaign} brands={brands} onClose={() => setInitToCampaign(null)} onSave={(campaignData) => createCampaignFromInit(initToCampaign, campaignData)} />}
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
       {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = (conceptCacheVersion >= 0 && conceptHtmlCache.current[init.id]) || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
@@ -5612,7 +5699,7 @@ ${MO_CANNABIS_COMPLIANCE_KB}`,
 
 // DETAIL MODAL
 // ════════════════════════════════════════════════════════════════════════════
-function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign }) {
+function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign, onViewConcept, conceptHtml }) {
   const acc = getAccent(init.channel);
   return (
     <div className="overlay" onClick={onClose}>
@@ -5677,6 +5764,9 @@ function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign }
           )}
         </div>
         <div className="mfoot">
+          {(conceptHtml || init.htmlConceptName) && onViewConcept && (
+            <button className="btn" style={{ borderColor: "rgba(123,104,181,.4)", color: "#8b7fc0", fontWeight: 600 }} onClick={() => onViewConcept(init.id)}>🎨 View Concept</button>
+          )}
           {!init.fileUrl && <button className="btn" onClick={() => { onClose(); onFileClick(init.id); }}>+ Attach File</button>}
           {onCreateCampaign && (
             <button className="btn" style={{ borderColor: "rgba(201,168,76,.35)", color: "var(--gold)", fontWeight: 600 }} onClick={() => onCreateCampaign(init)}>🚀 → Campaign</button>
