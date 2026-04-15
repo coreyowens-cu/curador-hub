@@ -60,7 +60,7 @@ lib/
 
 ## Branch Strategy
 - Feature branches -> merge into `staging` -> test -> merge into `main`
-- Never push to `upstream` (original repo: seanmatw-glitch/cuador-hub)
+- Never push to `upstream` (original repo: seanmatw-glitch/curador-hub)
 
 ## Key Patterns
 - **localStorage is still primary storage** for MarketingHub state. The /api/store endpoint syncs shared keys to PostgreSQL. This is intentional for Phase 1 - Phase 2 migrates to proper relational tables.

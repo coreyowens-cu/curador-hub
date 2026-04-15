@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # MarketingOS Project Rules
 
 - All new files must be TypeScript (.ts/.tsx). Existing .jsx files stay as-is unless explicitly being migrated.
-- Never push to `upstream` remote. Only push to `origin` (coreyowens-cu/cuador-hub).
+- Never push to `upstream` remote. Only push to `origin` (coreyowens-cu/curador-hub).
 - Never refactor MarketingHub.jsx, DAMPanel.jsx, AssetLibrary.jsx, or AIAssistant.jsx unless explicitly asked. These are large working components — make targeted edits only.
 - Auth is required on all routes except /login and /api/auth/*. Use the middleware pattern.
 - All /api routes must check session auth before processing.
