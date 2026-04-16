@@ -1,88 +1,134 @@
-# MarketingOS (curador-hub)
+# curador-hub — MarketingOS
 
-## What This Is
-MarketingOS is a marketing operations platform for CURADOR Brands. It manages marketing strategy, campaigns, initiatives, brands, team coordination, digital asset management, and AI-assisted planning.
+## What this project is
 
-It is a standalone app being integrated into the broader CuradorOS ecosystem. It lives at `marketing.curadoros.com` (production) and `staging-marketing.curadoros.com` (staging).
+curador-hub is the codebase behind CuradorOS — Curador Brands' internal operating system.
+This Claude Code project is connected to Curador's GitHub fork of the repository.
 
-## Tech Stack
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript + JSX (legacy components are .jsx, new code should be .ts/.tsx)
-- **Styling:** Tailwind CSS v4
-- **Auth:** NextAuth v5 with Google OAuth (restricted to @curadorbrands.com + individual allowlist)
-- **Database:** PostgreSQL via Drizzle ORM
-- **Deployment:** Railway (Nixpacks)
-- **AI:** Claude API (Anthropic) via /api/claude route
-- **Icons:** Lucide React
+The **MarketingOS** section of the app handles Curador's marketing operations: campaign
+tracking, content workflows, brand asset management, and related marketing intelligence.
 
-## Project Structure
-```
-app/
-  layout.jsx          - Root layout with SessionProvider
-  page.jsx            - Main app entry (MarketingHub + AIAssistant)
-  login/page.jsx      - Google sign-in page
-  campaign-timeline/  - Campaign timeline view
-  api/
-    auth/[...nextauth]/route.ts - NextAuth handler
-    store/route.ts    - Key-value store API (PostgreSQL)
-    claude/route.js   - AI chat proxy
-components/
-  MarketingHub.jsx    - Core marketing ops UI (7,751 lines - handle with care)
-  DAMPanel.jsx        - Digital asset management panel
-  AssetLibrary.jsx    - Asset browsing/organization
-  AIAssistant.jsx     - AI chat sidebar
-lib/
-  auth.ts             - NextAuth v5 configuration
-  db/
-    index.ts          - Drizzle client
-    schema.ts         - Database schema (users, kv_store)
-    migrations/       - Drizzle migrations
-  storage.js          - localStorage-based storage helper
-  systemPrompt.js     - AI assistant system prompt
-```
+Curador is a cannabis manufacturing company based in Missouri with two primary brands:
+- **Headchange** — concentrates and hash holes
+- **SafeBet** — vapes and infused pre-rolls/blunts (sub-brands: Bubbles fruity vapes, Airo licensed pod system)
 
-## Database
-- **users** - Auth + identity. Fields: id (uuid), name, email, googleSub, role, marketingRole, active, imageUrl, deletedAt, createdAt
-- **kv_store** - Shared state storage. Fields: key (PK), value (text/JSON), updatedAt, updatedBy
-
-## Auth
-- Google OAuth only, restricted to `@curadorbrands.com` domain + individual email allowlist
-- Auto-creates user on first sign-in
-- Blocks deactivated users (active=false or deletedAt set)
-- Session includes: id, name, email, role, marketingRole
-- First-time users pick a marketing role via MarketingHub's WhoModal
+---
 
 ## Environments
-| Env | URL | Branch | Railway Service |
-|-----|-----|--------|-----------------|
-| Staging | staging-marketing.curadoros.com | staging | marketingos-staging |
-| Production | marketing.curadoros.com | main | marketingos-production |
+
+| Environment | Branch  | Purpose                                      |
+|-------------|---------|----------------------------------------------|
+| Staging     | staging | Testing — safe to break, developers only     |
+| Production  | main    | Live app used by Curador's team every day    |
 
 ## Branch Strategy
 - Feature branches -> merge into `staging` -> test -> merge into `main`
 - Never push to `upstream` (original repo: seanmatw-glitch/curador-hub)
 
-## Key Patterns
-- **localStorage is still primary storage** for MarketingHub state. The /api/store endpoint syncs shared keys to PostgreSQL. This is intentional for Phase 1 - Phase 2 migrates to proper relational tables.
-- **Large components:** MarketingHub.jsx is 7,751 lines. Do not refactor unless explicitly asked. Make surgical edits only.
-- **Dark theme:** Background #07070f, text #ede8df, muted #8a87a8, green accent #3bb54a, gold accent #c9a84c
-- **Font:** DM Sans (body), use system monospace for code
+**Staging URL:** https://staging-marketing.curadoros.com
+**Production URL:** https://marketing.curadoros.com
 
-## Commands
+> Always deploy to **staging** first. Test. Then merge staging → main to go to production.
+> Never push untested changes directly to main.
+
+---
+
+## Deployment
+
+- Platform: **Railway** (not Vercel — that was the original dev setup)
+- Deployments trigger automatically when you push to `staging` or `main`
+- Environment variables are managed in the Railway dashboard under each service's Variables tab
+- **Never commit secrets or env vars to the code** — they belong in Railway only
+
+---
+
+## Key environment variables
+
+These live in Railway's dashboard. Do not put them in code or commit them to GitHub.
+Ask CO (cowens@curadorbrands.com) if you need access to Railway to view or update them.
+
+These are the exact variables in use (ask CO for the values):
+- `ANTHROPIC_API_KEY` — Anthropic API key for Claude integration
+- `AUTH_TRUST_HOST` — set to TRUE in Railway
+- `DATABASE_URL` — Postgres connection string (Railway provides this automatically)
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
+- `NEXTAUTH_SECRET` — NextAuth session secret
+- `NEXTAUTH_URL` — set to the environment's public URL (staging or production)
+
+---
+
+## MarketingOS — where to find things
+
+- Main section directory: `/app/marketingos/` (or `/src/app/marketingos/`)
+- Components specific to MarketingOS live under this path
+- Shared components (used across the whole app) are likely in `/components/` or `/src/components/`
+- API routes: `/app/api/` or `/pages/api/`
+
+---
+
+## How to run locally
+
 ```bash
-npm run dev          # Local dev server
-npm run build        # Production build
-npm run lint         # ESLint
-npx drizzle-kit push # Push schema to database (local dev)
-npx drizzle-kit generate # Generate migrations
+npm install
+npm run dev
 ```
 
-## Before You Code
-1. Read this file
-2. Check the actual schema in lib/db/schema.ts
-3. Check existing UI patterns in the component you're modifying
-4. Check auth/session handling in lib/auth.ts
-5. If touching MarketingHub.jsx, grep for the specific section - don't try to read the whole file
+App will be available at http://localhost:3000
 
-## Parent Platform
-MarketingOS is being integrated into CuradorOS (curadoros.com). Phase 2 work includes shared database, unified auth, Hastronaut AI access, Domo integration, and eventual codebase absorption. All Phase 1 decisions should avoid blocking these future integrations.
+If environment variables are needed locally, create a `.env.local` file in the project root.
+**Do not commit `.env.local` to GitHub.** Ask CO for the values you need for local development.
+
+---
+
+## Key business context
+
+**Brands:**
+- **Headchange** — concentrates and hash holes
+- **SafeBet** — vapes, infused pre-rolls, blunts
+- **Bubbles** (fruity vapes), 
+- **Airo** (licensed pod and AIO system)
+
+**Decision-first mindset:**
+- Features should answer: what action should we take?
+- Avoid building things that are interesting but not actionable
+
+---
+
+## Git workflow
+
+```bash
+# Start work
+git checkout staging
+git pull
+
+# Make changes with Claude Code, then commit
+git add .
+git commit -m "describe what you changed"
+
+# Deploy to staging for testing
+git push origin staging
+
+# After testing, promote to production
+git checkout main
+git merge staging
+git push origin main
+```
+
+---
+
+## Things to know / gotchas
+
+- This repo is a fork. The original was built and deployed to Vercel by the original dev.
+  Curador's version runs on Railway. The code is the same; the infrastructure differs.
+- CO (cowens@curadorbrands.com) is the primary contact for access, Railway credentials,
+  environment variables, and questions about Curador's business context.
+- If something breaks on production: revert first, fix second. Ping CO immediately.
+- The `staging` branch is the safety net — it is expected and acceptable to break things there.
+
+---
+
+## Contact
+
+**CO — Curador Brands**
+cowens@curadorbrands.com
