@@ -1858,8 +1858,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 activeConceptId={activeConceptId}
                 setActiveConceptId={setActiveConceptId}
                 onAdd={(concept) => setConcepts(p => [...p, concept])}
-                onRemove={canEdit ? (id) => { setConcepts(p => p.filter(c => c.id !== id)); if (activeConceptId === id) setActiveConceptId(null); } : null}
-                onRename={canEdit ? (id, name) => setConcepts(p => p.map(c => c.id === id ? { ...c, name } : c)) : null}
+                onRemove={(id) => { setConcepts(p => p.filter(c => c.id !== id)); if (activeConceptId === id) setActiveConceptId(null); }}
+                onRename={(id, name) => setConcepts(p => p.map(c => c.id === id ? { ...c, name } : c))}
+                onUpdateConcept={(id, updates) => setConcepts(p => p.map(c => c.id === id ? { ...c, ...updates } : c))}
                 brands={brands}
                 canEdit={canAddContent}
                 onPushToCampaign={(concept) => {
@@ -1878,7 +1879,6 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     _fromConcept: concept.id,
                   };
                   setCampaigns(p => [campaign, ...p]);
-                  setConcepts(p => p.map(c => c.id === concept.id ? { ...c, status: "campaign" } : c));
                   const today = new Date().toISOString().slice(0, 10);
                   const threeMonths = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
                   const brand = brands[concept.brandId];
@@ -1893,10 +1893,15 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     endDate: threeMonths,
                     elements: [],
                   }, ...p]);
+                  // Delete the concept (move, not just status change)
+                  window.storage.delete(`ns-ch-${concept.id}`, true).catch(() => {});
+                  setConcepts(p => p.filter(c => c.id !== concept.id));
+                  if (activeConceptId === concept.id) setActiveConceptId(null);
                 }}
                 onPushToInitiative={(concept, channel, html) => {
+                  const initId = `init-${Date.now()}`;
                   const init = {
-                    id: `init-${Date.now()}`, title: concept.name,
+                    id: initId, title: concept.name,
                     description: concept.description || "",
                     owner: currentUser?.name || "Team",
                     channel, brandId: concept.brandId || null,
@@ -1909,8 +1914,45 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     _briefFileType: concept.briefFileType || null,
                     _fromConcept: concept.id,
                   };
+                  // Also create a campaign from this concept
+                  const campId = `cmp-${Date.now() + 1}`;
+                  const brand = brands[concept.brandId];
+                  const today = new Date().toISOString().slice(0, 10);
+                  const threeMonths = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+                  const campaign = {
+                    id: campId, title: concept.name,
+                    concept: concept.description || concept.name,
+                    brand: brand?.name || "CÚRADOR",
+                    objective: concept.description || "",
+                    brief: concept.brief || null, status: "idea",
+                    createdBy: currentUser?.name || "Team",
+                    createdAt: new Date().toISOString(),
+                    _fromInitiative: initId,
+                    _fromConcept: concept.id,
+                    _briefFile: concept.briefFile || null,
+                    _briefFileData: concept.briefFileData || null,
+                    _briefFileType: concept.briefFileType || null,
+                  };
+                  // Link initiative to campaign
+                  init._campaignId = campId;
+                  init._campaignTitle = concept.name;
                   setInitiatives(p => [...p, init]);
-                  setConcepts(p => p.map(c => c.id === concept.id ? { ...c, status: "initiative" } : c));
+                  setCampaigns(p => [campaign, ...p]);
+                  setCampaignTimeline(p => [{
+                    id: `ctl-${Date.now() + 2}`,
+                    campaignId: campId,
+                    title: concept.name,
+                    brand: brand?.name || "CÚRADOR",
+                    color: brand?.color || "#c9a84c",
+                    cost: 0,
+                    startDate: today,
+                    endDate: threeMonths,
+                    elements: [],
+                  }, ...p]);
+                  // Delete the concept (move, not just status change)
+                  window.storage.delete(`ns-ch-${concept.id}`, true).catch(() => {});
+                  setConcepts(p => p.filter(c => c.id !== concept.id));
+                  if (activeConceptId === concept.id) setActiveConceptId(null);
                 }}
                 onNote={(text, label) => {
                   if (!text.trim() || !currentUser) return;
@@ -6677,11 +6719,76 @@ ${atob(base64)}` }];
   );
 }
 
-function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, brands, canEdit, onPushToCampaign, onPushToInitiative, onNote }) {
+function EditConceptModal({ concept, brands, onClose, onSave }) {
+  const brandList = brands ? Object.values(brands) : [];
+  const [f, setF] = useState({
+    name: concept.name || "",
+    description: concept.description || concept.brief?.description || "",
+    brandId: concept.brandId || null,
+    channel: concept.channel || CHANNELS[0],
+  });
+  const s = (k, v) => setF(p => ({ ...p, [k]: v }));
+  const selectedBrand = f.brandId ? brandList.find(b => b.id === f.brandId) : null;
+  const accentColor = selectedBrand?.color || "var(--gold)";
+
+  const handleSave = () => {
+    if (!f.name.trim()) return;
+    onSave({
+      name: f.name.trim(),
+      description: f.description,
+      brandId: f.brandId,
+      channel: f.channel,
+    });
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="mhdr" style={{ borderTop: `2px solid ${accentColor}`, borderRadius: "16px 16px 0 0" }}>
+          <div className="mtitle">Edit Concept</div>
+          <button className="mclose" onClick={onClose}>×</button>
+        </div>
+        <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+          <div className="ff">
+            <label className="fl">Brand</label>
+            <div className="brand-sel-row">
+              <button className={`brand-sel-chip ${f.brandId === null ? "on" : ""}`}
+                style={{ borderColor: f.brandId === null ? "var(--gold)" : "var(--border)", background: f.brandId === null ? "var(--gold-dim)" : "transparent", color: f.brandId === null ? "var(--gold)" : "var(--text-muted)" }}
+                onClick={() => s("brandId", null)}>
+                <div className="brand-sel-pip" style={{ background: "var(--gold)" }} /> CURADOR
+              </button>
+              {brandList.map(b => (
+                <button key={b.id} className={`brand-sel-chip ${f.brandId === b.id ? "on" : ""}`}
+                  style={{ borderColor: f.brandId === b.id ? b.color+"88":"var(--border)", background: f.brandId === b.id ? b.color+"14":"transparent", color: f.brandId === b.id ? b.color:"var(--text-muted)" }}
+                  onClick={() => s("brandId", b.id)}>
+                  <div className="brand-sel-pip" style={{ background: b.color }} />{b.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="ff"><label className="fl">Title *</label><input className="fi" value={f.name} onChange={e => s("name", e.target.value)} /></div>
+          <div className="ff"><label className="fl">Description</label><textarea className="fta" rows={4} placeholder="Add details about this concept..." value={f.description} onChange={e => s("description", e.target.value)} /></div>
+          <div className="ff"><label className="fl">Channel</label>
+            <select className="fsel" value={f.channel} onChange={e => s("channel", e.target.value)}>
+              {CHANNELS.map(x => <option key={x}>{x}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="mfoot">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn btn-gold" disabled={!f.name.trim()} onClick={handleSave}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, onUpdateConcept, brands, canEdit, onPushToCampaign, onPushToInitiative, onNote }) {
   const [dragging, setDragging] = useState(false);
   const [renaming, setRenaming] = useState(null);
   const [renameVal, setRenameVal] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(null); // concept object to edit
   const [showPushMenu, setShowPushMenu] = useState(false);
   const [pushChannel, setPushChannel] = useState(CHANNELS[0]);
   const [fileViewer, setFileViewer] = useState(null); // { data, name, type, conceptName }
@@ -6729,6 +6836,10 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
   return (
     <div style={{ display: "flex", height: "calc(100vh - 57px)", overflow: "hidden" }}>
       {showAddModal && <AddConceptModal brands={brands} onClose={() => setShowAddModal(false)} onSave={handleAdd} />}
+      {showEditModal && <EditConceptModal concept={showEditModal} brands={brands} onClose={() => setShowEditModal(null)} onSave={(updates) => {
+        if (onUpdateConcept) onUpdateConcept(showEditModal.id, updates);
+        setShowEditModal(null);
+      }} />}
 
       {/* LEFT — list */}
       <div style={{ width: 230, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", background: "var(--surface)" }}>
@@ -6776,8 +6887,10 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                     </div>
                   </div>
                 )}
-                {activeConceptId === c.id && renaming !== c.id && (onRename || onRemove) && (
+                {activeConceptId === c.id && renaming !== c.id && (
                   <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+                    <button onClick={e => { e.stopPropagation(); setShowEditModal(c); }}
+                      style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(201,168,76,.08)", border: "1px solid rgba(201,168,76,.2)", borderRadius: 4, color: "var(--gold)", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Edit</button>
                     {onRename && <button onClick={e => { e.stopPropagation(); setRenaming(c.id); setRenameVal(c.name); }}
                       style={{ flex: 1, fontSize: 9, padding: "3px 0", background: "rgba(255,255,255,.05)", border: "1px solid var(--border)", borderRadius: 4, color: "var(--text-muted)", cursor: "pointer", letterSpacing: ".06em", textTransform: "uppercase" }}>Rename</button>}
                     {onRemove && <button onClick={e => { e.stopPropagation(); handleRemove(c.id); }}
@@ -6828,6 +6941,7 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                     </div>
                   </div>
                 )}
+                <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.2)", color: "var(--gold)" }} onClick={() => setShowEditModal(activeConcept)}>Edit</button>
                 <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); window.open(URL.createObjectURL(blob),"_blank"); }}>Open ↗</button>
                 <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=activeConcept.name+".html"; a.click(); }}>↓ Download</button>
               </div>
@@ -6861,6 +6975,7 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                   <button className="btn btn-sm" style={{ borderColor: "rgba(77,158,142,.3)", color: "#4d9e8e" }}
                     onClick={() => setShowPushMenu(o => !o)}>→ Initiative</button>
                 )}
+                <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.2)", color: "var(--gold)" }} onClick={() => setShowEditModal(activeConcept)}>Edit</button>
                 {showPushMenu && (
                   <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 6, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px", boxShadow: "0 12px 40px rgba(0,0,0,.4)", zIndex: 20, width: 260 }}
                     onClick={e => e.stopPropagation()}>
