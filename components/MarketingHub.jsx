@@ -1307,7 +1307,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
       <style>{css}</style>
       {showWhoModal && <WhoModal whoName={whoName} setWhoName={setWhoName} whoRole={whoRole} setWhoRole={setWhoRole} onSave={saveUser} orgRoles={orgRoles} />}
       {selectedMember && <TeamMemberModal member={selectedMember} currentUser={currentUser} onClose={() => setSelectedMember(null)} onUpdate={updateMemberProfile} onDelete={(name) => { setTeamMembers(p => p.filter(m => m.name !== name)); setSelectedMember(null); }} />}
-      {showCampaignModal && <CampaignModal currentUser={currentUser} pillars={strategy.pillars} onClose={() => setShowCampaignModal(false)} onSave={(c) => {
+      {showCampaignModal && <CampaignModal currentUser={currentUser} pillars={strategy.pillars} teamMembers={teamMembers} onClose={() => setShowCampaignModal(false)} onSave={(c) => {
         setCampaigns(p => [c, ...p]);
         const today = new Date().toISOString().slice(0, 10);
         const threeMonths = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
@@ -1675,7 +1675,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                       Each initiative maps to a marketing channel and drives toward a specific goal. Attach creative concepts, upload a brief, set dates, and push directly to a campaign when ready to activate. Use the <strong style={{ color: "var(--text)", fontWeight: 600 }}>→ Campaign</strong> button on any card to build a campaign and timeline entry from that initiative.
                     </div>
                   </div>
-                  {canEdit && <button className="btn btn-gold" style={{ marginTop: 8, flexShrink: 0 }} onClick={() => setShowAddInit(true)}>+ Add Initiative</button>}
+                  {canAddContent && <button className="btn btn-gold" style={{ marginTop: 8, flexShrink: 0 }} onClick={() => setShowAddInit(true)}>+ Add Initiative</button>}
                 </div>
 
                 {/* Initiative cards */}
@@ -1684,7 +1684,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     <div style={{ fontSize: 36, marginBottom: 14, opacity: .25 }}>📌</div>
                     <div style={{ fontSize: 15, color: "var(--text-dim)", marginBottom: 8 }}>No initiatives yet</div>
                     <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>Add your first initiative and attach an HTML concept to bring the vision to life</div>
-                    {canEdit && <button className="btn btn-gold" onClick={() => setShowAddInit(true)}>+ Add Initiative</button>}
+                    {canAddContent && <button className="btn btn-gold" onClick={() => setShowAddInit(true)}>+ Add Initiative</button>}
                   </div>
                 ) : (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
@@ -1754,7 +1754,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{init.owner}</div>
                                 {init._campaignTitle && <div style={{ fontSize: 9, color: "var(--gold)", letterSpacing: ".04em" }}>🚀 {init._campaignTitle}</div>}
-                                {canEdit && (
+                                {canAddContent && (
                                   <div style={{ display: "flex", gap: 4 }}>
                                     <button onClick={() => { setShowAddInit(init.id); }} title="Edit"
                                       style={{ fontSize: 10, padding: "2px 7px", borderRadius: 5, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer" }}>✏</button>
@@ -1862,6 +1862,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 onRename={(id, name) => setConcepts(p => p.map(c => c.id === id ? { ...c, name } : c))}
                 onUpdateConcept={(id, updates) => setConcepts(p => p.map(c => c.id === id ? { ...c, ...updates } : c))}
                 brands={brands}
+                teamMembers={teamMembers}
                 canEdit={canAddContent}
                 onPushToCampaign={(concept) => {
                   const campId = `cmp-${Date.now()}`;
@@ -2574,7 +2575,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
       {fileModal && <FileUploadModal initiative={initiatives.find(i => i.id === fileModal)} onClose={() => setFileModal(null)} onSave={(url, name) => saveFile(fileModal, url, name)} />}
       {conceptModal && (() => { const init = initiatives.find(i => i.id === conceptModal); if (!init) return null; const html = (conceptCacheVersion >= 0 && conceptHtmlCache.current[init.id]) || init.htmlConcept; return html ? <ConceptViewerModal init={{...init, htmlConcept: html}} onClose={() => setConceptModal(null)} onUpload={() => { setConceptModal(null); setConceptUpload(init.id); }} onNote={(ctx) => { setConceptModal(null); addNoteWithContext(ctx); }} /> : null; })()}
       {conceptUpload && <ConceptHtmlUploadModal initName={initiatives.find(i => i.id === conceptUpload)?.title || ""} onClose={() => setConceptUpload(null)} onSave={(html, name) => saveConceptHtml(conceptUpload, html, name)} />}
-      {showAddInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={null}
+      {showAddInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={null} teamMembers={teamMembers}
         existing={typeof showAddInit === "string" ? (() => { const init = initiatives.find(i => i.id === showAddInit); return init ? { ...init, htmlConcept: conceptHtmlCache.current[init.id] || init.htmlConcept || null } : null; })() : null}
         onClose={() => setShowAddInit(false)}
         onSave={init => {
@@ -2585,7 +2586,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
             addInit(init);
           }
         }} />}
-      {showAddBrandInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={showAddBrandInit} onClose={() => setShowAddBrandInit(null)} onSave={init => { addInit(init); setShowAddBrandInit(null); }} />}
+      {showAddBrandInit && <AddInitiativeModal pillars={strategy.pillars} brands={brands} preselectedBrand={showAddBrandInit} teamMembers={teamMembers} onClose={() => setShowAddBrandInit(null)} onSave={init => { addInit(init); setShowAddBrandInit(null); }} />}
       {showBriefUpload && <BriefUploadModal brandId={showBriefUpload} brand={brands[showBriefUpload]} pillars={strategy.pillars} onClose={() => setShowBriefUpload(null)} onSave={init => { addInit(init); setShowBriefUpload(null); }} />}
       {showEditStrategy && <EditStrategyModal strategy={strategy} onClose={() => setShowEditStrategy(false)} onSave={saveStrategy} />}
       {showEditStrategy && <EditStrategyModal strategy={strategy} onClose={() => setShowEditStrategy(false)} onSave={saveStrategy} />}
@@ -4145,11 +4146,15 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
 // ════════════════════════════════════════════════════════════════════════════
 // CAMPAIGN MODAL — AI Brief Generator
 // ════════════════════════════════════════════════════════════════════════════
-function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) {
+function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit, teamMembers }) {
   const [tab, setTab] = useState("write"); // "write" | "upload"
   const [concept, setConcept] = useState("");
   const [brand, setBrand] = useState("Headchange");
   const [objective, setObjective] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [team, setTeam] = useState([]);
+  const [manualName, setManualName] = useState("");
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState(null);
   const [err, setErr] = useState("");
@@ -4159,6 +4164,22 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
   const [uploadDragging, setUploadDragging] = useState(false);
   const fileRef = useRef();
   const ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp"];
+  // Attached files
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [filesDragging, setFilesDragging] = useState(false);
+  const attachRef = useRef();
+  const FILE_ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp",".xls",".xlsx",".csv",".ppt",".pptx",".zip"];
+
+  const addTeamMember = (name) => { if (!name.trim() || team.includes(name.trim())) return; setTeam(p => [...p, name.trim()]); };
+  const removeTeamMember = (name) => setTeam(p => p.filter(n => n !== name));
+  const handleAttachFiles = async (fileList) => {
+    for (const file of Array.from(fileList)) {
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      if (!FILE_ACCEPTED.some(a => ext === a)) continue;
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+      setAttachedFiles(p => [...p, { name: file.name, type: file.type, size: file.size, data }]);
+    }
+  };
 
   const readUploadFile = (f) => {
     if (!f) return;
@@ -4227,7 +4248,7 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
   };
 
   const saveCampaign = (status = "idea") => {
-    const c = { id: `cmp-${Date.now()}`, title: brief?.title || concept || uploadFile?.name || "Untitled", concept, brand, objective, brief, status, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString(), _briefFile: uploadFile?.name || null, _briefFileData: uploadFileData || null, _briefFileType: uploadFile?.type || null };
+    const c = { id: `cmp-${Date.now()}`, title: brief?.title || concept || uploadFile?.name || "Untitled", concept, brand, objective, brief, status, createdBy: currentUser?.name || "Team", createdAt: new Date().toISOString(), _briefFile: uploadFile?.name || null, _briefFileData: uploadFileData || null, _briefFileType: uploadFile?.type || null, startDate: startDate || null, endDate: endDate || null, team, _attachedFiles: attachedFiles };
     onSave(c);
   };
 
@@ -4301,6 +4322,67 @@ function CampaignModal({ currentUser, pillars, onClose, onSave, onSaveAsInit }) 
             )
           ) : (
             <BriefDisplay brief={brief} />
+          )}
+          {/* Dates, Team, Files — shared across both tabs */}
+          {!brief && (
+            <>
+              <div style={{ borderTop: "1px solid var(--border2)", marginTop: 16, paddingTop: 16 }}>
+                <div className="frow">
+                  <div className="ff"><label className="fl">Start Date</label><input className="fi" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
+                  <div className="ff"><label className="fl">End Date</label><input className="fi" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
+                </div>
+                <div className="ff">
+                  <label className="fl">Team</label>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                    {team.map(name => (
+                      <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 100, background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.2)", fontSize: 11, color: "var(--gold)" }}>
+                        {name}
+                        <span onClick={() => removeTeamMember(name)} style={{ cursor: "pointer", opacity: .6, fontSize: 13, lineHeight: 1 }}>×</span>
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {(teamMembers || []).length > 0 && (
+                      <select className="fsel" value="" onChange={e => { if (e.target.value) { addTeamMember(e.target.value); e.target.value = ""; } }} style={{ flex: 1 }}>
+                        <option value="">Select team member...</option>
+                        {(teamMembers || []).filter(m => !team.includes(m.name)).map(m => <option key={m.name} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ""}</option>)}
+                      </select>
+                    )}
+                    <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                      <input className="fi" placeholder="Add name manually" value={manualName} onChange={e => setManualName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") { addTeamMember(manualName); setManualName(""); } }}
+                        style={{ flex: 1 }} />
+                      <button type="button" className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", flexShrink: 0 }}
+                        onClick={() => { addTeamMember(manualName); setManualName(""); }}>+</button>
+                    </div>
+                  </div>
+                </div>
+                <div className="ff">
+                  <label className="fl">Supporting Files</label>
+                  <div className={`bu-zone ${filesDragging ? "drag" : ""}`}
+                    style={{ minHeight: 60, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px" }}
+                    onDragOver={e => { e.preventDefault(); setFilesDragging(true); }}
+                    onDragLeave={() => setFilesDragging(false)}
+                    onDrop={e => { e.preventDefault(); setFilesDragging(false); handleAttachFiles(e.dataTransfer.files); }}
+                    onClick={() => attachRef.current.click()}>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Drop files or click to attach</div>
+                    <input ref={attachRef} type="file" accept={FILE_ACCEPTED.join(",")} multiple style={{ display: "none" }} onChange={e => handleAttachFiles(e.target.files)} />
+                  </div>
+                  {attachedFiles.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+                      {attachedFiles.map((af, i) => (
+                        <div key={i} className="bu-file-row">
+                          <span style={{ fontSize: 14 }}>{af.type?.startsWith("image/") ? "🖼" : "📄"}</span>
+                          <div className="bu-file-name">{af.name}</div>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{(af.size / 1024).toFixed(0)} KB</span>
+                          <button className="bu-file-rm" onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
           {loading && <div className="ai-loading"><div className="ai-dot" /><div className="ai-dot" /><div className="ai-dot" /><span>{tab === "upload" ? "Reading brief…" : "Generating brief…"}</span></div>}
           {err && <div style={{ padding: "10px 12px", background: "rgba(224,123,106,.08)", border: "1px solid rgba(224,123,106,.2)", borderRadius: 8, fontSize: 12, color: "#e07b6a", marginTop: 8 }}>{err}</div>}
@@ -5860,7 +5942,7 @@ function FileUploadModal({ initiative, onClose, onSave }) {
 // ════════════════════════════════════════════════════════════════════════════
 // ADD INITIATIVE — with integrated brief upload that auto-fills the form
 // ════════════════════════════════════════════════════════════════════════════
-function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClose, onSave }) {
+function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClose, onSave, teamMembers }) {
   const brandList = brands ? Object.values(brands) : [];
   const isEditing = !!existing;
 
@@ -5868,6 +5950,7 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
     title: existing?.title || "",
     description: existing?.description || "",
     owner: existing?.owner || "",
+    team: existing?.team || [],
     channel: existing?.channel || CHANNELS[0],
     brandId: existing?.brandId || preselectedBrand || null,
     startDate: existing?.startDate || "",
@@ -5877,8 +5960,9 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
   const s = (k, v) => setF(p => ({ ...p, [k]: v }));
   const selectedBrand = f.brandId ? brandList.find(b => b.id === f.brandId) : null;
   const accentColor = selectedBrand?.color || "var(--gold)";
+  const [manualName, setManualName] = useState("");
 
-  // Right panel mode: "brief" | "concept"
+  // Right panel mode: "brief" | "concept" | "files"
   const [rightMode, setRightMode] = useState("brief");
 
   // Brief state
@@ -5890,11 +5974,33 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
   const briefRef = useRef();
   const ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp"];
 
+  // Attached files (general supporting files)
+  const [attachedFiles, setAttachedFiles] = useState(existing?._attachedFiles || []);
+  const [filesDragging, setFilesDragging] = useState(false);
+  const filesRef = useRef();
+  const FILE_ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp",".xls",".xlsx",".csv",".ppt",".pptx",".zip"];
+
   // Concept HTML state — preserve existing when editing
   const [conceptHtml, setConceptHtml] = useState(existing?.htmlConcept || null);
   const [conceptName, setConceptName] = useState(existing?.htmlConceptName || null);
   const [conceptDragging, setConceptDragging] = useState(false);
   const conceptRef = useRef();
+
+  const addTeamMember = (name) => {
+    if (!name.trim() || f.team.includes(name.trim())) return;
+    s("team", [...f.team, name.trim()]);
+  };
+  const removeTeamMember = (name) => s("team", f.team.filter(n => n !== name));
+
+  const handleAttachFiles = async (fileList) => {
+    const files = Array.from(fileList);
+    for (const file of files) {
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      if (!FILE_ACCEPTED.some(a => ext === a)) continue;
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+      setAttachedFiles(p => [...p, { name: file.name, type: file.type, size: file.size, data }]);
+    }
+  };
 
   const handleBriefFile = (file) => {
     if (!file) return;
@@ -5958,6 +6064,7 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
       htmlConcept: conceptHtml || null,
       htmlConceptName: conceptName || existing?.htmlConceptName || null,
       _conceptUrl: existing?._conceptUrl || null,
+      _attachedFiles: attachedFiles,
     };
     onSave(data);
   };
@@ -5994,7 +6101,33 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
             </div>
             <div className="ff"><label className="fl">Title *</label><input className="fi" placeholder="e.g. How to Hash Guide" value={f.title} onChange={e => s("title", e.target.value)} /></div>
             <div className="ff"><label className="fl">Description</label><textarea className="fta" placeholder="What does this initiative accomplish?" value={f.description} onChange={e => s("description", e.target.value)} /></div>
-            <div className="ff"><label className="fl">Owner</label><input className="fi" placeholder="Team or person" value={f.owner} onChange={e => s("owner", e.target.value)} /></div>
+            <div className="ff"><label className="fl">Owner</label><input className="fi" placeholder="Lead person or team" value={f.owner} onChange={e => s("owner", e.target.value)} /></div>
+            <div className="ff">
+              <label className="fl">Team</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                {f.team.map(name => (
+                  <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 100, background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.2)", fontSize: 11, color: "var(--gold)" }}>
+                    {name}
+                    <span onClick={() => removeTeamMember(name)} style={{ cursor: "pointer", opacity: .6, fontSize: 13, lineHeight: 1 }}>×</span>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {(teamMembers || []).length > 0 && (
+                  <select className="fsel" value="" onChange={e => { if (e.target.value) { addTeamMember(e.target.value); e.target.value = ""; } }} style={{ flex: 1 }}>
+                    <option value="">Select team member...</option>
+                    {(teamMembers || []).filter(m => !f.team.includes(m.name)).map(m => <option key={m.name} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ""}</option>)}
+                  </select>
+                )}
+                <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                  <input className="fi" placeholder="Add name manually" value={manualName} onChange={e => setManualName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { addTeamMember(manualName); setManualName(""); } }}
+                    style={{ flex: 1 }} />
+                  <button type="button" className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", flexShrink: 0 }}
+                    onClick={() => { addTeamMember(manualName); setManualName(""); }}>+</button>
+                </div>
+              </div>
+            </div>
             <div className="ff"><label className="fl">Channel</label>
               <select className="fsel" value={f.channel} onChange={e => s("channel", e.target.value)}>
                 {CHANNELS.map(x => <option key={x}>{x}</option>)}
@@ -6020,13 +6153,13 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
           <div style={{ display: "flex", flexDirection: "column", maxHeight: "72vh" }}>
             {/* Tab switcher */}
             <div style={{ display: "flex", borderBottom: "1px solid var(--border2)", flexShrink: 0 }}>
-              {[["brief","📎 Attach Brief"],["concept","🎨 HTML Concept"]].map(([mode, label]) => (
+              {[["brief","📎 Brief"],["files","📁 Files"],["concept","🎨 HTML"]].map(([mode, label]) => (
                 <button key={mode} onClick={() => setRightMode(mode)} style={{
                   flex: 1, padding: "12px 0", border: "none", cursor: "pointer", fontFamily: "var(--bf)", fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase", transition: "all .15s",
                   background: rightMode === mode ? "var(--surface2)" : "transparent",
                   color: rightMode === mode ? accentColor : "var(--text-muted)",
                   borderBottom: rightMode === mode ? `2px solid ${accentColor}` : "2px solid transparent",
-                }}>{label}</button>
+                }}>{label}{mode === "files" && attachedFiles.length > 0 ? ` (${attachedFiles.length})` : ""}</button>
               ))}
             </div>
 
@@ -6082,6 +6215,35 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
                 </div>
               )}
 
+              {rightMode === "files" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Attach supporting files — decks, images, spreadsheets, docs.</div>
+                  <div className={`bu-zone ${filesDragging ? "drag" : ""}`}
+                    style={{ minHeight: 100, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                    onDragOver={e => { e.preventDefault(); setFilesDragging(true); }}
+                    onDragLeave={() => setFilesDragging(false)}
+                    onDrop={e => { e.preventDefault(); setFilesDragging(false); handleAttachFiles(e.dataTransfer.files); }}
+                    onClick={() => filesRef.current.click()}>
+                    <span className="bu-icon">📁</span>
+                    <div className="bu-title">Drop files here</div>
+                    <div className="bu-sub">PDF · Word · Image · Excel · PowerPoint · CSV</div>
+                    <input ref={filesRef} type="file" accept={FILE_ACCEPTED.join(",")} multiple style={{ display: "none" }} onChange={e => handleAttachFiles(e.target.files)} />
+                  </div>
+                  {attachedFiles.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {attachedFiles.map((af, i) => (
+                        <div key={i} className="bu-file-row">
+                          <span style={{ fontSize: 14 }}>{af.type?.startsWith("image/") ? "🖼" : "📄"}</span>
+                          <div className="bu-file-name">{af.name}</div>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{(af.size / 1024).toFixed(0)} KB</span>
+                          <button className="bu-file-rm" onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {rightMode === "concept" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Drop an HTML file — presentations, mockups, interactive prototypes. It will preview on the initiative card and open full screen.</div>
@@ -6121,7 +6283,7 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
         <div className="mfoot">
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-gold" disabled={!f.title.trim()} onClick={handleSave}>
-            {isEditing ? "Save Changes" : `Add Initiative${briefFile ? " + Brief" : ""}${conceptHtml ? " + Concept" : ""}`}
+            {isEditing ? "Save Changes" : `Add Initiative${briefFile ? " + Brief" : ""}${conceptHtml ? " + Concept" : ""}${attachedFiles.length > 0 ? ` + ${attachedFiles.length} file${attachedFiles.length > 1 ? "s" : ""}` : ""}`}
           </button>
         </div>
       </div>
@@ -6495,13 +6657,14 @@ function ConceptHtmlUploadModal({ initName, onClose, onSave }) {
   );
 }
 
-function AddConceptModal({ brands, onClose, onSave }) {
+function AddConceptModal({ brands, onClose, onSave, teamMembers }) {
   const brandList = brands ? Object.values(brands) : [];
-  const [f, setF] = useState({ title: "", description: "", brandId: null, channel: CHANNELS[0] });
+  const [f, setF] = useState({ title: "", description: "", brandId: null, channel: CHANNELS[0], startDate: "", endDate: "", team: [] });
   const s = (k, v) => setF(p => ({ ...p, [k]: v }));
   const selectedBrand = f.brandId ? brandList.find(b => b.id === f.brandId) : null;
   const accentColor = selectedBrand?.color || "var(--gold)";
   const [rightMode, setRightMode] = useState("brief");
+  const [manualName, setManualName] = useState("");
 
   // Brief
   const [briefFile, setBriefFile] = useState(null);
@@ -6512,11 +6675,28 @@ function AddConceptModal({ brands, onClose, onSave }) {
   const briefRef = useRef();
   const ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp"];
 
+  // Attached files
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [filesDragging, setFilesDragging] = useState(false);
+  const filesRef = useRef();
+  const FILE_ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp",".xls",".xlsx",".csv",".ppt",".pptx",".zip"];
+
   // HTML concept
   const [conceptHtml, setConceptHtml] = useState(null);
   const [conceptName, setConceptName] = useState(null);
   const [conceptDragging, setConceptDragging] = useState(false);
   const conceptRef = useRef();
+
+  const addTeamMember = (name) => { if (!name.trim() || f.team.includes(name.trim())) return; s("team", [...f.team, name.trim()]); };
+  const removeTeamMember = (name) => s("team", f.team.filter(n => n !== name));
+  const handleAttachFiles = async (fileList) => {
+    for (const file of Array.from(fileList)) {
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      if (!FILE_ACCEPTED.some(a => ext === a)) continue;
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+      setAttachedFiles(p => [...p, { name: file.name, type: file.type, size: file.size, data }]);
+    }
+  };
 
   const handleBriefFile = (file) => {
     if (!file) return;
@@ -6583,11 +6763,15 @@ ${atob(base64)}` }];
       description: f.description,
       brandId: f.brandId,
       channel: f.channel,
+      startDate: f.startDate || null,
+      endDate: f.endDate || null,
+      team: f.team,
       html: conceptHtml || null,
       brief: briefParsed ? { title: briefParsed.title || f.title, description: briefParsed.description || f.description, keyPoints: briefParsed.keyPoints || [] } : null,
       briefFile: briefFile?.name || null,
       briefFileData: fileData,
       briefFileType: fileType,
+      _attachedFiles: attachedFiles,
       createdAt: new Date().toISOString(),
     });
   };
@@ -6626,11 +6810,41 @@ ${atob(base64)}` }];
                 {CHANNELS.map(x => <option key={x}>{x}</option>)}
               </select>
             </div>
+            <div className="frow">
+              <div className="ff"><label className="fl">Start Date</label><input className="fi" type="date" value={f.startDate} onChange={e => s("startDate", e.target.value)} /></div>
+              <div className="ff"><label className="fl">End Date</label><input className="fi" type="date" value={f.endDate} onChange={e => s("endDate", e.target.value)} /></div>
+            </div>
+            <div className="ff">
+              <label className="fl">Team</label>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                {f.team.map(name => (
+                  <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 100, background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.2)", fontSize: 11, color: "var(--gold)" }}>
+                    {name}
+                    <span onClick={() => removeTeamMember(name)} style={{ cursor: "pointer", opacity: .6, fontSize: 13, lineHeight: 1 }}>×</span>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {(teamMembers || []).length > 0 && (
+                  <select className="fsel" value="" onChange={e => { if (e.target.value) { addTeamMember(e.target.value); e.target.value = ""; } }} style={{ flex: 1 }}>
+                    <option value="">Select team member...</option>
+                    {(teamMembers || []).filter(m => !f.team.includes(m.name)).map(m => <option key={m.name} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ""}</option>)}
+                  </select>
+                )}
+                <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                  <input className="fi" placeholder="Add name manually" value={manualName} onChange={e => setManualName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { addTeamMember(manualName); setManualName(""); } }}
+                    style={{ flex: 1 }} />
+                  <button type="button" className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", flexShrink: 0 }}
+                    onClick={() => { addTeamMember(manualName); setManualName(""); }}>+</button>
+                </div>
+              </div>
+            </div>
           </div>
           {/* RIGHT — tabs */}
           <div style={{ display: "flex", flexDirection: "column", maxHeight: "68vh" }}>
             <div style={{ display: "flex", borderBottom: "1px solid var(--border2)", flexShrink: 0 }}>
-              {[["brief","📎 Attach Brief"],["concept","🎨 HTML Concept"]].map(([mode, label]) => (
+              {[["brief","📎 Brief"],["files","📁 Files"],["concept","🎨 HTML"]].map(([mode, label]) => (
                 <button key={mode} onClick={() => setRightMode(mode)} style={{
                   flex: 1, padding: "12px 0", border: "none", cursor: "pointer", fontFamily: "var(--bf)", fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase",
                   background: rightMode === mode ? "var(--surface2)" : "transparent",
@@ -6677,6 +6891,34 @@ ${atob(base64)}` }];
                   )}
                 </div>
               )}
+              {rightMode === "files" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Attach supporting files — decks, images, spreadsheets, docs.</div>
+                  <div className={`bu-zone ${filesDragging ? "drag" : ""}`}
+                    style={{ minHeight: 100, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                    onDragOver={e => { e.preventDefault(); setFilesDragging(true); }}
+                    onDragLeave={() => setFilesDragging(false)}
+                    onDrop={e => { e.preventDefault(); setFilesDragging(false); handleAttachFiles(e.dataTransfer.files); }}
+                    onClick={() => filesRef.current.click()}>
+                    <span className="bu-icon">📁</span>
+                    <div className="bu-title">Drop files here</div>
+                    <div className="bu-sub">PDF · Word · Image · Excel · PowerPoint · CSV</div>
+                    <input ref={filesRef} type="file" accept={FILE_ACCEPTED.join(",")} multiple style={{ display: "none" }} onChange={e => handleAttachFiles(e.target.files)} />
+                  </div>
+                  {attachedFiles.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {attachedFiles.map((af, i) => (
+                        <div key={i} className="bu-file-row">
+                          <span style={{ fontSize: 14 }}>{af.type?.startsWith("image/") ? "🖼" : "📄"}</span>
+                          <div className="bu-file-name">{af.name}</div>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{(af.size / 1024).toFixed(0)} KB</span>
+                          <button className="bu-file-rm" onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               {rightMode === "concept" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Drop an HTML file — it renders live in the Concepts panel.</div>
@@ -6711,7 +6953,7 @@ ${atob(base64)}` }];
         <div className="mfoot">
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-gold" disabled={!f.title.trim() && !conceptName} onClick={handleSave}>
-            Add Concept{briefFile ? " + Brief" : ""}{conceptHtml ? " + HTML" : ""}
+            Add Concept{briefFile ? " + Brief" : ""}{conceptHtml ? " + HTML" : ""}{attachedFiles.length > 0 ? ` + ${attachedFiles.length} file${attachedFiles.length > 1 ? "s" : ""}` : ""}
           </button>
         </div>
       </div>
@@ -6719,17 +6961,24 @@ ${atob(base64)}` }];
   );
 }
 
-function EditConceptModal({ concept, brands, onClose, onSave }) {
+function EditConceptModal({ concept, brands, onClose, onSave, teamMembers }) {
   const brandList = brands ? Object.values(brands) : [];
   const [f, setF] = useState({
     name: concept.name || "",
     description: concept.description || concept.brief?.description || "",
     brandId: concept.brandId || null,
     channel: concept.channel || CHANNELS[0],
+    startDate: concept.startDate || "",
+    endDate: concept.endDate || "",
+    team: concept.team || [],
   });
   const s = (k, v) => setF(p => ({ ...p, [k]: v }));
   const selectedBrand = f.brandId ? brandList.find(b => b.id === f.brandId) : null;
   const accentColor = selectedBrand?.color || "var(--gold)";
+  const [manualName, setManualName] = useState("");
+
+  const addTeamMember = (name) => { if (!name.trim() || f.team.includes(name.trim())) return; s("team", [...f.team, name.trim()]); };
+  const removeTeamMember = (name) => s("team", f.team.filter(n => n !== name));
 
   const handleSave = () => {
     if (!f.name.trim()) return;
@@ -6738,6 +6987,9 @@ function EditConceptModal({ concept, brands, onClose, onSave }) {
       description: f.description,
       brandId: f.brandId,
       channel: f.channel,
+      startDate: f.startDate || null,
+      endDate: f.endDate || null,
+      team: f.team,
     });
   };
 
@@ -6773,6 +7025,36 @@ function EditConceptModal({ concept, brands, onClose, onSave }) {
               {CHANNELS.map(x => <option key={x}>{x}</option>)}
             </select>
           </div>
+          <div className="frow">
+            <div className="ff"><label className="fl">Start Date</label><input className="fi" type="date" value={f.startDate} onChange={e => s("startDate", e.target.value)} /></div>
+            <div className="ff"><label className="fl">End Date</label><input className="fi" type="date" value={f.endDate} onChange={e => s("endDate", e.target.value)} /></div>
+          </div>
+          <div className="ff">
+            <label className="fl">Team</label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+              {f.team.map(name => (
+                <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 100, background: "rgba(201,168,76,.1)", border: "1px solid rgba(201,168,76,.2)", fontSize: 11, color: "var(--gold)" }}>
+                  {name}
+                  <span onClick={() => removeTeamMember(name)} style={{ cursor: "pointer", opacity: .6, fontSize: 13, lineHeight: 1 }}>×</span>
+                </span>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(teamMembers || []).length > 0 && (
+                <select className="fsel" value="" onChange={e => { if (e.target.value) { addTeamMember(e.target.value); e.target.value = ""; } }} style={{ flex: 1 }}>
+                  <option value="">Select team member...</option>
+                  {(teamMembers || []).filter(m => !f.team.includes(m.name)).map(m => <option key={m.name} value={m.name}>{m.name}{m.role ? ` — ${m.role}` : ""}</option>)}
+                </select>
+              )}
+              <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                <input className="fi" placeholder="Add name manually" value={manualName} onChange={e => setManualName(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { addTeamMember(manualName); setManualName(""); } }}
+                  style={{ flex: 1 }} />
+                <button type="button" className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", flexShrink: 0 }}
+                  onClick={() => { addTeamMember(manualName); setManualName(""); }}>+</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="mfoot">
           <button className="btn" onClick={onClose}>Cancel</button>
@@ -6783,7 +7065,7 @@ function EditConceptModal({ concept, brands, onClose, onSave }) {
   );
 }
 
-function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, onUpdateConcept, brands, canEdit, onPushToCampaign, onPushToInitiative, onNote }) {
+function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, onRemove, onRename, onUpdateConcept, brands, teamMembers, canEdit, onPushToCampaign, onPushToInitiative, onNote }) {
   const [dragging, setDragging] = useState(false);
   const [renaming, setRenaming] = useState(null);
   const [renameVal, setRenameVal] = useState("");
@@ -6835,8 +7117,8 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
 
   return (
     <div style={{ display: "flex", height: "calc(100vh - 57px)", overflow: "hidden" }}>
-      {showAddModal && <AddConceptModal brands={brands} onClose={() => setShowAddModal(false)} onSave={handleAdd} />}
-      {showEditModal && <EditConceptModal concept={showEditModal} brands={brands} onClose={() => setShowEditModal(null)} onSave={(updates) => {
+      {showAddModal && <AddConceptModal brands={brands} teamMembers={teamMembers} onClose={() => setShowAddModal(false)} onSave={handleAdd} />}
+      {showEditModal && <EditConceptModal concept={showEditModal} brands={brands} teamMembers={teamMembers} onClose={() => setShowEditModal(null)} onSave={(updates) => {
         if (onUpdateConcept) onUpdateConcept(showEditModal.id, updates);
         setShowEditModal(null);
       }} />}
@@ -6847,9 +7129,9 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
           <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 4 }}>Creative Studio</div>
           <div style={{ fontFamily: "var(--df)", fontSize: 20, fontWeight: 300, color: "var(--text)", lineHeight: 1.1, marginBottom: 6 }}>Concepts</div>
           <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 10 }}>Store briefs, HTML prototypes, and creative decks. Push to an initiative or campaign when ready.</div>
-          {canEdit && <button className="btn btn-gold" style={{ width: "100%", justifyContent: "center", fontSize: 11 }} onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-gold" style={{ width: "100%", justifyContent: "center", fontSize: 11 }} onClick={() => setShowAddModal(true)}>
             + New Concept
-          </button>}
+          </button>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
           {concepts.length === 0 ? (
