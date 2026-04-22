@@ -8310,6 +8310,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterBrand, setFilterBrand] = useState("all");
+  const [collapsedSections, setCollapsedSections] = useState({});
 
   const addRequest = (req) => {
     setRequests(p => [{ ...req, id: `dr-${Date.now()}`, createdAt: new Date().toISOString(), createdBy: currentUser?.name || "Team", status: "Not Started" }, ...p]);
@@ -8319,6 +8320,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
 
   const updateRequest = (id, updates) => setRequests(p => p.map(r => r.id === id ? { ...r, ...updates } : r));
   const deleteRequest = (id) => { setRequests(p => p.filter(r => r.id !== id)); if (selectedReq?.id === id) setSelectedReq(null); };
+  const toggleSection = (s) => setCollapsedSections(p => ({ ...p, [s]: !p[s] }));
 
   const filtered = requests.filter(r => {
     if (filterStatus !== "all" && r.status !== filterStatus) return false;
@@ -8327,103 +8329,165 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
     return true;
   });
 
-  // Group by section
   const groups = {};
-  filtered.forEach(r => {
-    const section = r.section || "General";
-    if (!groups[section]) groups[section] = [];
-    groups[section].push(r);
-  });
+  filtered.forEach(r => { const section = r.section || "General"; if (!groups[section]) groups[section] = []; groups[section].push(r); });
+
+  // Shared inline cell styles
+  const cellBase = { padding: "6px 8px", fontSize: 12, overflow: "hidden", display: "flex", alignItems: "center", borderRight: "1px solid var(--border2)" };
+  const selStyle = { background: "transparent", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none", width: "100%", padding: 0 };
+  const inpStyle = { background: "transparent", border: "none", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const GRID = "110px 1fr 130px 130px 130px 120px 95px 95px 120px 90px 1fr";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
       {showModal && <DesignRequestModal brands={brands} teamMembers={teamMembers} onClose={() => setShowModal(false)} onSave={addRequest} />}
-      {selectedReq && <DesignDetailModal request={selectedReq} brands={brands} teamMembers={teamMembers} onClose={() => setSelectedReq(null)} onUpdate={(updates) => { updateRequest(selectedReq.id, updates); setSelectedReq({ ...selectedReq, ...updates }); }} onDelete={() => deleteRequest(selectedReq.id)} />}
 
       {/* Header */}
-      <div style={{ padding: "28px 36px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ padding: "20px 24px 0", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <div>
-            <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 8, fontWeight: 600 }}>Creative Operations</div>
-            <div style={{ fontFamily: "var(--df)", fontSize: 36, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>Design Portal</div>
-            <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.7, maxWidth: 520 }}>Submit design requests, track progress, and manage the creative queue. Every request flows through here.</div>
+            <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: "var(--text)", lineHeight: 1.2 }}>Design Queue</div>
           </div>
-          <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Design Request</button>
-        </div>
-
-        {/* Filters */}
-        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-          <select className="fsel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: "auto", minWidth: 140, fontSize: 11 }}>
-            <option value="all">All Statuses</option>
-            {DESIGN_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select className="fsel" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ width: "auto", minWidth: 130, fontSize: 11 }}>
-            <option value="all">All Priorities</option>
-            {DESIGN_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <select className="fsel" value={filterBrand} onChange={e => setFilterBrand(e.target.value)} style={{ width: "auto", minWidth: 130, fontSize: 11 }}>
-            <option value="all">All Brands</option>
-            {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-            <option value="All Brands">All Brands (cross)</option>
-          </select>
-          <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} request{filtered.length !== 1 ? "s" : ""}</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <select className="fsel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: "auto", minWidth: 120, fontSize: 11 }}>
+              <option value="all">All Statuses</option>
+              {DESIGN_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select className="fsel" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ width: "auto", minWidth: 110, fontSize: 11 }}>
+              <option value="all">All Priorities</option>
+              {DESIGN_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <select className="fsel" value={filterBrand} onChange={e => setFilterBrand(e.target.value)} style={{ width: "auto", minWidth: 110, fontSize: 11 }}>
+              <option value="all">All Brands</option>
+              {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+            </select>
+            <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Request</button>
+          </div>
         </div>
       </div>
 
-      {/* Queue Table */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 36px 36px" }}>
-        {Object.keys(groups).length === 0 && requests.length === 0 ? (
+      {/* Spreadsheet table */}
+      <div style={{ flex: 1, overflow: "auto", padding: "0 24px 24px" }}>
+        {requests.length === 0 ? (
           <div style={{ textAlign: "center", padding: "80px 40px" }}>
             <div style={{ fontSize: 48, opacity: .3, marginBottom: 16 }}>🖌</div>
             <div style={{ fontFamily: "var(--df)", fontSize: 24, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>No design requests yet</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>Submit a request to get started.</div>
-            <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Design Request</button>
+            <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Request</button>
           </div>
-        ) : Object.keys(groups).length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 40px", color: "var(--text-muted)", fontSize: 13 }}>No requests match your filters.</div>
         ) : (
-          <div style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden" }}>
-            {/* Table header */}
-            <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 130px 120px 120px 110px 90px 90px 100px 80px", padding: "10px 16px", background: "rgba(201,168,76,.06)", borderBottom: "1px solid var(--border)", fontSize: 10, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold)", gap: 8 }}>
-              <div>Brand</div><div>Project</div><div>Owner</div><div>Type</div><div>Channel</div><div>Designer</div><div>Due</div><div>Live</div><div>Status</div><div>Priority</div>
+          <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden", minWidth: 1100 }}>
+            {/* Column headers */}
+            <div style={{ display: "grid", gridTemplateColumns: GRID, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
+              {["Brand", "Project", "Project Owner", "What is Needed", "Channel", "Designer", "Due Date", "Live Date", "Status", "Priority", "Notes"].map(h => (
+                <div key={h} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap" }}>{h}</div>
+              ))}
             </div>
+
             {Object.entries(groups).map(([section, items]) => (
               <div key={section}>
-                {/* Section header */}
-                <div style={{ padding: "10px 16px", background: "rgba(255,255,255,.02)", borderBottom: "1px solid var(--border2)", fontSize: 12, fontWeight: 600, color: "var(--text)", letterSpacing: ".03em" }}>
-                  {section}
-                  <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 400, marginLeft: 8 }}>{items.length} item{items.length !== 1 ? "s" : ""}</span>
+                {/* Section row */}
+                <div onClick={() => toggleSection(section)} style={{ padding: "8px 12px", background: "rgba(201,168,76,.04)", borderBottom: "1px solid var(--border)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                  <span style={{ fontSize: 10, transition: "transform .15s", display: "inline-block", transform: collapsedSections[section] ? "rotate(0deg)" : "rotate(90deg)" }}>▶</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{section}</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)" }}>— {items.length} item{items.length !== 1 ? "s" : ""}</span>
                 </div>
-                {/* Rows */}
-                {items.map(r => {
+
+                {/* Data rows — inline editable */}
+                {!collapsedSections[section] && items.map(r => {
                   const brandObj = brandList.find(b => b.name === r.brand);
+                  const ownerObj = (teamMembers || []).find(m => m.name === r.owner);
+                  const u = (field, val) => updateRequest(r.id, { [field]: val });
                   return (
-                    <div key={r.id} onClick={() => setSelectedReq(r)} style={{
-                      display: "grid", gridTemplateColumns: "100px 1fr 130px 120px 120px 110px 90px 90px 100px 80px",
-                      padding: "10px 16px", borderBottom: "1px solid var(--border2)", fontSize: 12, gap: 8,
-                      cursor: "pointer", transition: "background .1s",
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.03)"}
+                    <div key={r.id} style={{ display: "grid", gridTemplateColumns: GRID, borderBottom: "1px solid var(--border2)", fontSize: 12, minHeight: 36 }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.02)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
-                      <div><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: brandObj ? brandObj.color + "20" : "rgba(201,168,76,.12)", color: brandObj?.color || "var(--gold)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "inline-block", maxWidth: "100%" }}>{r.brand || "—"}</span></div>
-                      <div style={{ color: "var(--text)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.project}</div>
-                      <div style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.owner || "—"}</div>
-                      <div style={{ color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.designType || "—"}</div>
-                      <div style={{ color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.channel || "—"}</div>
-                      <div style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.designer || "TBD"}</div>
-                      <div style={{ color: "var(--text-muted)", fontSize: 11 }}>{r.dueDate ? new Date(r.dueDate + "T00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "—"}</div>
-                      <div style={{ color: "var(--text-muted)", fontSize: 11 }}>{r.liveDate ? new Date(r.liveDate + "T00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "—"}</div>
-                      <div><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, border: `1px solid ${STATUS_COLORS[r.status] || "var(--border)"}30`, color: STATUS_COLORS[r.status] || "var(--text-muted)", background: `${STATUS_COLORS[r.status] || "var(--border)"}12` }}>{r.status}</span></div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_COLORS[r.priority] || "#888", flexShrink: 0 }} />
-                        <span style={{ fontSize: 11, color: PRIORITY_COLORS[r.priority] || "var(--text-muted)" }}>{r.priority || "—"}</span>
+                      {/* Brand */}
+                      <div style={{ ...cellBase }}>
+                        <select value={r.brand || ""} onChange={e => u("brand", e.target.value)} style={{ ...selStyle, color: brandObj?.color || "var(--gold)", fontWeight: 600, fontSize: 11 }}>
+                          {brandList.map(b => <option key={b.id} value={b.name} style={{ color: b.color }}>{b.name}</option>)}
+                          <option value="All Brands">All Brands</option>
+                        </select>
+                      </div>
+                      {/* Project */}
+                      <div style={{ ...cellBase }}>
+                        <input value={r.project || ""} onChange={e => u("project", e.target.value)} style={{ ...inpStyle, fontWeight: 500 }} />
+                      </div>
+                      {/* Owner */}
+                      <div style={{ ...cellBase }}>
+                        {(teamMembers || []).length > 0 ? (
+                          <select value={r.owner || ""} onChange={e => u("owner", e.target.value)} style={{ ...selStyle, color: ownerObj ? "#e8a87c" : "var(--text-dim)" }}>
+                            <option value="">—</option>
+                            {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                          </select>
+                        ) : <input value={r.owner || ""} onChange={e => u("owner", e.target.value)} style={inpStyle} placeholder="—" />}
+                      </div>
+                      {/* What is Needed */}
+                      <div style={{ ...cellBase }}>
+                        <select value={r.designType || ""} onChange={e => u("designType", e.target.value)} style={{ ...selStyle, color: "var(--text-dim)" }}>
+                          {DESIGN_TYPES.map(t => <option key={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      {/* Channel */}
+                      <div style={{ ...cellBase }}>
+                        <input value={r.channel || ""} onChange={e => u("channel", e.target.value)} style={{ ...inpStyle, color: "var(--text-muted)" }} placeholder="—" />
+                      </div>
+                      {/* Designer */}
+                      <div style={{ ...cellBase }}>
+                        {(teamMembers || []).length > 0 ? (
+                          <select value={r.designer || ""} onChange={e => u("designer", e.target.value)} style={{ ...selStyle, color: "var(--text-dim)" }}>
+                            <option value="">TBD</option>
+                            {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                          </select>
+                        ) : <input value={r.designer || ""} onChange={e => u("designer", e.target.value)} style={inpStyle} placeholder="TBD" />}
+                      </div>
+                      {/* Due Date */}
+                      <div style={{ ...cellBase }}>
+                        <input type="date" value={r.dueDate || ""} onChange={e => u("dueDate", e.target.value)} style={{ ...inpStyle, fontSize: 11, color: "var(--text-muted)" }} />
+                      </div>
+                      {/* Live Date */}
+                      <div style={{ ...cellBase }}>
+                        <input type="date" value={r.liveDate || ""} onChange={e => u("liveDate", e.target.value)} style={{ ...inpStyle, fontSize: 11, color: "var(--text-muted)" }} />
+                      </div>
+                      {/* Status */}
+                      <div style={{ ...cellBase }}>
+                        <select value={r.status || "Not Started"} onChange={e => u("status", e.target.value)}
+                          style={{ ...selStyle, color: STATUS_COLORS[r.status] || "var(--text-muted)", fontWeight: 600, fontSize: 11 }}>
+                          {DESIGN_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      {/* Priority */}
+                      <div style={{ ...cellBase }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_COLORS[r.priority] || "#888", flexShrink: 0, marginRight: 6 }} />
+                        <select value={r.priority || "Medium"} onChange={e => u("priority", e.target.value)}
+                          style={{ ...selStyle, color: PRIORITY_COLORS[r.priority] || "var(--text-muted)", fontWeight: 600, fontSize: 11 }}>
+                          {DESIGN_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                      </div>
+                      {/* Notes */}
+                      <div style={{ ...cellBase, borderRight: "none" }}>
+                        <input value={r.notes || ""} onChange={e => u("notes", e.target.value)} style={{ ...inpStyle, color: "var(--text-muted)", fontSize: 11 }} placeholder="Add notes..." />
                       </div>
                     </div>
                   );
                 })}
+
+                {/* Add row button within section */}
+                {!collapsedSections[section] && (
+                  <div onClick={() => { setShowModal(true); }} style={{ padding: "6px 12px", borderBottom: "1px solid var(--border2)", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                    onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>
+                    + Add row
+                  </div>
+                )}
               </div>
             ))}
+
+            {/* Global add row if no sections */}
+            {Object.keys(groups).length === 0 && filtered.length === 0 && requests.length > 0 && (
+              <div style={{ padding: "16px", textAlign: "center", color: "var(--text-muted)", fontSize: 12 }}>No requests match filters.</div>
+            )}
           </div>
         )}
       </div>
