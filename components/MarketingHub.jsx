@@ -8336,11 +8336,12 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
   const cellBase = { padding: "6px 8px", fontSize: 12, overflow: "hidden", display: "flex", alignItems: "center", borderRight: "1px solid var(--border2)" };
   const selStyle = { background: "transparent", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none", width: "100%", padding: 0 };
   const inpStyle = { background: "transparent", border: "none", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
-  const GRID = "110px 1fr 130px 130px 130px 120px 120px 95px 95px 120px 90px 1fr";
+  const GRID = "36px 100px 1fr 120px 120px 120px 110px 110px 90px 90px 115px 85px 1fr";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
       {showModal && <DesignRequestModal brands={brands} teamMembers={teamMembers} onClose={() => setShowModal(false)} onSave={addRequest} />}
+      {selectedReq && <DesignDetailModal request={selectedReq} brands={brands} teamMembers={teamMembers} onClose={() => setSelectedReq(null)} onUpdate={(updates) => { updateRequest(selectedReq.id, updates); setSelectedReq({ ...selectedReq, ...updates }); }} onDelete={() => { deleteRequest(selectedReq.id); setSelectedReq(null); }} />}
 
       {/* Header */}
       <div style={{ padding: "20px 24px 0", flexShrink: 0 }}>
@@ -8379,8 +8380,8 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
           <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden", minWidth: 1100 }}>
             {/* Column headers */}
             <div style={{ display: "grid", gridTemplateColumns: GRID, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-              {["Brand", "Project", "Project Owner", "What is Needed", "Channel", "Designer", "Creative", "Due Date", "Live Date", "Status", "Priority", "Notes"].map(h => (
-                <div key={h} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap" }}>{h}</div>
+              {["", "Brand", "Project", "Owner", "What Needed", "Channel", "Designer", "Creative", "Due", "Live", "Status", "Priority", "Notes"].map((h, i) => (
+                <div key={i} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap" }}>{h}</div>
               ))}
             </div>
 
@@ -8403,6 +8404,10 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.02)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
+                      {/* Expand button */}
+                      <div style={{ ...cellBase, justifyContent: "center", cursor: "pointer" }} onClick={() => setSelectedReq(r)} title="Open card view">
+                        <span style={{ fontSize: 14, opacity: .4 }}>↗</span>
+                      </div>
                       {/* Brand */}
                       <div style={{ ...cellBase }}>
                         <select value={r.brand || ""} onChange={e => u("brand", e.target.value)} style={{ ...selStyle, color: brandObj?.color || "var(--gold)", fontWeight: 600, fontSize: 11 }}>
@@ -8429,7 +8434,8 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                       </div>
                       {/* Channel */}
                       <div style={{ ...cellBase }}>
-                        <input value={r.channel || ""} onChange={e => u("channel", e.target.value)} style={{ ...inpStyle, color: "var(--text-muted)" }} placeholder="—" />
+                        <input list={`ch-opts-${r.id}`} value={r.channel || ""} onChange={e => u("channel", e.target.value)} style={{ ...inpStyle, color: "var(--text-muted)" }} placeholder="—" />
+                        <datalist id={`ch-opts-${r.id}`}>{CHANNELS.map(c => <option key={c} value={c} />)}</datalist>
                       </div>
                       {/* Designer */}
                       <div style={{ ...cellBase }}>
@@ -8748,6 +8754,42 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
                   ))}
                 </div>
               </div>
+              {/* Attached Brief */}
+              {request._briefFile && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Brief</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8 }}>
+                    <span style={{ fontSize: 18 }}>📎</span>
+                    <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{request._briefFile}</div>
+                    {request._briefFileData && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => { const w = window.open("", "_blank"); if (w) { w.document.write(`<iframe src="${request._briefFileData}" style="width:100%;height:100%;border:none"></iframe>`); } }}>View</button>}
+                  </div>
+                </div>
+              )}
+              {/* Attached Files */}
+              {request._attachedFiles?.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Attached Files</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {request._attachedFiles.map((af, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8 }}>
+                        <span style={{ fontSize: 16 }}>{af.type?.startsWith("image/") ? "🖼" : "📄"}</span>
+                        <div style={{ flex: 1, fontSize: 12, color: "var(--text)" }}>{af.name}</div>
+                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{(af.size / 1024).toFixed(0)} KB</span>
+                        {af.data && <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const a = document.createElement("a"); a.href = af.data; a.download = af.name; a.click(); }}>Download</button>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* HTML Concept */}
+              {request._html && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>HTML Concept — {request._htmlName || "Attached"}</div>
+                  <div style={{ height: 200, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)", background: "#fff" }}>
+                    <iframe srcDoc={request._html} style={{ width: "100%", height: "100%", border: "none" }} sandbox="allow-scripts" title="concept" />
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
