@@ -908,10 +908,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     resetNewMember(); setShowAddMember(false);
   };
 
-  // Auto-set user from login gate name selection
+  // Auto-set user from login gate name selection + auto-register in team
   useEffect(() => {
     if (initialUserName) {
-      // Preserve existing marketing role from localStorage if same user
       let role = "content";
       try {
         const existing = localStorage.getItem("ns_ns-user");
@@ -922,6 +921,12 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
       const user = { name: initialUserName, color, role };
       setCurrentUser(user);
       try { localStorage.setItem("ns_ns-user", JSON.stringify(user)); } catch {}
+      // Auto-register in team if not already there
+      setTeamMembers(prev => {
+        const exists = prev.find(m => m.name === initialUserName);
+        if (exists) return prev;
+        return [...prev, { name: initialUserName, color, role, title: "", bio: "", strengths: [], skills: [], keyPoints: [], joinedAt: new Date().toISOString() }];
+      });
       setShowWhoModal(false);
     }
   }, [initialUserName]);
@@ -1313,7 +1318,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   return (
     <>
       <style>{css}</style>
-      {showWhoModal && <WhoModal whoName={whoName} setWhoName={setWhoName} whoRole={whoRole} setWhoRole={setWhoRole} onSave={saveUser} orgRoles={orgRoles} />}
+      {showWhoModal && <WhoModal whoName={whoName} setWhoName={setWhoName} whoRole={whoRole} setWhoRole={setWhoRole} onSave={saveUser} orgRoles={orgRoles} teamMembers={teamMembers} />}
       {selectedMember && <TeamMemberModal member={selectedMember} currentUser={currentUser} onClose={() => setSelectedMember(null)} onUpdate={updateMemberProfile} onDelete={(name) => { setTeamMembers(p => p.filter(m => m.name !== name)); setSelectedMember(null); }} />}
       {showCampaignModal && <CampaignModal currentUser={currentUser} pillars={strategy.pillars} teamMembers={teamMembers} onClose={() => setShowCampaignModal(false)} onSave={(c) => {
         setCampaigns(p => [c, ...p]);
@@ -4073,7 +4078,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
                 {editing ? "Cancel" : "Edit Profile"}
               </button>
             )}
-            {isAdmin && !isMe && !editing && !confirmDelete && (
+            {(isMe || isAdmin) && !editing && !confirmDelete && (
               <button onClick={() => setConfirmDelete(true)} style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", fontSize: 11, cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 500 }}>
                 Delete
               </button>
@@ -4671,64 +4676,105 @@ function BriefDisplay({ brief }) {
 // ════════════════════════════════════════════════════════════════════════════
 // WHO ARE YOU MODAL
 // ════════════════════════════════════════════════════════════════════════════
-function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles }) {
+function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, teamMembers }) {
+  const [mode, setMode] = useState((teamMembers || []).length > 0 ? "select" : "create"); // "select" | "create"
   const preview = whoName.trim() ? colorForName(whoName.trim()) : null;
   const roles = orgRoles?.length ? orgRoles : ORG_ROLES;
+  const existingMembers = teamMembers || [];
+
   return (
     <div className="overlay">
-      <div className="modal" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
         <div className="who-inner">
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            {preview ? (
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            {preview && mode === "create" ? (
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: preview.bg, color: preview.text, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, margin: "0 auto 12px" }}>{initials(whoName.trim())}</div>
             ) : (
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "grid", placeItems: "center", fontSize: 22, margin: "0 auto 12px", opacity: .4 }}>👤</div>
             )}
             <div className="who-title">Who are you?</div>
-            <div className="who-sub">Your name and role appear on the org chart and in notes.</div>
+            <div className="who-sub">Select your profile or create a new one.</div>
           </div>
 
-          <div className="ff">
-            <label className="fl">Your Name</label>
-            <input className="fi" placeholder="e.g. Jordan Lee" value={whoName}
-              onChange={e => setWhoName(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && whoName.trim()) onSave(whoName.trim(), whoRole); }}
-              autoFocus />
-          </div>
-
-          <div className="ff">
-            <label className="fl">Your Role</label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, maxHeight: 220, overflowY: "auto", padding: "2px 0" }}>
-              {roles.map(r => (
-                <button key={r.id}
-                  onClick={() => setWhoRole(r.id)}
-                  style={{
-                    padding: "9px 12px", borderRadius: 8, border: `1px solid ${whoRole === r.id ? "var(--gold)" : "var(--border)"}`,
-                    background: whoRole === r.id ? "var(--gold-dim)" : "var(--surface2)",
-                    color: whoRole === r.id ? "var(--gold)" : "var(--text-muted)",
-                    fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", textAlign: "left",
-                    fontWeight: whoRole === r.id ? 600 : 400, transition: "all .13s",
-                  }}
-                  onMouseEnter={e => { if (whoRole !== r.id) e.currentTarget.style.borderColor = "rgba(255,255,255,.15)"; }}
-                  onMouseLeave={e => { if (whoRole !== r.id) e.currentTarget.style.borderColor = "var(--border)"; }}
-                >{r.title}</button>
-              ))}
-            </div>
-          </div>
-
-          {preview && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "var(--surface2)", borderRadius: 8, marginBottom: 4 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: preview.bg, color: preview.text, display: "grid", placeItems: "center", fontSize: 8, fontWeight: 700 }}>{initials(whoName.trim())}</div>
-              <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
-                You'll appear as <strong style={{ color: "var(--text)" }}>{whoName.trim()}</strong> in <strong style={{ color: preview.label.toLowerCase() }}>{preview.label}</strong>
-                {whoRole && <span> · <strong style={{ color: "var(--text)" }}>{roles.find(r => r.id === whoRole)?.title}</strong></span>}
-              </div>
+          {/* Toggle between select existing / create new */}
+          {existingMembers.length > 0 && (
+            <div style={{ display: "flex", gap: 4, marginBottom: 16, padding: 4, background: "var(--surface2)", borderRadius: 10, width: "fit-content" }}>
+              <button onClick={() => setMode("select")} style={{ padding: "7px 16px", fontSize: 12, fontWeight: 500, borderRadius: 7, border: "none", cursor: "pointer", background: mode === "select" ? "rgba(201,168,76,.12)" : "transparent", color: mode === "select" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", transition: "all .15s" }}>Select Existing</button>
+              <button onClick={() => setMode("create")} style={{ padding: "7px 16px", fontSize: 12, fontWeight: 500, borderRadius: 7, border: "none", cursor: "pointer", background: mode === "create" ? "rgba(201,168,76,.12)" : "transparent", color: mode === "create" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", transition: "all .15s" }}>Create New</button>
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-            <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Let's go →</button>
-          </div>
+          {mode === "select" && existingMembers.length > 0 ? (
+            <>
+              <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Select your profile</div>
+              <div style={{ display: "grid", gap: 6, maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
+                {existingMembers.map(m => {
+                  const c = m.color?.bg ? m.color : colorForName(m.name);
+                  const selected = whoName === m.name;
+                  return (
+                    <button key={m.name} onClick={() => { setWhoName(m.name); setWhoRole(m.role || "content"); }}
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, border: `1px solid ${selected ? "var(--gold)" : "var(--border)"}`, background: selected ? "var(--gold-dim)" : "var(--surface2)", cursor: "pointer", textAlign: "left", transition: "all .13s" }}
+                      onMouseEnter={e => { if (!selected) e.currentTarget.style.borderColor = "rgba(255,255,255,.15)"; }}
+                      onMouseLeave={e => { if (!selected) e.currentTarget.style.borderColor = "var(--border)"; }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: c.bg, color: c.text, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{initials(m.name)}</div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: selected ? 600 : 400, color: selected ? "var(--gold)" : "var(--text)" }}>{m.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{m.title || roles.find(r => r.id === m.role)?.title || "Team Member"}</div>
+                      </div>
+                      {selected && <span style={{ marginLeft: "auto", fontSize: 14, color: "var(--gold)" }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Continue as {whoName || "..."} →</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="ff">
+                <label className="fl">Your Name</label>
+                <input className="fi" placeholder="e.g. Jordan Lee" value={whoName}
+                  onChange={e => setWhoName(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && whoName.trim()) onSave(whoName.trim(), whoRole); }}
+                  autoFocus />
+              </div>
+
+              <div className="ff">
+                <label className="fl">Your Role</label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, maxHeight: 220, overflowY: "auto", padding: "2px 0" }}>
+                  {roles.map(r => (
+                    <button key={r.id}
+                      onClick={() => setWhoRole(r.id)}
+                      style={{
+                        padding: "9px 12px", borderRadius: 8, border: `1px solid ${whoRole === r.id ? "var(--gold)" : "var(--border)"}`,
+                        background: whoRole === r.id ? "var(--gold-dim)" : "var(--surface2)",
+                        color: whoRole === r.id ? "var(--gold)" : "var(--text-muted)",
+                        fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", textAlign: "left",
+                        fontWeight: whoRole === r.id ? 600 : 400, transition: "all .13s",
+                      }}
+                      onMouseEnter={e => { if (whoRole !== r.id) e.currentTarget.style.borderColor = "rgba(255,255,255,.15)"; }}
+                      onMouseLeave={e => { if (whoRole !== r.id) e.currentTarget.style.borderColor = "var(--border)"; }}
+                    >{r.title}</button>
+                  ))}
+                </div>
+              </div>
+
+              {preview && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "var(--surface2)", borderRadius: 8, marginBottom: 4 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: preview.bg, color: preview.text, display: "grid", placeItems: "center", fontSize: 8, fontWeight: 700 }}>{initials(whoName.trim())}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
+                    You'll appear as <strong style={{ color: "var(--text)" }}>{whoName.trim()}</strong> in <strong style={{ color: preview.label.toLowerCase() }}>{preview.label}</strong>
+                    {whoRole && <span> · <strong style={{ color: "var(--text)" }}>{roles.find(r => r.id === whoRole)?.title}</strong></span>}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Create Profile →</button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
