@@ -962,6 +962,11 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [teamView, setTeamView] = useState(null); // "orgchart" | "members"
   const [concepts, setConcepts] = useState([]); // [{id, name, html, createdAt}]
   const [activeConceptId, setActiveConceptId] = useState(null);
+  // ── DESIGN PORTAL STATE ─────────────────────────────────────────────────────
+  const [designRequests, setDesignRequests] = useState([]);
+  const [designView, setDesignView] = useState("queue"); // "queue" | "submit"
+  const [showDesignModal, setShowDesignModal] = useState(false);
+  const [selectedDesignReq, setSelectedDesignReq] = useState(null);
 
 
   // Load
@@ -1020,7 +1025,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         }
         if (u) { setCurrentUser(JSON.parse(u.value)); }
         else if (!initialUserName) setShowWhoModal(true);
-        const [,,,,,,,,, cn] = await Promise.all([
+        const [,,,,,,,,, cn, dr] = await Promise.all([
           window.storage.get("ns-strategy", true),
           window.storage.get("ns-initiatives", true),
           window.storage.get("ns-notes", true),
@@ -1031,8 +1036,10 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           window.storage.get("ns-team", true),
           window.storage.get("ns-campaigns", true),
           window.storage.get("ns-concepts", true),
+          window.storage.get("ns-design-requests", true),
         ]);
         if (cn) setConcepts(JSON.parse(cn.value));
+        if (dr) setDesignRequests(JSON.parse(dr.value));
       } catch (_) { if (!initialUserName) setShowWhoModal(true); }
       setReady(true);
     })();
@@ -1120,6 +1127,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     const meta = concepts.map(({ html, ...rest }) => rest);
     window.storage.set("ns-concepts", JSON.stringify(meta), true).catch(() => {});
   }, [concepts, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-design-requests", JSON.stringify(designRequests), true).catch(() => {}); }, [designRequests, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -1474,6 +1482,32 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     </button>
                   ))}
 
+                  {/* Design Portal — with inline dropdown */}
+                  <button className={`lsb-tab ${leftTab === "design" ? "on" : ""}`} onClick={() => { setLeftTab("design"); setActiveBrand(null); }}>
+                    <span className="lsb-icon">🖌</span>
+                    {lsbOpen && <span className="lsb-lbl">Design Portal</span>}
+                    {lsbOpen && (
+                      <span style={{ marginLeft: "auto", fontSize: 10, opacity: .5, transition: "transform .18s", display: "inline-block", transform: leftTab === "design" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                    )}
+                  </button>
+                  {leftTab === "design" && lsbOpen && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, paddingLeft: 8, marginTop: 1 }}>
+                      {[
+                        { id: "queue",  icon: "📋", label: "Design Queue" },
+                        { id: "submit", icon: "➕", label: "Submit Request" },
+                      ].map(item => (
+                        <button key={item.id}
+                          onClick={() => setDesignView(item.id)}
+                          className={`lsb-tab ${designView === item.id ? "on" : ""}`}
+                          style={{ paddingLeft: 20, fontSize: 11, opacity: designView === item.id ? 1 : .75 }}
+                        >
+                          <span className="lsb-icon" style={{ fontSize: 11 }}>{item.icon}</span>
+                          <span className="lsb-lbl">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Team — with inline dropdown */}
                   <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { setLeftTab("team"); setActiveBrand(null); }}>
                     <span className="lsb-icon">👥</span>
@@ -1530,7 +1564,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 </nav>
 
                 {/* Channels / Campaigns hint */}
-                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance") && (
+                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design") && (
                   <div style={{ padding: "6px 16px 10px", fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                     Content shown on the right →
                   </div>
@@ -1960,6 +1994,23 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                   setNotes(p => [{ id: `n-${Date.now()}`, author: currentUser.name, color: currentUser.color, text: text.trim(), ts: new Date().toISOString(), context: `Concept: ${label}` }, ...p]);
                   setNotesOpen(true);
                 }}
+              />
+            )}
+
+            {/* ── DESIGN PORTAL ── */}
+            {leftTab === "design" && !activeBrand && (
+              <DesignPortal
+                requests={designRequests}
+                setRequests={setDesignRequests}
+                brands={brands}
+                teamMembers={teamMembers}
+                currentUser={currentUser}
+                view={designView}
+                setView={setDesignView}
+                showModal={showDesignModal}
+                setShowModal={setShowDesignModal}
+                selectedReq={selectedDesignReq}
+                setSelectedReq={setSelectedDesignReq}
               />
             )}
 
@@ -8240,6 +8291,471 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
 
       {/* Add modal */}
       {showAdd && <TimelineAddModal onClose={() => setShowAdd(false)} onAdd={addItem} initiatives={initiatives} campaigns={campaigns} />}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DESIGN PORTAL
+// ════════════════════════════════════════════════════════════════════════════
+
+const DESIGN_STATUSES = ["Not Started", "In Progress", "In Review", "Completed", "On Hold"];
+const DESIGN_PRIORITIES = ["Low", "Medium", "High", "Urgent"];
+const DESIGN_TYPES = ["Video", "Photography", "Print", "Packaging", "Social Graphics", "Email", "Web", "Signage", "Table Cards", "Other"];
+const PRIORITY_COLORS = { Low: "#4d9e8e", Medium: "#c9a84c", High: "#e07b6a", Urgent: "#d94848" };
+const STATUS_COLORS = { "Not Started": "var(--text-muted)", "In Progress": "#c9a84c", "In Review": "#7b93db", "Completed": "#4d9e8e", "On Hold": "#e07b6a" };
+
+function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser, view, setView, showModal, setShowModal, selectedReq, setSelectedReq }) {
+  const brandList = brands ? Object.values(brands) : [];
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [filterBrand, setFilterBrand] = useState("all");
+
+  const addRequest = (req) => {
+    setRequests(p => [{ ...req, id: `dr-${Date.now()}`, createdAt: new Date().toISOString(), createdBy: currentUser?.name || "Team", status: "Not Started" }, ...p]);
+    setShowModal(false);
+    setView("queue");
+  };
+
+  const updateRequest = (id, updates) => setRequests(p => p.map(r => r.id === id ? { ...r, ...updates } : r));
+  const deleteRequest = (id) => { setRequests(p => p.filter(r => r.id !== id)); if (selectedReq?.id === id) setSelectedReq(null); };
+
+  const filtered = requests.filter(r => {
+    if (filterStatus !== "all" && r.status !== filterStatus) return false;
+    if (filterPriority !== "all" && r.priority !== filterPriority) return false;
+    if (filterBrand !== "all" && r.brand !== filterBrand) return false;
+    return true;
+  });
+
+  // Group by section
+  const groups = {};
+  filtered.forEach(r => {
+    const section = r.section || "General";
+    if (!groups[section]) groups[section] = [];
+    groups[section].push(r);
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
+      {showModal && <DesignRequestModal brands={brands} teamMembers={teamMembers} onClose={() => setShowModal(false)} onSave={addRequest} />}
+      {selectedReq && <DesignDetailModal request={selectedReq} brands={brands} teamMembers={teamMembers} onClose={() => setSelectedReq(null)} onUpdate={(updates) => { updateRequest(selectedReq.id, updates); setSelectedReq({ ...selectedReq, ...updates }); }} onDelete={() => deleteRequest(selectedReq.id)} />}
+
+      {/* Header */}
+      <div style={{ padding: "28px 36px 0", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 8, fontWeight: 600 }}>Creative Operations</div>
+            <div style={{ fontFamily: "var(--df)", fontSize: 36, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>Design Portal</div>
+            <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.7, maxWidth: 520 }}>Submit design requests, track progress, and manage the creative queue. Every request flows through here.</div>
+          </div>
+          <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Design Request</button>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+          <select className="fsel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ width: "auto", minWidth: 140, fontSize: 11 }}>
+            <option value="all">All Statuses</option>
+            {DESIGN_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select className="fsel" value={filterPriority} onChange={e => setFilterPriority(e.target.value)} style={{ width: "auto", minWidth: 130, fontSize: 11 }}>
+            <option value="all">All Priorities</option>
+            {DESIGN_PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <select className="fsel" value={filterBrand} onChange={e => setFilterBrand(e.target.value)} style={{ width: "auto", minWidth: 130, fontSize: 11 }}>
+            <option value="all">All Brands</option>
+            {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+            <option value="All Brands">All Brands (cross)</option>
+          </select>
+          <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} request{filtered.length !== 1 ? "s" : ""}</div>
+        </div>
+      </div>
+
+      {/* Queue Table */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 36px 36px" }}>
+        {Object.keys(groups).length === 0 && requests.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "80px 40px" }}>
+            <div style={{ fontSize: 48, opacity: .3, marginBottom: 16 }}>🖌</div>
+            <div style={{ fontFamily: "var(--df)", fontSize: 24, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>No design requests yet</div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>Submit a request to get started.</div>
+            <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Design Request</button>
+          </div>
+        ) : Object.keys(groups).length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 40px", color: "var(--text-muted)", fontSize: 13 }}>No requests match your filters.</div>
+        ) : (
+          <div style={{ borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden" }}>
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 130px 120px 120px 110px 90px 90px 100px 80px", padding: "10px 16px", background: "rgba(201,168,76,.06)", borderBottom: "1px solid var(--border)", fontSize: 10, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--gold)", gap: 8 }}>
+              <div>Brand</div><div>Project</div><div>Owner</div><div>Type</div><div>Channel</div><div>Designer</div><div>Due</div><div>Live</div><div>Status</div><div>Priority</div>
+            </div>
+            {Object.entries(groups).map(([section, items]) => (
+              <div key={section}>
+                {/* Section header */}
+                <div style={{ padding: "10px 16px", background: "rgba(255,255,255,.02)", borderBottom: "1px solid var(--border2)", fontSize: 12, fontWeight: 600, color: "var(--text)", letterSpacing: ".03em" }}>
+                  {section}
+                  <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 400, marginLeft: 8 }}>{items.length} item{items.length !== 1 ? "s" : ""}</span>
+                </div>
+                {/* Rows */}
+                {items.map(r => {
+                  const brandObj = brandList.find(b => b.name === r.brand);
+                  return (
+                    <div key={r.id} onClick={() => setSelectedReq(r)} style={{
+                      display: "grid", gridTemplateColumns: "100px 1fr 130px 120px 120px 110px 90px 90px 100px 80px",
+                      padding: "10px 16px", borderBottom: "1px solid var(--border2)", fontSize: 12, gap: 8,
+                      cursor: "pointer", transition: "background .1s",
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.03)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <div><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: brandObj ? brandObj.color + "20" : "rgba(201,168,76,.12)", color: brandObj?.color || "var(--gold)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "inline-block", maxWidth: "100%" }}>{r.brand || "—"}</span></div>
+                      <div style={{ color: "var(--text)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.project}</div>
+                      <div style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.owner || "—"}</div>
+                      <div style={{ color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.designType || "—"}</div>
+                      <div style={{ color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.channel || "—"}</div>
+                      <div style={{ color: "var(--text-dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.designer || "TBD"}</div>
+                      <div style={{ color: "var(--text-muted)", fontSize: 11 }}>{r.dueDate ? new Date(r.dueDate + "T00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "—"}</div>
+                      <div style={{ color: "var(--text-muted)", fontSize: 11 }}>{r.liveDate ? new Date(r.liveDate + "T00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "—"}</div>
+                      <div><span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, border: `1px solid ${STATUS_COLORS[r.status] || "var(--border)"}30`, color: STATUS_COLORS[r.status] || "var(--text-muted)", background: `${STATUS_COLORS[r.status] || "var(--border)"}12` }}>{r.status}</span></div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_COLORS[r.priority] || "#888", flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, color: PRIORITY_COLORS[r.priority] || "var(--text-muted)" }}>{r.priority || "—"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── DESIGN REQUEST MODAL ──────────────────────────────────────────────────
+function DesignRequestModal({ brands, teamMembers, onClose, onSave }) {
+  const brandList = brands ? Object.values(brands) : [];
+  const [f, setF] = useState({
+    project: "", brand: brandList[0]?.name || "Headchange", owner: "", designType: DESIGN_TYPES[0],
+    channel: CHANNELS[0], designer: "", dueDate: "", liveDate: "", priority: "Medium",
+    section: "General", notes: "",
+  });
+  const s = (k, v) => setF(p => ({ ...p, [k]: v }));
+  const selectedBrand = brandList.find(b => b.name === f.brand);
+  const accentColor = selectedBrand?.color || "var(--gold)";
+
+  // Right panel
+  const [rightMode, setRightMode] = useState("brief");
+  const [briefFile, setBriefFile] = useState(null);
+  const [briefFileData, setBriefFileData] = useState(null);
+  const [briefDragging, setBriefDragging] = useState(false);
+  const briefRef = useRef();
+  const [conceptHtml, setConceptHtml] = useState(null);
+  const [conceptName, setConceptName] = useState(null);
+  const [conceptDragging, setConceptDragging] = useState(false);
+  const conceptRef = useRef();
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [filesDragging, setFilesDragging] = useState(false);
+  const filesRef = useRef();
+  const FILE_ACCEPTED = [".pdf",".doc",".docx",".txt",".md",".png",".jpg",".jpeg",".webp",".xls",".xlsx",".csv",".ppt",".pptx",".zip",".ai",".psd",".eps",".svg"];
+
+  const readBrief = (file) => { if (!file) return; setBriefFile(file); const r = new FileReader(); r.onload = e => setBriefFileData(e.target.result); r.readAsDataURL(file); };
+  const readHtml = (file) => { if (!file?.name.endsWith(".html")) return; const r = new FileReader(); r.onload = e => { setConceptHtml(e.target.result); setConceptName(file.name.replace(/\.html$/i, "")); }; r.readAsText(file); };
+  const handleAttachFiles = async (fileList) => {
+    for (const file of Array.from(fileList)) {
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      if (!FILE_ACCEPTED.some(a => ext === a)) continue;
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+      setAttachedFiles(p => [...p, { name: file.name, type: file.type, size: file.size, data }]);
+    }
+  };
+
+  const handleSave = () => {
+    if (!f.project.trim()) return;
+    onSave({ ...f, _briefFile: briefFile?.name || null, _briefFileData: briefFileData || null, _briefFileType: briefFile?.type || null, _html: conceptHtml || null, _htmlName: conceptName || null, _attachedFiles: attachedFiles });
+  };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal wide" onClick={e => e.stopPropagation()} style={{ maxWidth: 920 }}>
+        <div className="mhdr" style={{ borderTop: `2px solid ${accentColor}`, borderRadius: "16px 16px 0 0" }}>
+          <div className="mtitle">Submit Design Request</div>
+          <button className="mclose" onClick={onClose}>×</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", overflow: "hidden" }}>
+          {/* LEFT — form */}
+          <div style={{ padding: "18px 20px", overflowY: "auto", borderRight: "1px solid var(--border2)", maxHeight: "72vh" }}>
+            <div className="ff"><label className="fl">Project Name *</label><input className="fi" placeholder="e.g. Two New Flavor Launches" value={f.project} onChange={e => s("project", e.target.value)} /></div>
+            <div className="frow">
+              <div className="ff"><label className="fl">Brand</label>
+                <select className="fsel" value={f.brand} onChange={e => s("brand", e.target.value)}>
+                  {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                  <option value="All Brands">All Brands</option>
+                </select>
+              </div>
+              <div className="ff"><label className="fl">What is Needed</label>
+                <select className="fsel" value={f.designType} onChange={e => s("designType", e.target.value)}>
+                  {DESIGN_TYPES.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="ff"><label className="fl">Channel</label>
+              <select className="fsel" value={f.channel} onChange={e => s("channel", e.target.value)}>
+                {CHANNELS.map(x => <option key={x}>{x}</option>)}
+              </select>
+            </div>
+            <div className="frow">
+              <div className="ff"><label className="fl">Project Owner</label>
+                {(teamMembers || []).length > 0 ? (
+                  <select className="fsel" value={f.owner} onChange={e => s("owner", e.target.value)}>
+                    <option value="">Select...</option>
+                    {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                  </select>
+                ) : <input className="fi" placeholder="Owner name" value={f.owner} onChange={e => s("owner", e.target.value)} />}
+              </div>
+              <div className="ff"><label className="fl">Designer</label>
+                {(teamMembers || []).length > 0 ? (
+                  <select className="fsel" value={f.designer} onChange={e => s("designer", e.target.value)}>
+                    <option value="">TBD</option>
+                    {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                  </select>
+                ) : <input className="fi" placeholder="Designer name" value={f.designer} onChange={e => s("designer", e.target.value)} />}
+              </div>
+            </div>
+            <div className="frow">
+              <div className="ff"><label className="fl">Due Date</label><input className="fi" type="date" value={f.dueDate} onChange={e => s("dueDate", e.target.value)} /></div>
+              <div className="ff"><label className="fl">Live Date</label><input className="fi" type="date" value={f.liveDate} onChange={e => s("liveDate", e.target.value)} /></div>
+            </div>
+            <div className="frow">
+              <div className="ff"><label className="fl">Priority</label>
+                <select className="fsel" value={f.priority} onChange={e => s("priority", e.target.value)}>
+                  {DESIGN_PRIORITIES.map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+              <div className="ff"><label className="fl">Section / Group</label>
+                <input className="fi" placeholder="e.g. Active & Upcoming Launches" value={f.section} onChange={e => s("section", e.target.value)} />
+              </div>
+            </div>
+            <div className="ff"><label className="fl">Description / Notes</label><textarea className="fta" rows={3} placeholder="What specifically needs to be designed? Any references, sizes, or specs..." value={f.notes} onChange={e => s("notes", e.target.value)} /></div>
+          </div>
+          {/* RIGHT — attachments */}
+          <div style={{ display: "flex", flexDirection: "column", maxHeight: "72vh" }}>
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border2)", flexShrink: 0 }}>
+              {[["brief", "📎 Brief"], ["files", "📁 Files"], ["html", "🎨 HTML"]].map(([mode, label]) => (
+                <button key={mode} onClick={() => setRightMode(mode)} style={{
+                  flex: 1, padding: "12px 0", border: "none", cursor: "pointer", fontFamily: "var(--bf)", fontSize: 11, fontWeight: 600, letterSpacing: ".06em", textTransform: "uppercase",
+                  background: rightMode === mode ? "var(--surface2)" : "transparent",
+                  color: rightMode === mode ? accentColor : "var(--text-muted)",
+                  borderBottom: rightMode === mode ? `2px solid ${accentColor}` : "2px solid transparent",
+                }}>{label}{mode === "files" && attachedFiles.length > 0 ? ` (${attachedFiles.length})` : ""}</button>
+              ))}
+            </div>
+            <div style={{ flex: 1, padding: "16px 18px", overflowY: "auto" }}>
+              {rightMode === "brief" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Attach a design brief — PDF, Word, image, or text file.</div>
+                  {!briefFile ? (
+                    <div className={`bu-zone ${briefDragging ? "drag" : ""}`} style={{ minHeight: 130, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                      onDragOver={e => { e.preventDefault(); setBriefDragging(true); }} onDragLeave={() => setBriefDragging(false)}
+                      onDrop={e => { e.preventDefault(); setBriefDragging(false); readBrief(e.dataTransfer.files[0]); }}
+                      onClick={() => briefRef.current.click()}>
+                      <span className="bu-icon">📎</span><div className="bu-title">Drop brief here</div><div className="bu-sub">PDF · Word · Image · Text</div>
+                      <input ref={briefRef} type="file" accept=".pdf,.doc,.docx,.txt,.md,.png,.jpg,.jpeg,.webp" style={{ display: "none" }} onChange={e => readBrief(e.target.files[0])} />
+                    </div>
+                  ) : (
+                    <div className="bu-file-row"><span>📎</span><div className="bu-file-name">{briefFile.name}</div><button className="bu-file-rm" onClick={() => { setBriefFile(null); setBriefFileData(null); }}>✕</button></div>
+                  )}
+                </div>
+              )}
+              {rightMode === "files" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Attach reference files, assets, mockups, source files.</div>
+                  <div className={`bu-zone ${filesDragging ? "drag" : ""}`} style={{ minHeight: 100, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                    onDragOver={e => { e.preventDefault(); setFilesDragging(true); }} onDragLeave={() => setFilesDragging(false)}
+                    onDrop={e => { e.preventDefault(); setFilesDragging(false); handleAttachFiles(e.dataTransfer.files); }}
+                    onClick={() => filesRef.current.click()}>
+                    <span className="bu-icon">📁</span><div className="bu-title">Drop files here</div><div className="bu-sub">PDF · Image · AI · PSD · SVG · Excel</div>
+                    <input ref={filesRef} type="file" accept={FILE_ACCEPTED.join(",")} multiple style={{ display: "none" }} onChange={e => handleAttachFiles(e.target.files)} />
+                  </div>
+                  {attachedFiles.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {attachedFiles.map((af, i) => (
+                        <div key={i} className="bu-file-row">
+                          <span style={{ fontSize: 14 }}>{af.type?.startsWith("image/") ? "🖼" : "📄"}</span>
+                          <div className="bu-file-name">{af.name}</div>
+                          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{(af.size / 1024).toFixed(0)} KB</span>
+                          <button className="bu-file-rm" onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {rightMode === "html" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.6 }}>Attach an HTML mockup or prototype.</div>
+                  {!conceptHtml ? (
+                    <div className={`bu-zone ${conceptDragging ? "drag" : ""}`} style={{ minHeight: 140, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
+                      onDragOver={e => { e.preventDefault(); setConceptDragging(true); }} onDragLeave={() => setConceptDragging(false)}
+                      onDrop={e => { e.preventDefault(); setConceptDragging(false); readHtml(e.dataTransfer.files[0]); }}
+                      onClick={() => conceptRef.current.click()}>
+                      <span className="bu-icon">🎨</span><div className="bu-title">Drop HTML file</div><div className="bu-sub">.html files only</div>
+                      <input ref={conceptRef} type="file" accept=".html" style={{ display: "none" }} onChange={e => readHtml(e.target.files[0])} />
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div className="bu-file-row"><span>🎨</span><div className="bu-file-name">{conceptName}</div><button className="bu-file-rm" onClick={() => { setConceptHtml(null); setConceptName(null); }}>✕</button></div>
+                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "#111", border: "1px solid var(--border)" }}>
+                        <iframe srcDoc={conceptHtml} style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }} sandbox="allow-scripts" title="preview" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="mfoot">
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn btn-gold" disabled={!f.project.trim()} onClick={handleSave}>Submit Request{briefFile ? " + Brief" : ""}{attachedFiles.length > 0 ? ` + ${attachedFiles.length} file${attachedFiles.length > 1 ? "s" : ""}` : ""}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── DESIGN DETAIL MODAL ───────────────────────────────────────────────────
+function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, onDelete }) {
+  const brandList = brands ? Object.values(brands) : [];
+  const [editing, setEditing] = useState(false);
+  const [f, setF] = useState({ ...request });
+  const s = (k, v) => setF(p => ({ ...p, [k]: v }));
+  const brandObj = brandList.find(b => b.name === request.brand);
+
+  const handleSave = () => { onUpdate(f); setEditing(false); };
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 640 }}>
+        <div className="mhdr" style={{ borderTop: `2px solid ${brandObj?.color || "var(--gold)"}`, borderRadius: "16px 16px 0 0" }}>
+          <div className="mtitle">{request.project}</div>
+          <button className="mclose" onClick={onClose}>×</button>
+        </div>
+        <div style={{ padding: "20px 24px", overflowY: "auto", maxHeight: "65vh" }}>
+          {!editing ? (
+            <>
+              <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                <span style={{ padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: brandObj ? brandObj.color + "18" : "rgba(201,168,76,.1)", color: brandObj?.color || "var(--gold)" }}>{request.brand}</span>
+                <span style={{ padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: `1px solid ${STATUS_COLORS[request.status]}30`, color: STATUS_COLORS[request.status] }}>{request.status}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: PRIORITY_COLORS[request.priority] }} />
+                  <span style={{ color: PRIORITY_COLORS[request.priority] }}>{request.priority}</span>
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px", marginBottom: 20 }}>
+                {[
+                  ["Type", request.designType], ["Channel", (request.channel || "").split(" · ")[1] || request.channel],
+                  ["Owner", request.owner || "—"], ["Designer", request.designer || "TBD"],
+                  ["Due Date", request.dueDate ? new Date(request.dueDate + "T00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
+                  ["Live Date", request.liveDate ? new Date(request.liveDate + "T00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
+                  ["Section", request.section || "General"], ["Submitted By", request.createdBy || "—"],
+                ].map(([label, val]) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 3 }}>{label}</div>
+                    <div style={{ fontSize: 13, color: "var(--text-dim)" }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+              {request.notes && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Notes</div>
+                  <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.7, padding: "12px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, whiteSpace: "pre-wrap" }}>{request.notes}</div>
+                </div>
+              )}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Update Status</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {DESIGN_STATUSES.map(st => (
+                    <button key={st} onClick={() => onUpdate({ status: st })}
+                      style={{ padding: "5px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        border: `1px solid ${STATUS_COLORS[st]}${request.status === st ? "" : "40"}`,
+                        background: request.status === st ? STATUS_COLORS[st] + "20" : "transparent",
+                        color: STATUS_COLORS[st], fontFamily: "var(--bf)",
+                      }}>{st}</button>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="ff"><label className="fl">Project</label><input className="fi" value={f.project} onChange={e => s("project", e.target.value)} /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Brand</label>
+                  <select className="fsel" value={f.brand} onChange={e => s("brand", e.target.value)}>
+                    {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                    <option value="All Brands">All Brands</option>
+                  </select>
+                </div>
+                <div className="ff"><label className="fl">Type</label>
+                  <select className="fsel" value={f.designType} onChange={e => s("designType", e.target.value)}>
+                    {DESIGN_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="ff"><label className="fl">Channel</label>
+                <select className="fsel" value={f.channel} onChange={e => s("channel", e.target.value)}>
+                  {CHANNELS.map(x => <option key={x}>{x}</option>)}
+                </select>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Owner</label>
+                  {(teamMembers || []).length > 0 ? (
+                    <select className="fsel" value={f.owner} onChange={e => s("owner", e.target.value)}>
+                      <option value="">Select...</option>
+                      {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                    </select>
+                  ) : <input className="fi" value={f.owner || ""} onChange={e => s("owner", e.target.value)} />}
+                </div>
+                <div className="ff"><label className="fl">Designer</label>
+                  {(teamMembers || []).length > 0 ? (
+                    <select className="fsel" value={f.designer} onChange={e => s("designer", e.target.value)}>
+                      <option value="">TBD</option>
+                      {(teamMembers || []).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                    </select>
+                  ) : <input className="fi" value={f.designer || ""} onChange={e => s("designer", e.target.value)} />}
+                </div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Due Date</label><input className="fi" type="date" value={f.dueDate || ""} onChange={e => s("dueDate", e.target.value)} /></div>
+                <div className="ff"><label className="fl">Live Date</label><input className="fi" type="date" value={f.liveDate || ""} onChange={e => s("liveDate", e.target.value)} /></div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Priority</label>
+                  <select className="fsel" value={f.priority} onChange={e => s("priority", e.target.value)}>
+                    {DESIGN_PRIORITIES.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div className="ff"><label className="fl">Section</label><input className="fi" value={f.section || ""} onChange={e => s("section", e.target.value)} /></div>
+              </div>
+              <div className="ff"><label className="fl">Notes</label><textarea className="fta" rows={3} value={f.notes || ""} onChange={e => s("notes", e.target.value)} /></div>
+            </>
+          )}
+        </div>
+        <div className="mfoot">
+          {!editing ? (
+            <>
+              <button className="btn" style={{ borderColor: "rgba(224,123,106,.3)", color: "#e07b6a" }} onClick={() => { if (confirm(`Delete "${request.project}"?`)) { onDelete(); onClose(); } }}>Delete</button>
+              <div style={{ flex: 1 }} />
+              <button className="btn" onClick={() => setEditing(true)}>Edit</button>
+              <button className="btn" onClick={onClose}>Close</button>
+            </>
+          ) : (
+            <>
+              <button className="btn" onClick={() => setEditing(false)}>Cancel</button>
+              <button className="btn btn-gold" onClick={handleSave}>Save Changes</button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
