@@ -4034,7 +4034,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
   const [strengthsText, setStrengthsText] = useState((member.strengths || []).join("\n"));
   const [keyPointsText, setKeyPointsText] = useState((member.keyPoints || []).join("\n"));
   const isMe = currentUser?.name?.toLowerCase() === member.name?.toLowerCase();
-  const isAdmin = isSessionAdmin || currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
+  const isAdmin = currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
   const canEditProfile = isMe || isAdmin;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const roleLabel = ORG_ROLES.find(r => r.id === member.role)?.title || member.role || "Team Member";
