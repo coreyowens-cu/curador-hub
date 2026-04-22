@@ -4039,8 +4039,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
   const [strengthsText, setStrengthsText] = useState((member.strengths || []).join("\n"));
   const [keyPointsText, setKeyPointsText] = useState((member.keyPoints || []).join("\n"));
   const isMe = currentUser?.name?.toLowerCase() === member.name?.toLowerCase();
-  const isAdmin = currentUser?.name?.toLowerCase() === "sean" || currentUser?.name?.toLowerCase() === "bobby g";
-  const canEditProfile = isMe || isAdmin;
+  const canEditProfile = true; // everyone can edit any profile
   const [confirmDelete, setConfirmDelete] = useState(false);
   const roleLabel = ORG_ROLES.find(r => r.id === member.role)?.title || member.role || "Team Member";
   const displayTitle = member.title || roleLabel;
@@ -4078,7 +4077,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
                 {editing ? "Cancel" : "Edit Profile"}
               </button>
             )}
-            {(isMe || isAdmin) && !editing && !confirmDelete && (
+            {!editing && !confirmDelete && (
               <button onClick={() => setConfirmDelete(true)} style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid rgba(224,123,106,.3)", background: "transparent", color: "#e07b6a", fontSize: 11, cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 500 }}>
                 Delete
               </button>
