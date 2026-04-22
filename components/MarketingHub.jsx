@@ -1394,7 +1394,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 <button onClick={() => {
                   const me = teamMembers.find(m => m.name?.toLowerCase() === currentUser.name?.toLowerCase());
                   if (me) setSelectedMember(me);
-                  else setSelectedMember({ name: currentUser.name, color: currentUser.color || { bg: "#c9a84c", text: "#07070f" }, role: currentUser.role || "content" });
+                  else setSelectedMember({ name: currentUser.name, color: currentUser.color?.bg ? currentUser.color : colorForName(currentUser.name || "User"), role: currentUser.role || "content" });
                 }}
                   style={{ width: 30, height: 30, borderRadius: "50%", border: "1px solid var(--border)", background: currentUser.color?.bg || "var(--gold)", color: currentUser.color?.text || "#07070f", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all .15s", flexShrink: 0 }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = `0 0 12px ${currentUser.color?.bg || "var(--gold)"}55`}
@@ -4024,6 +4024,7 @@ function CampaignsPanel({ campaigns, onNew, onSelect, onDelete, fullWidth }) {
 // TEAM MEMBER MODAL
 // ════════════════════════════════════════════════════════════════════════════
 function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
+  const memberColor = member.color?.bg ? member.color : colorForName(member.name || "User");
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(member.title || "");
   const [bio, setBio] = useState(member.bio || "");
@@ -4058,9 +4059,9 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
     <div className="overlay" onClick={onClose}>
       <div className="modal wide" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="mhdr" style={{ borderTop: `3px solid ${member.color.bg}`, borderRadius: "16px 16px 0 0" }}>
+        <div className="mhdr" style={{ borderTop: `3px solid ${memberColor.bg}`, borderRadius: "16px 16px 0 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1 }}>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: member.color.bg, color: member.color.text, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, flexShrink: 0, boxShadow: `0 0 16px ${member.color.bg}55` }}>{initials(member.name)}</div>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: memberColor.bg, color: memberColor.text, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, flexShrink: 0, boxShadow: `0 0 16px ${memberColor.bg}55` }}>{initials(member.name)}</div>
             <div>
               <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 400, color: "var(--text)" }}>{member.name}</div>
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{displayTitle}</div>
@@ -4163,7 +4164,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
                   <div className="tm-lbl">Skills</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
                     {member.skills.map((s, i) => (
-                      <span key={i} style={{ fontSize: 11, padding: "4px 11px", borderRadius: 100, background: `${member.color.bg}22`, border: `1px solid ${member.color.bg}44`, color: "var(--text-dim)", fontWeight: 500 }}>{s}</span>
+                      <span key={i} style={{ fontSize: 11, padding: "4px 11px", borderRadius: 100, background: `${memberColor.bg}22`, border: `1px solid ${memberColor.bg}44`, color: "var(--text-dim)", fontWeight: 500 }}>{s}</span>
                     ))}
                   </div>
                 </div>
