@@ -2116,7 +2116,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} currentUser={currentUser} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9185,7 +9185,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, currentUser }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9290,7 +9290,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
         {selected && isContactsView ? (
           <ContactsTable contacts={contacts} setContacts={setContacts} />
         ) : selected && isTierListView ? (
-          <TierListTable data={tierList} setData={setTierList} />
+          <TierListTable data={tierList} setData={setTierList} currentUser={currentUser} />
         ) : selected ? (
           <>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -9473,17 +9473,27 @@ function ContactsTable({ contacts, setContacts }) {
 }
 
 // ── TIER LIST TABLE ───────────────────────────────────────────────────────
-function TierListTable({ data, setData }) {
+function TierListTable({ data, setData, currentUser }) {
   const [collapsed, setCollapsed] = useState({});
   const [expandedAcct, setExpandedAcct] = useState({});
   const [filterTier, setFilterTier] = useState("all");
   const [search, setSearch] = useState("");
+  const [commentOpen, setCommentOpen] = useState(null); // account id
+  const [commentText, setCommentText] = useState("");
+  const commentRef = useRef();
 
   const TIER_COLORS = { "Tier 1": "#4d9e8e", "Tier 2": "#c9a84c", "Tier 3": "#e07b6a" };
   const tiers = [...new Set(data.map(a => a.tier))];
 
   const updateAccount = (id, field, val) => setData(p => p.map(a => a.id === id ? { ...a, [field]: val } : a));
   const updateStore = (acctId, storeId, field, val) => setData(p => p.map(a => a.id === acctId ? { ...a, stores: a.stores.map(s => s.id === storeId ? { ...s, [field]: val } : s) } : a));
+  const addComment = (acctId) => {
+    if (!commentText.trim()) return;
+    const c = { id: `tc-${Date.now()}`, author: currentUser?.name || "Team", text: commentText.trim(), ts: new Date().toISOString() };
+    setData(p => p.map(a => a.id === acctId ? { ...a, comments: [...(a.comments || []), c] } : a));
+    setCommentText("");
+  };
+  const deleteComment = (acctId, cId) => setData(p => p.map(a => a.id === acctId ? { ...a, comments: (a.comments || []).filter(c => c.id !== cId) } : a));
 
   const filtered = data.filter(a => {
     if (filterTier !== "all" && a.tier !== filterTier) return false;
@@ -9499,7 +9509,7 @@ function TierListTable({ data, setData }) {
 
   const cs = { padding: "5px 6px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
   const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
-  const AG = "1fr 140px 130px 80px 80px 80px 80px 80px 80px 80px 80px 80px";
+  const AG = "1fr 140px 130px 80px 80px 80px 80px 80px 80px 80px 80px 80px 40px";
   const SG = "30px 1fr 120px 70px 100px 80px 80px 90px 80px 80px 80px 80px";
 
   return (
@@ -9521,7 +9531,7 @@ function TierListTable({ data, setData }) {
         <div style={{ minWidth: 1100 }}>
           {/* Account header */}
           <div style={{ display: "grid", gridTemplateColumns: AG, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-            {["Account", "Brands Carried", "POC Access", "Discount", "Inventory", "Assets", "In-Store", "Digital", "Promos", "Orders", "Scorecard", "Proj Q2"].map(h => (
+            {["Account", "Brands Carried", "POC Access", "Discount", "Inventory", "Assets", "In-Store", "Digital", "Promos", "Orders", "Scorecard", "Proj Q2", "💬"].map(h => (
               <div key={h} style={{ padding: "8px 6px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
             ))}
           </div>
@@ -9553,7 +9563,39 @@ function TierListTable({ data, setData }) {
                     <div style={cs}><input value={a.promoParticipation||""} onChange={e => updateAccount(a.id, "promoParticipation", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.orderCadence||""} onChange={e => updateAccount(a.id, "orderCadence", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.scorecard||""} onChange={e => updateAccount(a.id, "scorecard", e.target.value)} style={is} /></div>
-                    <div style={{ ...cs, borderRight: "none" }}><input value={a.projQ2||""} onChange={e => updateAccount(a.id, "projQ2", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.projQ2||""} onChange={e => updateAccount(a.id, "projQ2", e.target.value)} style={is} /></div>
+                    {/* Comment icon */}
+                    <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer", position: "relative" }}
+                      onClick={e => { e.stopPropagation(); setCommentOpen(commentOpen === a.id ? null : a.id); }}>
+                      <span style={{ fontSize: 14, opacity: (a.comments?.length > 0) ? 1 : .3 }}>💬</span>
+                      {a.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{a.comments.length}</span>}
+                      {/* Comment dropdown */}
+                      {commentOpen === a.id && (
+                        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 320, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>Comments — {a.name}</div>
+                          <div ref={commentRef} style={{ maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                            {(a.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments yet.</div>}
+                            {(a.comments || []).map(c => (
+                              <div key={c.id} style={{ padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 8 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span>
+                                  <span style={{ fontSize: 9, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                                </div>
+                                <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
+                                {c.author === currentUser?.name && (
+                                  <button onClick={() => deleteComment(a.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)", marginTop: 2 }}>Delete</button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <input value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addComment(a.id); }} placeholder="Add comment..."
+                              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                            <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addComment(a.id)}>Send</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {/* Store sub-rows */}
                   {expandedAcct[a.id] && a.stores.map(st => (
