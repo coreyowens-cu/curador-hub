@@ -9373,7 +9373,11 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
 
 // ── CONTACTS TABLE (Centralized Contacts) ─────────────────────────────────
 function ContactsTable({ contacts, setContacts, currentUser }) {
-  const [collapsed, setCollapsed] = useState({});
+  const [collapsed, setCollapsed] = useState(() => {
+    const all = {};
+    [...new Set(contacts.map(c => c.section))].forEach(s => { all[s] = true; });
+    return all;
+  });
   const [filterTier, setFilterTier] = useState("all");
   const [filterSection, setFilterSection] = useState("all");
   const [search, setSearch] = useState("");
