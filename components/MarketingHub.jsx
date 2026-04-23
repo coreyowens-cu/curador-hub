@@ -8714,7 +8714,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                       <div style={{ ...cellBase, borderRight: "none", justifyContent: "center", cursor: "pointer", position: "relative" }}
                         onClick={e => { e.stopPropagation(); setSelectedReq(selectedReq?.id === r.id ? null : { ...r, _openComments: true }); }}
                         title="Comments">
-                        <span style={{ fontSize: 16, color: (r.comments?.length > 0) ? "var(--gold)" : "#888" }}>💬</span>
+                        <span style={{ fontSize: 16, color: (r.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
                         {r.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 4, fontSize: 8, background: "var(--gold)", color: "#07070f", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{r.comments.length}</span>}
                       </div>
                     </div>
@@ -9550,7 +9550,7 @@ function ContactsTable({ contacts, setContacts, currentUser }) {
                   {/* Comment */}
                   <div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }}
                     onClick={e => { e.stopPropagation(); setCommentOpen(commentOpen === c.id ? null : c.id); }}>
-                    <span style={{ fontSize: 16, color: (c.comments?.length > 0) ? "var(--gold)" : "#888" }}>💬</span>
+                    <span style={{ fontSize: 16, color: (c.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
                     {c.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{c.comments.length}</span>}
                     {commentOpen === c.id && (
                       <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 300, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -9704,7 +9704,7 @@ function TierListTable({ data, setData, currentUser }) {
                     {/* Comment icon */}
                     <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer", position: "relative" }}
                       onClick={e => { e.stopPropagation(); setCommentOpen(commentOpen === a.id ? null : a.id); }}>
-                      <span style={{ fontSize: 16, color: (a.comments?.length > 0) ? "var(--gold)" : "#888" }}>💬</span>
+                      <span style={{ fontSize: 16, color: (a.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
                       {a.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{a.comments.length}</span>}
                       {/* Comment dropdown */}
                       {commentOpen === a.id && (
@@ -9805,7 +9805,7 @@ function WeeklyDropsTable({ drops, setDrops }) {
     setCmtText("");
   };
   const deleteDropComment = (dropId, cId) => setDrops(p => p.map(d => d.id === dropId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
-  const DG = "100px 160px 200px 36px 28px";
+  const DG = "100px 160px 160px 32px 24px";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -9892,7 +9892,7 @@ function WeeklyDropsTable({ drops, setDrops }) {
                     {/* Comment */}
                     <div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }}
                       onClick={e => { e.stopPropagation(); setCmtOpen(cmtOpen === d.id ? null : d.id); }}>
-                      <span style={{ fontSize: 16, color: (d.comments?.length > 0) ? "var(--gold)" : "#888" }}>💬</span>
+                      <span style={{ fontSize: 16, color: (d.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
                       {d.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{d.comments.length}</span>}
                       {cmtOpen === d.id && (
                         <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 280, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
