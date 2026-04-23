@@ -1070,7 +1070,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           window.storage.get("ns-fieldteam-tree", true),
         ]);
         if (cn) setConcepts(JSON.parse(cn.value));
-        if (dr) setDesignRequests(JSON.parse(dr.value));
+        if (dr) { const parsed = JSON.parse(dr.value); setDesignRequests(parsed.length > 0 ? parsed : DEFAULT_DESIGN_REQUESTS); }
+        else setDesignRequests(DEFAULT_DESIGN_REQUESTS);
         if (ftt) setFieldTeamTree(JSON.parse(ftt.value));
       } catch (_) { if (!initialUserName) setShowWhoModal(true); }
       setReady(true);
@@ -8414,6 +8415,46 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
 // ════════════════════════════════════════════════════════════════════════════
 
 const DESIGN_STATUSES = ["Not Started", "In Progress", "In Review", "Completed", "On Hold"];
+const DESIGN_SECTIONS = ["Active & Upcoming Launches", "New Ideas — Strain Drops", "Field Kit Design Needs", "Social Content", "Packaging", "Events", "Other"];
+
+const DEFAULT_DESIGN_REQUESTS = [
+  // ── Active & Upcoming Launches ──
+  { id:"drd-1", section:"Active & Upcoming Launches", brand:"Bubbles", project:"Two New Flavor Launches (New SKUs)", owner:"Munchi", designType:"Video", channel:"Instagram", creative:"Tom", dueDate:"", liveDate:"2026-04-27", status:"In Progress", priority:"High", notes:"Tom sent over a video to review 4/21", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-2", section:"Active & Upcoming Launches", brand:"Bubbles", project:"Two New Flavor Launches (New SKUs)", owner:"Munchi", designType:"Table Cards", channel:"Field Team", creative:"Allison Gellner", dueDate:"", liveDate:"", status:"In Progress", priority:"High", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-3", section:"Active & Upcoming Launches", brand:"Headchange", project:"Rosin All In One", owner:"Sanson", designType:"Other", channel:"", creative:"", dueDate:"", liveDate:"2026-04-27", status:"Not Started", priority:"High", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-4", section:"Active & Upcoming Launches", brand:"Headchange", project:"Packaging (Boxes)", owner:"Sanson", designType:"Packaging", channel:"Packaging", creative:"Allison Gellner", dueDate:"", liveDate:"", status:"In Progress", priority:"Low", notes:"Bryan sent through compliance", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-5", section:"Active & Upcoming Launches", brand:"Headchange", project:"BatCountry Collab (Cartridge)", owner:"Munchi", designType:"Packaging", channel:"Packaging", creative:"Kelly", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-6", section:"Active & Upcoming Launches", brand:"Headchange", project:"BatCountry Collab (Video)", owner:"Munchi", designType:"Video", channel:"Video", creative:"Tom", dueDate:"", liveDate:"", status:"In Progress", priority:"High", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-7", section:"Active & Upcoming Launches", brand:"Headchange", project:"BatCountry Collab (Photography/Artwork)", owner:"Munchi", designType:"Photography", channel:"Instagram", creative:"Tom / Kelly", dueDate:"", liveDate:"", status:"In Progress", priority:"High", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-8", section:"Active & Upcoming Launches", brand:"Headchange", project:"Sesh - EDM Dab Circus Theme Robust & Sesh Menu", owner:"Luke", designType:"Print", channel:"Print", creative:"Kelly", dueDate:"2026-04-29", liveDate:"2026-05-11", status:"Not Started", priority:"Medium", notes:"Menu (2-sided)", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-9", section:"Active & Upcoming Launches", brand:"Headchange", project:"Sesh - EDM Dab Circus Theme Event Bright Artwork", owner:"Luke", designType:"Social Graphics", channel:"Digital", creative:"Kelly", dueDate:"2026-04-29", liveDate:"2026-05-11", status:"Not Started", priority:"Medium", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  // ── New Ideas — Strain Drops ──
+  { id:"drd-10", section:"New Ideas — Strain Drops", brand:"Headchange", project:"New Strains dropping w/o 5/4", owner:"Cindy", designType:"Photography", channel:"Instagram", creative:"TBD", dueDate:"2026-04-27", liveDate:"2026-05-03", status:"Not Started", priority:"Medium", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-11", section:"New Ideas — Strain Drops", brand:"Headchange", project:"New Strains dropping w/o 5/11", owner:"Cindy", designType:"Photography", channel:"Instagram", creative:"TBD", dueDate:"2026-05-04", liveDate:"2026-05-10", status:"Not Started", priority:"Medium", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-12", section:"New Ideas — Strain Drops", brand:"Headchange", project:"New Strains dropping w/o 5/18", owner:"Cindy", designType:"Photography", channel:"Instagram", creative:"TBD", dueDate:"2026-05-11", liveDate:"2026-05-17", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-13", section:"New Ideas — Strain Drops", brand:"Headchange", project:"New Strains dropping w/o 5/25", owner:"Cindy", designType:"Photography", channel:"Instagram", creative:"TBD", dueDate:"2026-05-18", liveDate:"2026-05-24", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-14", section:"New Ideas — Strain Drops", brand:"Headchange", project:"Melt Shot / Glass Feature / Comments", owner:"Sanson", designType:"Video", channel:"Video", creative:"Tom", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-15", section:"New Ideas — Strain Drops", brand:"Headchange", project:"Melt Shot / Glass Feature / Comments (Art)", owner:"Sanson", designType:"Video", channel:"Instagram", creative:"Tom / Kelly", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"Video w/ Art", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  // ── Field Kit Design Needs ──
+  { id:"drd-20", section:"Field Kit Design Needs", brand:"All Brands", project:"Popup Banners", owner:"TBD", designType:"Print", channel:"Field / Activation", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"SafeBet & Bubbles confirmed. Headchange needed.", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-21", section:"Field Kit Design Needs", brand:"All Brands", project:"Table Tents", owner:"TBD", designType:"Print", channel:"Field / Activation", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"For dispensary counters & pop-up tables", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-22", section:"Field Kit Design Needs", brand:"All Brands", project:"Printed Product Cards (SKU-Specific)", owner:"TBD", designType:"Print", channel:"Field / Activation", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"One per SKU per brand", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-23", section:"Field Kit Design Needs", brand:"All Brands", project:"Monthly Retailer Promo Flyers", owner:"TBD", designType:"Print", channel:"Field / Buyers", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"Include case pricing for buyers", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-24", section:"Field Kit Design Needs", brand:"All Brands", project:"General Signage (Posters / Shelf Talkers)", owner:"TBD", designType:"Print", channel:"Retail", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"Window clings, exit signage if applicable", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-25", section:"Field Kit Design Needs", brand:"All Brands", project:"Branded Table Skirts", owner:"TBD", designType:"Print", channel:"Field / Activation", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"Activation-specific", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-26", section:"Field Kit Design Needs", brand:"Headchange", project:"Retail Branded Display — REDESIGN", owner:"TBD", designType:"Other", channel:"Retail", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"High", notes:"Called out as out of date. Priority redesign needed.", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-27", section:"Field Kit Design Needs", brand:"SafeBet", project:"Retail Branded Display", owner:"TBD", designType:"Other", channel:"Retail", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-28", section:"Field Kit Design Needs", brand:"Bubbles", project:"Retail Branded Display", owner:"TBD", designType:"Other", channel:"Retail", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-29", section:"Field Kit Design Needs", brand:"All Brands", project:"Budtender Education One-Pagers", owner:"TBD", designType:"Print", channel:"Field / Education", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"Scientific 'Why' + product specs", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-30", section:"Field Kit Design Needs", brand:"All Brands", project:"Sell Sheets", owner:"TBD", designType:"Print", channel:"Sales", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Medium", notes:"PDF and physical print versions", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-31", section:"Field Kit Design Needs", brand:"All Brands", project:"Brand Guidelines Doc", owner:"TBD", designType:"Other", channel:"Internal / Field", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"High", notes:"Voice, usage, color/font standards", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-32", section:"Field Kit Design Needs", brand:"All Brands", project:"Full Logo Suite", owner:"TBD", designType:"Other", channel:"Internal / Field", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"High", notes:"Full color, B&W, horizontal, stacked", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-33", section:"Field Kit Design Needs", brand:"All Brands", project:"High-Res Product Photography", owner:"TBD", designType:"Photography", channel:"All Channels", creative:"Tom", dueDate:"", liveDate:"", status:"In Progress", priority:"Low", notes:"Studio & lifestyle. Macro shots needed too.", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-34", section:"Field Kit Design Needs", brand:"All Brands", project:"Stickers (Core + SKU-specific)", owner:"TBD", designType:"Print", channel:"Field / Swag", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-35", section:"Field Kit Design Needs", brand:"All Brands", project:"Branded Pins", owner:"TBD", designType:"Other", channel:"Field / Swag", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-36", section:"Field Kit Design Needs", brand:"All Brands", project:"T-Shirts", owner:"TBD", designType:"Other", channel:"Field / Swag", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+  { id:"drd-37", section:"Field Kit Design Needs", brand:"All Brands", project:"Lucid Loyalty QR Code Display", owner:"TBD", designType:"Print", channel:"Retail", creative:"TBD", dueDate:"", liveDate:"", status:"Not Started", priority:"Low", notes:"", createdAt:"2026-04-15T00:00:00Z", createdBy:"Team" },
+];
 const DESIGN_PRIORITIES = ["Low", "Medium", "High", "Urgent"];
 const DESIGN_TYPES = ["Video", "Photography", "Print", "Packaging", "Social Graphics", "Email", "Web", "Signage", "Table Cards", "Other"];
 const PRIORITY_COLORS = { Low: "#4d9e8e", Medium: "#c9a84c", High: "#e07b6a", Urgent: "#d94848" };
@@ -8619,7 +8660,7 @@ function DesignRequestModal({ brands, teamMembers, onClose, onSave }) {
   const [f, setF] = useState({
     project: "", brand: brandList[0]?.name || "Headchange", owner: "", designType: DESIGN_TYPES[0],
     channel: CHANNELS[0], designer: "", creative: "", dueDate: "", liveDate: "", priority: "Medium",
-    section: "General", notes: "",
+    section: DESIGN_SECTIONS[0], notes: "",
   });
   const s = (k, v) => setF(p => ({ ...p, [k]: v }));
   const selectedBrand = brandList.find(b => b.name === f.brand);
@@ -8703,8 +8744,10 @@ function DesignRequestModal({ brands, teamMembers, onClose, onSave }) {
                   {DESIGN_PRIORITIES.map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
-              <div className="ff"><label className="fl">Section / Group</label>
-                <input className="fi" placeholder="e.g. Active & Upcoming Launches" value={f.section} onChange={e => s("section", e.target.value)} />
+              <div className="ff"><label className="fl">Section</label>
+                <select className="fsel" value={f.section} onChange={e => s("section", e.target.value)}>
+                  {DESIGN_SECTIONS.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                </select>
               </div>
             </div>
             <div className="ff"><label className="fl">Description / Notes</label><textarea className="fta" rows={3} placeholder="What specifically needs to be designed? Any references, sizes, or specs..." value={f.notes} onChange={e => s("notes", e.target.value)} /></div>
@@ -9030,7 +9073,11 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
                     {DESIGN_PRIORITIES.map(p => <option key={p}>{p}</option>)}
                   </select>
                 </div>
-                <div className="ff"><label className="fl">Section</label><input className="fi" value={f.section || ""} onChange={e => s("section", e.target.value)} /></div>
+                <div className="ff"><label className="fl">Section</label>
+                  <select className="fsel" value={f.section || DESIGN_SECTIONS[0]} onChange={e => s("section", e.target.value)}>
+                    {DESIGN_SECTIONS.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="ff"><label className="fl">Notes</label><textarea className="fta" rows={3} value={f.notes || ""} onChange={e => s("notes", e.target.value)} /></div>
             </>
