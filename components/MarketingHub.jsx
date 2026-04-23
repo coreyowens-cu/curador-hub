@@ -889,11 +889,15 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const tzDate = (tz) => new Date().toLocaleDateString("en-US", { timeZone: tz, month: "short", day: "numeric" });
   const [weather, setWeather] = useState({});
   useEffect(() => {
-    const cities = { "America/Los_Angeles": "Los+Angeles", "America/Chicago": "St+Louis", "America/Puerto_Rico": "San+Juan" };
+    const cities = { "America/Los_Angeles": "Los+Angeles", "America/Chicago": "St+Louis,MO", "America/Puerto_Rico": "San+Juan" };
     Object.entries(cities).forEach(([tz, city]) => {
-      fetch(`https://wttr.in/${city}?format=%t+%C&m`).then(r => r.text()).then(t => {
-        const text = t.trim();
-        setWeather(p => ({ ...p, [tz]: text }));
+      fetch(`https://wttr.in/${city}?format=j1`).then(r => r.json()).then(d => {
+        const cur = d?.current_condition?.[0];
+        if (cur) {
+          const temp = cur.temp_F ? `${cur.temp_F}°F` : "";
+          const desc = cur.weatherDesc?.[0]?.value || "";
+          setWeather(p => ({ ...p, [tz]: `${temp} ${desc}`.trim() }));
+        }
       }).catch(() => {});
     });
   }, []);
