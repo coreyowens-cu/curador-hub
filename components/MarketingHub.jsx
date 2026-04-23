@@ -436,7 +436,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .cmp-empty-icon{font-size:28px;display:block;margin-bottom:10px;opacity:.4;}
 
 /* MAIN */
-.main{flex:1;min-width:0;overflow-y:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;}
+.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;}
 .main.nr{margin-right:var(--nw);}
 /* ── ASSET LIBRARY (DAM) ── */
 .dam-wrap{display:flex;height:100%;min-height:calc(100vh - 57px);}
@@ -887,6 +887,16 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   }, []);
   const tzNow = (tz) => new Date().toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true });
   const tzDate = (tz) => new Date().toLocaleDateString("en-US", { timeZone: tz, month: "short", day: "numeric" });
+  const [weather, setWeather] = useState({});
+  useEffect(() => {
+    const cities = { "America/Los_Angeles": "Los+Angeles", "America/Chicago": "St+Louis", "America/Puerto_Rico": "San+Juan" };
+    Object.entries(cities).forEach(([tz, city]) => {
+      fetch(`https://wttr.in/${city}?format=%t+%C&m`).then(r => r.text()).then(t => {
+        const text = t.trim();
+        setWeather(p => ({ ...p, [tz]: text }));
+      }).catch(() => {});
+    });
+  }, []);
 
   // Notes
   const [notesOpen, setNotesOpen] = useState(false);
@@ -1436,6 +1446,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 <div className="tz-item">
                   <div className="tz-label">{z.label}</div>
                   <div className="tz-time">{tzNow(z.tz)}</div>
+                  {weather[z.tz] && <div style={{ fontSize: 8, color: "var(--text-muted)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{weather[z.tz]}</div>}
                 </div>
               </div>
             ))}
