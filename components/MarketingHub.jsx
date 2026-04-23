@@ -1515,7 +1515,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                   ))}
 
                   {/* Campaigns — with inline dropdown */}
-                  <button className={`lsb-tab ${leftTab === "campaigns" ? "on" : ""}`} onClick={() => { setLeftTab("campaigns"); setActiveBrand(null); }}>
+                  <button className={`lsb-tab ${leftTab === "campaigns" ? "on" : ""}`} onClick={() => { if (leftTab === "campaigns") { setLeftTab("company"); } else { setLeftTab("campaigns"); } setActiveBrand(null); }}>
                     <span className="lsb-icon">🚀</span>
                     {lsbOpen && <span className="lsb-lbl">Campaigns</span>}
                     {lsbOpen && (
@@ -1562,7 +1562,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                   ))}
 
                   {/* Design Portal — with inline dropdown */}
-                  <button className={`lsb-tab ${leftTab === "design" ? "on" : ""}`} onClick={() => { setLeftTab("design"); setActiveBrand(null); }}>
+                  <button className={`lsb-tab ${leftTab === "design" ? "on" : ""}`} onClick={() => { if (leftTab === "design") { setLeftTab("company"); } else { setLeftTab("design"); } setActiveBrand(null); }}>
                     <span className="lsb-icon">🖌</span>
                     {lsbOpen && <span className="lsb-lbl">Design Portal</span>}
                     {lsbOpen && (
@@ -1594,7 +1594,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                   </button>
 
                   {/* Team — with inline dropdown */}
-                  <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { setLeftTab("team"); setActiveBrand(null); }}>
+                  <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { if (leftTab === "team") { setLeftTab("company"); } else { setLeftTab("team"); } setActiveBrand(null); }}>
                     <span className="lsb-icon">👥</span>
                     {lsbOpen && <span className="lsb-lbl">Team</span>}
                     {lsbOpen && (
