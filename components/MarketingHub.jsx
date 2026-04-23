@@ -1576,7 +1576,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                         { id: "submit", icon: "➕", label: "Submit Request" },
                       ].map(item => (
                         <button key={item.id}
-                          onClick={() => setDesignView(item.id)}
+                          onClick={() => { setDesignView(item.id); if (item.id === "submit") setShowDesignModal(true); }}
                           className={`lsb-tab ${designView === item.id ? "on" : ""}`}
                           style={{ paddingLeft: 20, fontSize: 11, opacity: designView === item.id ? 1 : .75 }}
                         >
@@ -8507,7 +8507,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
   // Zoom
   const [zoom, setZoom] = useState(100);
   // Column widths (resizable)
-  const defaultCols = [52, 100, 200, 120, 120, 120, 120, 90, 90, 115, 85, 180, 40];
+  const defaultCols = [52, 100, 200, 120, 120, 120, 120, 90, 90, 90, 115, 85, 180, 40];
   const [colWidths, setColWidths] = useState(defaultCols);
   const dragRef = useRef(null);
 
@@ -8579,10 +8579,10 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
           <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {/* Column headers with resize handles */}
             <div style={{ display: "grid", gridTemplateColumns: GRID, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-              {["", "Brand", "Project", "Owner", "What Needed", "Channel", "Creative", "Due", "Live", "Status", "Priority", "Notes", "💬"].map((h, i) => (
+              {["", "Brand", "Project", "Owner", "What Needed", "Channel", "Creative", "Due", "Live", "Created", "Status", "Priority", "Notes", "💬"].map((h, i) => (
                 <div key={i} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap", position: "relative", userSelect: "none" }}>
                   {h}
-                  {i < 12 && <div onMouseDown={e => startResize(i, e)} style={{ position: "absolute", right: -2, top: 0, bottom: 0, width: 5, cursor: "col-resize", zIndex: 3 }}
+                  {i < 13 && <div onMouseDown={e => startResize(i, e)} style={{ position: "absolute", right: -2, top: 0, bottom: 0, width: 5, cursor: "col-resize", zIndex: 3 }}
                     onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.4)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"} />}
                 </div>
@@ -8650,6 +8650,20 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                       {/* Live Date */}
                       <div style={{ ...cellBase }}>
                         <input type="date" value={r.liveDate || ""} onChange={e => u("liveDate", e.target.value)} style={{ ...inpStyle, fontSize: 11, color: "var(--text-muted)" }} />
+                      </div>
+                      {/* Created + Urgency */}
+                      <div style={{ ...cellBase, gap: 4 }}>
+                        <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "—"}</span>
+                        {(() => {
+                          if (!r.dueDate || !r.createdAt || r.status === "Completed") return null;
+                          const now = Date.now();
+                          const due = new Date(r.dueDate + "T00:00").getTime();
+                          const daysLeft = Math.ceil((due - now) / 86400000);
+                          if (daysLeft < 0) return <span title="Overdue" style={{ fontSize: 14, color: "#d94848", flexShrink: 0 }}>!!</span>;
+                          if (daysLeft <= 3) return <span title={`${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`} style={{ fontSize: 14, color: "#e07b6a", flexShrink: 0 }}>!</span>;
+                          if (daysLeft <= 7) return <span title={`${daysLeft} days left`} style={{ fontSize: 12, color: "#c9a84c", flexShrink: 0 }}>!</span>;
+                          return null;
+                        })()}
                       </div>
                       {/* Status */}
                       <div style={{ ...cellBase }}>
