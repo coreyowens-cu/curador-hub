@@ -997,6 +997,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   // ── FIELD TEAM STATE ────────────────────────────────────────────────────────
   const [fieldTeamTree, setFieldTeamTree] = useState(DEFAULT_FIELDTEAM_TREE);
   const [centralizedContacts, setCentralizedContacts] = useState([]);
+  const [tierListData, setTierListData] = useState([]);
 
 
   // Load
@@ -1176,10 +1177,19 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     (async () => {
       const stored = await window.storage.get("ns-centralized-contacts", true).catch(() => null);
       if (stored) { setCentralizedContacts(JSON.parse(stored.value)); return; }
-      // First time — load defaults from public JSON
       try { const r = await fetch("/data/contacts-default.json"); const d = await r.json(); setCentralizedContacts(d); } catch {}
     })();
   }, [ready]);
+  // Load tier list tracker — from storage or default JSON
+  useEffect(() => {
+    if (!ready) return;
+    (async () => {
+      const stored = await window.storage.get("ns-tierlist", true).catch(() => null);
+      if (stored) { setTierListData(JSON.parse(stored.value)); return; }
+      try { const r = await fetch("/data/tierlist-default.json"); const d = await r.json(); setTierListData(d); } catch {}
+    })();
+  }, [ready]);
+  useEffect(() => { if (ready && tierListData.length > 0) window.storage.set("ns-tierlist", JSON.stringify(tierListData), true).catch(() => {}); }, [tierListData, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -2091,7 +2101,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9113,7 +9123,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9124,6 +9134,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts }) {
   const getChildren = (parentId) => tree.filter(n => n.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
   const selected = tree.find(n => n.id === selectedId);
   const isContactsView = selected?.name === "Centralized Contacts";
+  const isTierListView = selected?.name === "Tier List Tracker";
 
   const addNode = (parentId, type) => {
     const siblings = getChildren(parentId);
@@ -9216,6 +9227,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {selected && isContactsView ? (
           <ContactsTable contacts={contacts} setContacts={setContacts} />
+        ) : selected && isTierListView ? (
+          <TierListTable data={tierList} setData={setTierList} />
         ) : selected ? (
           <>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -9389,6 +9402,116 @@ function ContactsTable({ contacts, setContacts }) {
                 <div onClick={() => addContact(section)} style={{ padding: "6px 12px", borderBottom: "1px solid var(--border2)", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
                   onMouseEnter={e => e.currentTarget.style.opacity="1"} onMouseLeave={e => e.currentTarget.style.opacity=".5"}>+ Add contact</div>
               )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TIER LIST TABLE ───────────────────────────────────────────────────────
+function TierListTable({ data, setData }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [expandedAcct, setExpandedAcct] = useState({});
+  const [filterTier, setFilterTier] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const TIER_COLORS = { "Tier 1": "#4d9e8e", "Tier 2": "#c9a84c", "Tier 3": "#e07b6a" };
+  const tiers = [...new Set(data.map(a => a.tier))];
+
+  const updateAccount = (id, field, val) => setData(p => p.map(a => a.id === id ? { ...a, [field]: val } : a));
+  const updateStore = (acctId, storeId, field, val) => setData(p => p.map(a => a.id === acctId ? { ...a, stores: a.stores.map(s => s.id === storeId ? { ...s, [field]: val } : s) } : a));
+
+  const filtered = data.filter(a => {
+    if (filterTier !== "all" && a.tier !== filterTier) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return a.name.toLowerCase().includes(s) || a.brandsCarried?.toLowerCase().includes(s) || a.stores.some(st => st.name.toLowerCase().includes(s));
+    }
+    return true;
+  });
+
+  const groups = {};
+  filtered.forEach(a => { if (!groups[a.tier]) groups[a.tier] = []; groups[a.tier].push(a); });
+
+  const cs = { padding: "5px 6px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const AG = "1fr 140px 130px 80px 80px 80px 80px 80px 80px 80px 80px 80px";
+  const SG = "30px 1fr 120px 70px 100px 80px 80px 90px 80px 80px 80px 80px";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Tier List Tracker</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} account{filtered.length !== 1 ? "s" : ""} / {filtered.reduce((s, a) => s + a.stores.length, 0)} stores</div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search accounts or stores..." style={{ flex: 1, minWidth: 180, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+          <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+            <option value="all">All Tiers</option>
+            {tiers.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ minWidth: 1100 }}>
+          {/* Account header */}
+          <div style={{ display: "grid", gridTemplateColumns: AG, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
+            {["Account", "Brands Carried", "POC Access", "Discount", "Inventory", "Assets", "In-Store", "Digital", "Promos", "Orders", "Scorecard", "Proj Q2"].map(h => (
+              <div key={h} style={{ padding: "8px 6px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
+            ))}
+          </div>
+          {Object.entries(groups).map(([tier, accounts]) => (
+            <div key={tier}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [tier]: !p[tier] }))} style={{ padding: "8px 12px", background: "rgba(201,168,76,.04)", borderBottom: "1px solid var(--border)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[tier] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: TIER_COLORS[tier] || "#888" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: TIER_COLORS[tier] || "var(--text)" }}>{tier}</span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{accounts.length} accounts</span>
+              </div>
+              {!collapsed[tier] && accounts.map(a => (
+                <div key={a.id}>
+                  {/* Account row */}
+                  <div style={{ display: "grid", gridTemplateColumns: AG, borderBottom: "1px solid var(--border2)", minHeight: 34, background: "rgba(255,255,255,.01)" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.03)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.01)"}>
+                    <div style={{ ...cs, gap: 6 }}>
+                      <span onClick={() => setExpandedAcct(p => ({ ...p, [a.id]: !p[a.id] }))} style={{ cursor: "pointer", fontSize: 9, opacity: .5, display: "inline-block", transform: expandedAcct[a.id] ? "rotate(90deg)" : "rotate(0deg)", transition: "transform .15s" }}>▶</span>
+                      <input value={a.name} onChange={e => updateAccount(a.id, "name", e.target.value)} style={{ ...is, fontWeight: 600, color: "var(--text)" }} />
+                      <span style={{ fontSize: 9, color: "var(--text-muted)", flexShrink: 0 }}>{a.stores.length}</span>
+                    </div>
+                    <div style={cs}><input value={a.brandsCarried||""} onChange={e => updateAccount(a.id, "brandsCarried", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.pocAccess||""} onChange={e => updateAccount(a.id, "pocAccess", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.discount||""} onChange={e => updateAccount(a.id, "discount", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.inventoryReports||""} onChange={e => updateAccount(a.id, "inventoryReports", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.assetUsage||""} onChange={e => updateAccount(a.id, "assetUsage", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.inStoreVM||""} onChange={e => updateAccount(a.id, "inStoreVM", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.digitalAssets||""} onChange={e => updateAccount(a.id, "digitalAssets", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.promoParticipation||""} onChange={e => updateAccount(a.id, "promoParticipation", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.orderCadence||""} onChange={e => updateAccount(a.id, "orderCadence", e.target.value)} style={is} /></div>
+                    <div style={cs}><input value={a.scorecard||""} onChange={e => updateAccount(a.id, "scorecard", e.target.value)} style={is} /></div>
+                    <div style={{ ...cs, borderRight: "none" }}><input value={a.projQ2||""} onChange={e => updateAccount(a.id, "projQ2", e.target.value)} style={is} /></div>
+                  </div>
+                  {/* Store sub-rows */}
+                  {expandedAcct[a.id] && a.stores.map(st => (
+                    <div key={st.id} style={{ display: "grid", gridTemplateColumns: SG, borderBottom: "1px solid var(--border2)", minHeight: 30, background: "rgba(201,168,76,.02)" }}>
+                      <div style={{ ...cs, justifyContent: "center" }}><span style={{ fontSize: 8, color: "var(--text-muted)" }}>└</span></div>
+                      <div style={cs}><input value={st.name||""} onChange={e => updateStore(a.id, st.id, "name", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.storeRep||""} onChange={e => updateStore(a.id, st.id, "storeRep", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.region||""} onChange={e => updateStore(a.id, st.id, "region", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.msrpDetails||""} onChange={e => updateStore(a.id, st.id, "msrpDetails", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.msrpChanges||""} onChange={e => updateStore(a.id, st.id, "msrpChanges", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.carriedAllBrands||""} onChange={e => updateStore(a.id, st.id, "carriedAllBrands", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.whatsMissing||""} onChange={e => updateStore(a.id, st.id, "whatsMissing", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.assetUsage||""} onChange={e => updateStore(a.id, st.id, "assetUsage", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.inStoreVM||""} onChange={e => updateStore(a.id, st.id, "inStoreVM", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={cs}><input value={st.digitalAsset||""} onChange={e => updateStore(a.id, st.id, "digitalAsset", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                      <div style={{ ...cs, borderRight: "none" }}><input value={st.promoParticipation||""} onChange={e => updateStore(a.id, st.id, "promoParticipation", e.target.value)} style={{ ...is, fontSize: 10 }} /></div>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           ))}
         </div>
