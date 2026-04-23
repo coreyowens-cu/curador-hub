@@ -131,6 +131,9 @@ const DEFAULT_GANTT_URL = "/concepts/gantt.html";
 const DEFAULT_FIELDTEAM_TREE = [
   { id:"ft-1", parentId:null, type:"doc", name:"2026 Weekly Drops Menu", sortOrder:0, notes:"", link:"", attachments:[] },
   { id:"ft-2", parentId:null, type:"folder", name:"Sales", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-2a", parentId:"ft-2", type:"doc", name:"Credit Memo Requests", sortOrder:0, notes:"", link:"", attachments:[] },
+  { id:"ft-2b", parentId:"ft-2", type:"doc", name:"Sales Contact List", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-2c", parentId:"ft-2", type:"doc", name:"Promo Calendar- Work In Progress", sortOrder:2, notes:"", link:"", attachments:[] },
   { id:"ft-3", parentId:null, type:"folder", name:"CRM", sortOrder:2, notes:"", link:"", attachments:[] },
   { id:"ft-3a", parentId:"ft-3", type:"doc", name:"Tier List Tracker", sortOrder:0, notes:"", link:"", attachments:[] },
   { id:"ft-3b", parentId:"ft-3", type:"doc", name:"Centralized Contacts", sortOrder:1, notes:"", link:"", attachments:[] },
