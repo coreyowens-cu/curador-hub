@@ -1301,7 +1301,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
   const updateMemberProfile = (name, updates) => {
     setTeamMembers(p => p.map(m => m.name === name ? { ...m, ...updates } : m));
-    if (selectedMember?.name === name) setSelectedMember(m => ({ ...m, ...updates }));
+    if (selectedMember?.name === name) setSelectedMember(prev => prev ? { ...prev, ...updates } : prev);
   };
 
   const filtered = initiatives.filter(i => filterChannel === "All" || i.channel === filterChannel);
@@ -3576,6 +3576,7 @@ function MembersGridView({ teamMembers, currentUser, orgRoles, onSelect, onChang
       {teamMembers.map(m => {
         const roleLabel = orgRoles.find(r => r.id === m.role)?.title || "Team Member";
         const isMe = currentUser?.name?.toLowerCase() === m.name?.toLowerCase();
+        const mc = m.color?.bg ? m.color : colorForName(m.name || "User");
         return (
           <div key={m.name} data-tag-type="Team Member" data-tag-label={m.name} data-tag-section="Team" onClick={() => onSelect(m)} style={{
             padding: "18px 18px 16px", borderRadius: 13, cursor: "pointer",
@@ -3587,7 +3588,7 @@ function MembersGridView({ teamMembers, currentUser, orgRoles, onSelect, onChang
             onMouseLeave={e => { e.currentTarget.style.borderColor = isMe ? "rgba(201,168,76,.3)" : "var(--border)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = isMe ? "0 0 0 1px rgba(201,168,76,.1)" : "none"; }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-              <div style={{ width: 46, height: 46, borderRadius: "50%", background: m.color.bg, color: m.color.text, display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>{initials(m.name)}</div>
+              <div style={{ width: 46, height: 46, borderRadius: "50%", background: mc.bg, color: mc.text, display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>{initials(m.name)}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{m.name}</div>
                 <div style={{ fontSize: 11, color: m.title ? "var(--text-dim)" : "var(--text-muted)", marginTop: 2, fontStyle: m.title ? "normal" : "italic" }}>{m.title || roleLabel}</div>
@@ -3598,7 +3599,7 @@ function MembersGridView({ teamMembers, currentUser, orgRoles, onSelect, onChang
             {(m.skills?.length > 0) && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
                 {m.skills.slice(0, 4).map(s => (
-                  <span key={s} style={{ fontSize: 10, padding: "3px 9px", borderRadius: 100, background: `${m.color.bg}18`, border: `1px solid ${m.color.bg}30`, color: "var(--text-dim)", fontWeight: 500 }}>{s}</span>
+                  <span key={s} style={{ fontSize: 10, padding: "3px 9px", borderRadius: 100, background: `${mc.bg}18`, border: `1px solid ${mc.bg}30`, color: "var(--text-dim)", fontWeight: 500 }}>{s}</span>
                 ))}
                 {m.skills.length > 4 && <span style={{ fontSize: 10, color: "var(--text-muted)", alignSelf: "center" }}>+{m.skills.length - 4} more</span>}
               </div>
