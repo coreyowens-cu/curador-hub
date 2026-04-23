@@ -9377,6 +9377,13 @@ function ContactsTable({ contacts, setContacts }) {
   const [filterTier, setFilterTier] = useState("all");
   const [filterSection, setFilterSection] = useState("all");
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sortField, setSortField] = useState("");
+  const [sortDir, setSortDir] = useState("asc");
+  const [groupBy, setGroupBy] = useState("section"); // "section" | "tier" | "account" | "role"
+  const [showGroupBy, setShowGroupBy] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [showNewGroup, setShowNewGroup] = useState(false);
 
   const sections = [...new Set(contacts.map(c => c.section))];
   const tiers = [...new Set(contacts.map(c => c.tier).filter(Boolean))].sort();
@@ -9386,8 +9393,14 @@ function ContactsTable({ contacts, setContacts }) {
   const addContact = (section) => {
     setContacts(p => [...p, { id: `cc-${Date.now()}`, section, name: "", role: "", email: "", tier: "", tierTracker: "", location: "", account: "", phone: "", lastContacted: "", storeOwner: "", notes: "" }]);
   };
+  const addGroup = () => {
+    if (!newGroupName.trim()) return;
+    addContact(newGroupName.trim());
+    setNewGroupName("");
+    setShowNewGroup(false);
+  };
 
-  const filtered = contacts.filter(c => {
+  let filtered = contacts.filter(c => {
     if (filterTier !== "all" && c.tier !== filterTier) return false;
     if (filterSection !== "all" && c.section !== filterSection) return false;
     if (search) {
@@ -9397,33 +9410,77 @@ function ContactsTable({ contacts, setContacts }) {
     return true;
   });
 
+  if (sortField) {
+    filtered = [...filtered].sort((a, b) => {
+      const av = (a[sortField] || "").toLowerCase();
+      const bv = (b[sortField] || "").toLowerCase();
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }
+
   const groups = {};
-  filtered.forEach(c => { if (!groups[c.section]) groups[c.section] = []; groups[c.section].push(c); });
+  const groupKey = groupBy === "tier" ? "tier" : groupBy === "account" ? "account" : groupBy === "role" ? "role" : "section";
+  filtered.forEach(c => { const g = c[groupKey] || "Other"; if (!groups[g]) groups[g] = []; groups[g].push(c); });
 
   const TIER_COLORS = { "Tier 1": "#4d9e8e", "Tier 2": "#c9a84c", "Tier 3": "#e07b6a" };
+  const SECTION_COLORS = { "Global Contacts": "#6366f1", "SWMO": "#4d9e8e", "KC": "#3b82f6", "SEMO": "#22c55e", "STL": "#c9a84c", "MidMO": "#a855f7", "COMO": "#f59e0b" };
   const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
   const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
   const CG = "1fr 130px 1fr 80px 140px 100px 110px 110px 100px 90px 1fr 30px";
+  const tbtn = { display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", border: "none", background: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: 12, fontFamily: "var(--bf)", fontWeight: 500, borderRadius: 6, transition: "all .15s", whiteSpace: "nowrap" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Centralized Contacts</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} contact{filtered.length !== 1 ? "s" : ""}</div>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, account..." style={{ flex: 1, minWidth: 180, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
-          <select value={filterSection} onChange={e => setFilterSection(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+      {/* Toolbar */}
+      <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+        <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px", borderRadius: 6 }} onClick={() => addContact(sections[0] || "Global Contacts")}>+ New Contact</button>
+        <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
+        <button onClick={() => setSearchOpen(o => !o)} style={{ ...tbtn, color: searchOpen ? "var(--gold)" : "var(--text-dim)" }}
+          onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+          🔍 Search
+        </button>
+        <button style={tbtn} onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+          <select value={filterSection} onChange={e => setFilterSection(e.target.value)} style={{ background: "none", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none" }}>
             <option value="all">All Regions</option>
             {sections.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
-            <option value="all">All Tiers</option>
+        </button>
+        <button style={tbtn} onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+          <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ background: "none", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none" }}>
+            <option value="all">Filter Tier</option>
             {tiers.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+        </button>
+        <button style={tbtn} onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+          <select value={sortField ? `${sortField}-${sortDir}` : ""} onChange={e => { const v = e.target.value; if (!v) { setSortField(""); return; } const [f, d] = v.split("-"); setSortField(f); setSortDir(d); }}
+            style={{ background: "none", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none" }}>
+            <option value="">Sort</option>
+            <option value="name-asc">Name A-Z</option><option value="name-desc">Name Z-A</option>
+            <option value="tier-asc">Tier 1-3</option><option value="tier-desc">Tier 3-1</option>
+            <option value="account-asc">Account A-Z</option><option value="role-asc">Role A-Z</option>
+          </select>
+        </button>
+        <div style={{ position: "relative" }}>
+          <button onClick={() => setShowGroupBy(o => !o)} style={{ ...tbtn, color: groupBy !== "section" ? "var(--gold)" : "var(--text-dim)" }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--surface2)"} onMouseLeave={e => e.currentTarget.style.background = "none"}>
+            Group by
+          </button>
+          {showGroupBy && (
+            <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 0", boxShadow: "0 8px 24px rgba(0,0,0,.12)", zIndex: 20, minWidth: 180 }}>
+              {[["section", "Region"], ["tier", "Tier"], ["account", "Account/Store"], ["role", "Role"]].map(([val, label]) => (
+                <button key={val} onClick={() => { setGroupBy(val); setShowGroupBy(false); }} style={{ display: "block", width: "100%", padding: "8px 16px", border: "none", background: groupBy === val ? "var(--gold-dim)" : "none", color: groupBy === val ? "var(--gold)" : "var(--text-dim)", fontSize: 12, textAlign: "left", cursor: "pointer", fontFamily: "var(--bf)" }}>{label}</button>
+              ))}
+            </div>
+          )}
         </div>
+        <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} contact{filtered.length !== 1 ? "s" : ""}</div>
       </div>
+      {/* Search bar */}
+      {searchOpen && (
+        <div style={{ padding: "8px 16px", borderBottom: "1px solid var(--border2)", background: "var(--surface2)" }}>
+          <input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, account, role..." style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
+        </div>
+      )}
       <div style={{ flex: 1, overflow: "auto" }}>
         <div style={{ minWidth: 1200 }}>
           <div style={{ display: "grid", gridTemplateColumns: CG, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
@@ -9433,10 +9490,10 @@ function ContactsTable({ contacts, setContacts }) {
           </div>
           {Object.entries(groups).map(([section, items]) => (
             <div key={section}>
-              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "8px 12px", background: "rgba(201,168,76,.04)", borderBottom: "1px solid var(--border)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "10px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", borderLeft: `3px solid ${SECTION_COLORS[section] || "var(--gold)"}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
                 <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)" }}>{section}</span>
-                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} contacts</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: SECTION_COLORS[section] || "var(--gold)" }}>{section}</span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} Contact{items.length !== 1 ? "s" : ""}</span>
               </div>
               {!collapsed[section] && items.map(c => (
                 <div key={c.id} style={{ display: "grid", gridTemplateColumns: CG, borderBottom: "1px solid var(--border2)", minHeight: 34 }}
@@ -9466,6 +9523,24 @@ function ContactsTable({ contacts, setContacts }) {
               )}
             </div>
           ))}
+          {/* Add new group */}
+          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)" }}>
+            {showNewGroup ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input autoFocus value={newGroupName} onChange={e => setNewGroupName(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") addGroup(); if (e.key === "Escape") setShowNewGroup(false); }}
+                  placeholder="Group name (e.g. NEMO, Columbia)" style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
+                <button className="btn btn-sm" style={{ borderColor: "rgba(184,150,58,.3)", color: "var(--gold)", fontSize: 10 }} onClick={addGroup}>Add</button>
+                <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => setShowNewGroup(false)}>Cancel</button>
+              </div>
+            ) : (
+              <button onClick={() => setShowNewGroup(true)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", border: "1px solid var(--border)", borderRadius: 8, background: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 12, fontFamily: "var(--bf)", transition: "all .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--gold)"; e.currentTarget.style.color = "var(--gold)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+                + Add new group
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
