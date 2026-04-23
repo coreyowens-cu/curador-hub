@@ -9849,6 +9849,7 @@ function WeeklyDropsTable({ drops, setDrops }) {
                 style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
             </div>
             <button className="btn btn-gold" style={{ fontSize: 10, padding: "6px 14px" }} onClick={addDrop} disabled={!newDrop.sku.trim() || !newDrop.weekOf}>Add Drop</button>
+            <button className="btn" style={{ fontSize: 10, padding: "6px 14px" }} onClick={() => setShowAdd(false)}>Cancel</button>
           </div>
         )}
       </div>
