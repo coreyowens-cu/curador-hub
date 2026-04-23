@@ -1018,6 +1018,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [weeklyDrops, setWeeklyDrops] = useState([]);
   const [creditMemos, setCreditMemos] = useState([]);
   const [salesContacts, setSalesContacts] = useState([]);
+  const [promoCalendar, setPromoCalendar] = useState([]);
 
 
   // Load
@@ -1243,6 +1244,15 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     })();
   }, [ready]);
   useEffect(() => { if (ready && salesContacts.length > 0) window.storage.set("ns-sales-contacts", JSON.stringify(salesContacts), true).catch(() => {}); }, [salesContacts, ready]);
+  useEffect(() => {
+    if (!ready) return;
+    (async () => {
+      const stored = await window.storage.get("ns-promo-calendar", true).catch(() => null);
+      if (stored) { setPromoCalendar(JSON.parse(stored.value)); return; }
+      try { const r = await fetch("/data/promocalendar-default.json"); const d = await r.json(); setPromoCalendar(d); } catch {}
+    })();
+  }, [ready]);
+  useEffect(() => { if (ready && promoCalendar.length > 0) window.storage.set("ns-promo-calendar", JSON.stringify(promoCalendar), true).catch(() => {}); }, [promoCalendar, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -2155,7 +2165,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} currentUser={currentUser} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} currentUser={currentUser} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9224,7 +9234,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, currentUser }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, promoCalendar, setPromoCalendar, currentUser }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9239,6 +9249,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
   const isDropsView = selected?.name === "2026 Weekly Drops Menu";
   const isCreditMemosView = selected?.name === "Credit Memo Requests";
   const isSalesContactsView = selected?.name === "Sales Contact List";
+  const isPromoCalendarView = selected?.name === "Promo Calendar- Work In Progress";
 
   const addNode = (parentId, type) => {
     const siblings = getChildren(parentId);
@@ -9339,6 +9350,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
           <CreditMemoTable data={creditMemos} setData={setCreditMemos} currentUser={currentUser} />
         ) : selected && isSalesContactsView ? (
           <SalesContactTable data={salesContacts} setData={setSalesContacts} currentUser={currentUser} />
+        ) : selected && isPromoCalendarView ? (
+          <PromoCalendarTable data={promoCalendar} setData={setPromoCalendar} currentUser={currentUser} />
         ) : selected ? (
           <>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -10232,6 +10245,153 @@ function SalesContactTable({ data, setData, currentUser }) {
           ))}
           <div onClick={addItem} style={{ padding: "8px 12px", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
             onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add account</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PROMO CALENDAR TABLE ──────────────────────────────────────────────────
+const PROMO_STATUSES = ["Planning", "Active", "Ended", "Cancelled"];
+const PROMO_BRANDS = ["ALL", "Headchange", "Safe Bet", "Bubbles", "Airo"];
+
+function PromoCalendarTable({ data, setData, currentUser }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [didInit, setDidInit] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [cmtOpen, setCmtOpen] = useState(null);
+  const [cmtText, setCmtText] = useState("");
+  const [newItem, setNewItem] = useState({ name: "", section: "", status: "Planning", discountType: "", startDate: "", endDate: "", brand: "ALL", participants: "", promoDetails: "" });
+
+  useEffect(() => { if (!didInit && data.length > 0) { const all = {}; [...new Set(data.map(d => d.section))].forEach(s => { all[s] = true; }); setCollapsed(all); setDidInit(true); } }, [data, didInit]);
+
+  const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
+  const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
+  const addItem = () => {
+    if (!newItem.name.trim()) return;
+    const section = newItem.section.trim() || new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    setData(p => [...p, { ...newItem, id: `pc-${Date.now()}`, section }]);
+    setCollapsed(p => ({ ...p, [section]: false }));
+    setShowAddModal(false);
+    setNewItem({ name: "", section: "", status: "Planning", discountType: "", startDate: "", endDate: "", brand: "ALL", participants: "", promoDetails: "" });
+  };
+  const addComment = (itemId) => { if (!cmtText.trim()) return; setData(p => p.map(d => d.id === itemId ? { ...d, comments: [...(d.comments || []), { id: `pcc-${Date.now()}`, author: currentUser?.name || "Team", text: cmtText.trim(), ts: new Date().toISOString() }] } : d)); setCmtText(""); };
+  const deleteComment = (itemId, cId) => setData(p => p.map(d => d.id === itemId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
+
+  const filtered = search ? data.filter(d => { const s = search.toLowerCase(); return (d.name||"").toLowerCase().includes(s) || (d.promoDetails||"").toLowerCase().includes(s) || (d.brand||"").toLowerCase().includes(s); }) : data;
+  const groups = {}; filtered.forEach(d => { const s = d.section || "General"; if (!groups[s]) groups[s] = []; groups[s].push(d); });
+
+  const STATUS_CLR = { "Planning": "#6366f1", "Active": "#4d9e8e", "Ended": "#8a8a96", "Cancelled": "#e07b6a" };
+  const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is3 = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const PG = "1fr 90px 90px 100px 100px 100px 1fr 1fr 36px 28px";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(12px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Promo Calendar</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} promo{filtered.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Promo</button>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search promo, brand, details..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+        </div>
+      </div>
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+              <div className="mtitle">New Promo</div>
+              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+              <div className="ff"><label className="fl">Promo Name *</label><input className="fi" placeholder="e.g. Week 2, Q1 Promo..." value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} autoFocus /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Month / Period</label><input className="fi" placeholder="e.g. April 2026" value={newItem.section} onChange={e => setNewItem(p => ({ ...p, section: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Brand</label>
+                  <select className="fsel" value={newItem.brand} onChange={e => setNewItem(p => ({ ...p, brand: e.target.value }))}>{PROMO_BRANDS.map(b => <option key={b}>{b}</option>)}</select>
+                </div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Start Date</label><input className="fi" type="date" value={newItem.startDate} onChange={e => setNewItem(p => ({ ...p, startDate: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">End Date</label><input className="fi" type="date" value={newItem.endDate} onChange={e => setNewItem(p => ({ ...p, endDate: e.target.value }))} /></div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Status</label>
+                  <select className="fsel" value={newItem.status} onChange={e => setNewItem(p => ({ ...p, status: e.target.value }))}>{PROMO_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+                </div>
+                <div className="ff"><label className="fl">Discount Type</label><input className="fi" placeholder="e.g. 20% off" value={newItem.discountType} onChange={e => setNewItem(p => ({ ...p, discountType: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Participants</label><input className="fi" placeholder="Participating accounts..." value={newItem.participants} onChange={e => setNewItem(p => ({ ...p, participants: e.target.value }))} /></div>
+              <div className="ff"><label className="fl">Promo Details</label><textarea className="fta" rows={3} placeholder="Products included, terms, etc." value={newItem.promoDetails} onChange={e => setNewItem(p => ({ ...p, promoDetails: e.target.value }))} /></div>
+            </div>
+            <div className="mfoot">
+              <button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button className="btn btn-gold" disabled={!newItem.name.trim()} onClick={addItem}>Add Promo</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ minWidth: 900 }}>
+          <div style={{ display: "grid", gridTemplateColumns: PG, background: "var(--surface3)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
+            {["Promo", "Status", "Discount", "Start", "End", "Brand", "Participants", "Details", "💬", ""].map(h => (
+              <div key={h} style={{ padding: "8px 8px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
+            ))}
+          </div>
+          {Object.entries(groups).map(([section, items]) => (
+            <div key={section}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "10px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", borderLeft: "3px solid var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{section}</span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} promo{items.length !== 1 ? "s" : ""}</span>
+              </div>
+              {!collapsed[section] && items.map(d => (
+                <div key={d.id} style={{ display: "grid", gridTemplateColumns: PG, borderBottom: "1px solid var(--border2)", minHeight: 34 }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div style={cs}><input value={d.name||""} onChange={e => updateItem(d.id, "name", e.target.value)} style={{ ...is3, fontWeight: 500, color: "var(--text)" }} /></div>
+                  <div style={cs}><select value={d.status||""} onChange={e => updateItem(d.id, "status", e.target.value)} style={{ ...is3, fontSize: 10, fontWeight: 600, color: STATUS_CLR[d.status] || "var(--text-dim)" }}>{PROMO_STATUSES.map(s => <option key={s}>{s}</option>)}</select></div>
+                  <div style={cs}><input value={d.discountType||""} onChange={e => updateItem(d.id, "discountType", e.target.value)} style={is3} /></div>
+                  <div style={cs}><input type="date" value={d.startDate||""} onChange={e => updateItem(d.id, "startDate", e.target.value)} style={{ ...is3, fontSize: 10, color: "var(--text-muted)" }} /></div>
+                  <div style={cs}><input type="date" value={d.endDate||""} onChange={e => updateItem(d.id, "endDate", e.target.value)} style={{ ...is3, fontSize: 10, color: "var(--text-muted)" }} /></div>
+                  <div style={cs}><select value={d.brand||""} onChange={e => updateItem(d.id, "brand", e.target.value)} style={{ ...is3, fontSize: 10 }}>{PROMO_BRANDS.map(b => <option key={b}>{b}</option>)}</select></div>
+                  <div style={cs}><input value={d.participants||""} onChange={e => updateItem(d.id, "participants", e.target.value)} style={is3} /></div>
+                  <div style={cs}><input value={d.promoDetails||""} onChange={e => updateItem(d.id, "promoDetails", e.target.value)} style={is3} placeholder="Details..." /></div>
+                  <div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }} onClick={e => { e.stopPropagation(); setCmtOpen(cmtOpen === d.id ? null : d.id); }}>
+                    <span style={{ fontSize: 16, color: (d.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
+                    {d.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{d.comments.length}</span>}
+                    {cmtOpen === d.id && (
+                      <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 280, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>{d.name}</div>
+                        <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                          {(d.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments.</div>}
+                          {(d.comments || []).map(c => (
+                            <div key={c.id} style={{ padding: "6px 8px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}><span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span><span style={{ fontSize: 8, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>
+                              <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
+                              {c.author === currentUser?.name && <button onClick={() => deleteComment(d.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)" }}>Delete</button>}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <input value={cmtText} onChange={e => setCmtText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addComment(d.id); }} placeholder="Comment..." style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "5px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                          <button className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addComment(d.id)}>Send</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteItem(d.id); }}><span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span></div>
+                </div>
+              ))}
+              {!collapsed[section] && (
+                <div onClick={() => setShowAddModal(true)} style={{ padding: "6px 12px", borderBottom: "1px solid var(--border2)", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add promo</div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
