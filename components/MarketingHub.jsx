@@ -9978,14 +9978,19 @@ function CreditMemoTable({ data, setData, currentUser }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [cmtOpen, setCmtOpen] = useState(null);
   const [cmtText, setCmtText] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({ name: "", date: new Date().toISOString().slice(0, 10), customer: "", total: "", priority: "", section: "Awaiting Sales Approval", notes: "" });
 
   useEffect(() => { if (!didInit && data.length > 0) { const all = {}; [...new Set(data.map(d => d.section))].forEach(s => { all[s] = true; }); setCollapsed(all); setDidInit(true); } }, [data, didInit]);
 
   const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
   const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
-  const addItem = (section) => {
-    setData(p => [...p, { id: `cm-${Date.now()}`, section, name: "", date: new Date().toISOString().slice(0, 10), customer: "", total: 0, priority: "", status: "Submitted", notes: "" }]);
-    setCollapsed(p => ({ ...p, [section]: false }));
+  const addItem = () => {
+    if (!newItem.name.trim() && !newItem.customer.trim()) return;
+    setData(p => [...p, { ...newItem, id: `cm-${Date.now()}`, total: parseFloat(newItem.total) || 0, status: "Submitted" }]);
+    setCollapsed(p => ({ ...p, [newItem.section]: false }));
+    setShowAddModal(false);
+    setNewItem({ name: "", date: new Date().toISOString().slice(0, 10), customer: "", total: "", priority: "", section: "Awaiting Sales Approval", notes: "" });
   };
   const addComment = (itemId) => { if (!cmtText.trim()) return; setData(p => p.map(d => d.id === itemId ? { ...d, comments: [...(d.comments || []), { id: `cmc-${Date.now()}`, author: currentUser?.name || "Team", text: cmtText.trim(), ts: new Date().toISOString() }] } : d)); setCmtText(""); };
   const deleteComment = (itemId, cId) => setData(p => p.map(d => d.id === itemId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
@@ -10010,7 +10015,7 @@ function CreditMemoTable({ data, setData, currentUser }) {
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} items / ${filtered.reduce((s, d) => s + (d.total || 0), 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => addItem(sections[0] || "Awaiting Sales Approval")}>+ New Request</button>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Request</button>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or customer..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
             <option value="all">All Statuses</option>
@@ -10018,6 +10023,42 @@ function CreditMemoTable({ data, setData, currentUser }) {
           </select>
         </div>
       </div>
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+              <div className="mtitle">New Credit Memo Request</div>
+              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+              <div className="ff"><label className="fl">Name / Description</label><input className="fi" placeholder="e.g. Q1 Promos" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} autoFocus /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Date</label><input className="fi" type="date" value={newItem.date} onChange={e => setNewItem(p => ({ ...p, date: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Total ($)</label><input className="fi" type="number" step="0.01" placeholder="0.00" value={newItem.total} onChange={e => setNewItem(p => ({ ...p, total: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Customer</label><input className="fi" placeholder="e.g. Blue Sage Belton" value={newItem.customer} onChange={e => setNewItem(p => ({ ...p, customer: e.target.value }))} /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Section</label>
+                  <select className="fsel" value={newItem.section} onChange={e => setNewItem(p => ({ ...p, section: e.target.value }))}>
+                    {Object.keys(CM_SECTION_COLORS).map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="ff"><label className="fl">Priority</label>
+                  <select className="fsel" value={newItem.priority} onChange={e => setNewItem(p => ({ ...p, priority: e.target.value }))}>
+                    {CM_PRIORITIES.map(p => <option key={p} value={p}>{p || "None"}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="ff"><label className="fl">Notes</label><textarea className="fta" rows={2} placeholder="Additional details..." value={newItem.notes} onChange={e => setNewItem(p => ({ ...p, notes: e.target.value }))} /></div>
+            </div>
+            <div className="mfoot">
+              <button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button className="btn btn-gold" onClick={addItem}>Submit Request</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ flex: 1, overflow: "auto" }}>
         <div style={{ minWidth: 800 }}>
           <div style={{ display: "grid", gridTemplateColumns: MG, background: "var(--surface3)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
@@ -10087,10 +10128,17 @@ function SalesContactTable({ data, setData, currentUser }) {
   const [search, setSearch] = useState("");
   const [cmtOpen, setCmtOpen] = useState(null);
   const [cmtText, setCmtText] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({ account: "", contact: "", email: "", phone: "", orderingStyle: "Menu", notes: "" });
 
   const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
   const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
-  const addItem = () => setData(p => [...p, { id: `scl-${Date.now()}`, account: "", contact: "", email: "", phone: "", orderingStyle: "Menu", notes: "" }]);
+  const addItem = () => {
+    if (!newItem.account.trim()) return;
+    setData(p => [...p, { ...newItem, id: `scl-${Date.now()}` }]);
+    setShowAddModal(false);
+    setNewItem({ account: "", contact: "", email: "", phone: "", orderingStyle: "Menu", notes: "" });
+  };
   const addComment = (itemId) => { if (!cmtText.trim()) return; setData(p => p.map(d => d.id === itemId ? { ...d, comments: [...(d.comments || []), { id: `scc-${Date.now()}`, author: currentUser?.name || "Team", text: cmtText.trim(), ts: new Date().toISOString() }] } : d)); setCmtText(""); };
   const deleteComment = (itemId, cId) => setData(p => p.map(d => d.id === itemId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
 
@@ -10108,10 +10156,38 @@ function SalesContactTable({ data, setData, currentUser }) {
           <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} account{filtered.length !== 1 ? "s" : ""}</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={addItem}>+ New Account</button>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Account</button>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search account, contact, email..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
         </div>
       </div>
+      {showAddModal && (
+        <div className="overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+              <div className="mtitle">New Sales Account</div>
+              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+              <div className="ff"><label className="fl">Account Name *</label><input className="fi" placeholder="e.g. Blue Sage" value={newItem.account} onChange={e => setNewItem(p => ({ ...p, account: e.target.value }))} autoFocus /></div>
+              <div className="ff"><label className="fl">Contact Name</label><input className="fi" placeholder="e.g. Katie Fagan" value={newItem.contact} onChange={e => setNewItem(p => ({ ...p, contact: e.target.value }))} /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Email</label><input className="fi" type="email" placeholder="email@example.com" value={newItem.email} onChange={e => setNewItem(p => ({ ...p, email: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Phone</label><input className="fi" placeholder="123-456-7890" value={newItem.phone} onChange={e => setNewItem(p => ({ ...p, phone: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Ordering Style</label>
+                <select className="fsel" value={newItem.orderingStyle} onChange={e => setNewItem(p => ({ ...p, orderingStyle: e.target.value }))}>
+                  {ORDER_STYLES.map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="ff"><label className="fl">Notes</label><textarea className="fta" rows={2} placeholder="Additional details..." value={newItem.notes} onChange={e => setNewItem(p => ({ ...p, notes: e.target.value }))} /></div>
+            </div>
+            <div className="mfoot">
+              <button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button className="btn btn-gold" disabled={!newItem.account.trim()} onClick={addItem}>Add Account</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ flex: 1, overflow: "auto" }}>
         <div style={{ minWidth: 700 }}>
           <div style={{ display: "grid", gridTemplateColumns: SLG, background: "var(--surface3)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
