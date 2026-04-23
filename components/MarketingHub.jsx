@@ -1249,18 +1249,21 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     (async () => {
       const stored = await window.storage.get("ns-promo-calendar", true).catch(() => null);
       if (stored) {
-        // Fix: items named "February" or "March" stuck in January section
         const parsed = JSON.parse(stored.value);
-        let curSection = "";
-        const fixed = [];
-        for (const item of parsed) {
-          if (/^February$/i.test(item.name) && !item.startDate) { curSection = "February 2026"; continue; }
-          if (/^March$/i.test(item.name) && !item.startDate) { curSection = "March 2026"; continue; }
-          if (/^February$/i.test(item.name) && item.startDate) { item.section = "February 2026"; item.name = "February Promo"; }
-          if (curSection && item.section === "January 2026") item.section = curSection;
-          fixed.push(item);
+        // Check if data needs migration (Feb/March stuck in January)
+        const needsFix = parsed.some(p => p.section === "January 2026" && /^(February|March)$/i.test(p.name));
+        if (needsFix) {
+          // Reload from corrected defaults, merge any user-added items
+          try {
+            const r = await fetch("/data/promocalendar-default.json");
+            const defaults = await r.json();
+            const defaultIds = new Set(defaults.map(d => d.id));
+            const userAdded = parsed.filter(p => !defaultIds.has(p.id) && !(/^(February|March)$/i.test(p.name) && !p.discountType));
+            setPromoCalendar([...defaults, ...userAdded]);
+          } catch { setPromoCalendar(parsed); }
+          return;
         }
-        setPromoCalendar(fixed);
+        setPromoCalendar(parsed);
         return;
       }
       try { const r = await fetch("/data/promocalendar-default.json"); const d = await r.json(); setPromoCalendar(d); } catch {}
