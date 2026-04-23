@@ -8559,9 +8559,9 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
   filtered.forEach(r => { const section = r.section || "General"; if (!groups[section]) groups[section] = []; groups[section].push(r); });
 
   // Zoom
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(80);
   // Column widths (resizable)
-  const defaultCols = [52, 100, 200, 120, 120, 120, 120, 90, 90, 90, 115, 85, 180, 40];
+  const defaultCols = [52, 100, 200, 120, 36, 120, 120, 120, 90, 90, 90, 115, 85, 180];
   const [colWidths, setColWidths] = useState(defaultCols);
   const dragRef = useRef(null);
 
@@ -8589,9 +8589,9 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
       {showModal && <DesignRequestModal brands={brands} teamMembers={teamMembers} onClose={() => setShowModal(false)} onSave={addRequest} />}
       {selectedReq && <DesignDetailModal request={selectedReq} brands={brands} teamMembers={teamMembers} currentUser={currentUser} onClose={() => setSelectedReq(null)} onUpdate={(updates) => { updateRequest(selectedReq.id, updates); setSelectedReq({ ...selectedReq, ...updates }); }} onDelete={() => { deleteRequest(selectedReq.id); setSelectedReq(null); }} />}
 
-      {/* Header */}
-      <div style={{ padding: "20px 24px 0", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+      {/* Header — sticky */}
+      <div style={{ padding: "12px 24px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10, background: "var(--surface)", borderBottom: "1px solid var(--border)", backdropFilter: "blur(12px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: "var(--text)", lineHeight: 1.2 }}>Design Queue</div>
           </div>
@@ -8633,7 +8633,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
           <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {/* Column headers with resize handles */}
             <div style={{ display: "grid", gridTemplateColumns: GRID, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-              {["", "Brand", "Project", "Owner", "What Needed", "Channel", "Creative", "Due", "Live", "Created", "Status", "Priority", "Notes", "💬"].map((h, i) => (
+              {["", "Brand", "Project", "Owner", "💬", "What Needed", "Channel", "Creative", "Due", "Live", "Created", "Status", "Priority", "Notes"].map((h, i) => (
                 <div key={i} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap", position: "relative", userSelect: "none" }}>
                   {h}
                   {i < 13 && <div onMouseDown={e => startResize(i, e)} style={{ position: "absolute", right: -2, top: 0, bottom: 0, width: 5, cursor: "col-resize", zIndex: 3 }}
@@ -8682,6 +8682,13 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                       {/* Owner — plain text, comma-separate for multiple */}
                       <div style={{ ...cellBase }}>
                         <input value={r.owner || ""} onChange={e => u("owner", e.target.value)} style={{ ...inpStyle, color: "#e8a87c" }} placeholder="Add names..." title="Comma-separate multiple names" />
+                      </div>
+                      {/* Comments — next to owner */}
+                      <div style={{ ...cellBase, justifyContent: "center", cursor: "pointer", position: "relative" }}
+                        onClick={e => { e.stopPropagation(); setSelectedReq(selectedReq?.id === r.id ? null : { ...r, _openComments: true }); }}
+                        title="Comments">
+                        <span style={{ fontSize: 16, color: (r.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
+                        {r.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 4, fontSize: 8, background: "var(--gold)", color: "#07070f", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{r.comments.length}</span>}
                       </div>
                       {/* What is Needed */}
                       <div style={{ ...cellBase }}>
@@ -8735,15 +8742,8 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
                         </select>
                       </div>
                       {/* Notes */}
-                      <div style={{ ...cellBase }}>
+                      <div style={{ ...cellBase, borderRight: "none" }}>
                         <input value={r.notes || ""} onChange={e => u("notes", e.target.value)} style={{ ...inpStyle, color: "var(--text-muted)", fontSize: 11 }} placeholder="Add notes..." />
-                      </div>
-                      {/* Comments button */}
-                      <div style={{ ...cellBase, borderRight: "none", justifyContent: "center", cursor: "pointer", position: "relative" }}
-                        onClick={e => { e.stopPropagation(); setSelectedReq(selectedReq?.id === r.id ? null : { ...r, _openComments: true }); }}
-                        title="Comments">
-                        <span style={{ fontSize: 16, color: (r.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
-                        {r.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 4, fontSize: 8, background: "var(--gold)", color: "#07070f", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{r.comments.length}</span>}
                       </div>
                     </div>
                   );
@@ -9499,7 +9499,7 @@ function ContactsTable({ contacts, setContacts, currentUser }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {/* Toolbar */}
-      <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+      <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(12px)" }}>
         <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px", borderRadius: 6 }} onClick={() => addContact(sections[0] || "Global Contacts")}>+ New Contact</button>
         <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
         <button onClick={() => setSearchOpen(o => !o)} style={{ ...tbtn, color: searchOpen ? "var(--gold)" : "var(--text-dim)" }}
