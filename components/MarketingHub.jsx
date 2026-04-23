@@ -128,6 +128,24 @@ const DEFAULT_STRATEGY = {brand:"Curador Brands",tagline:"Marketing that moves p
 
 const DEFAULT_GANTT_URL = "/concepts/gantt.html";
 
+const DEFAULT_FIELDTEAM_TREE = [
+  { id:"ft-1", parentId:null, type:"doc", name:"2026 Weekly Drops Menu", sortOrder:0, notes:"", link:"", attachments:[] },
+  { id:"ft-2", parentId:null, type:"folder", name:"Sales", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-3", parentId:null, type:"folder", name:"CRM", sortOrder:2, notes:"", link:"", attachments:[] },
+  { id:"ft-3a", parentId:"ft-3", type:"doc", name:"Tier List Tracker", sortOrder:0, notes:"", link:"", attachments:[] },
+  { id:"ft-3b", parentId:"ft-3", type:"doc", name:"Centralized Contacts", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-4", parentId:null, type:"folder", name:"Field Marketing", sortOrder:3, notes:"", link:"", attachments:[] },
+  { id:"ft-4a", parentId:"ft-4", type:"doc", name:"Popups and Blitz Calendar", sortOrder:0, notes:"", link:"", attachments:[] },
+  { id:"ft-4b", parentId:"ft-4", type:"doc", name:"Events & Event Support", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-4c", parentId:"ft-4", type:"doc", name:"Field Marketing Weekly", sortOrder:2, notes:"", link:"", attachments:[] },
+  { id:"ft-5", parentId:null, type:"folder", name:"Jerry's Folder", sortOrder:4, notes:"", link:"", attachments:[] },
+  { id:"ft-5a", parentId:"ft-5", type:"doc", name:"Newsletter - B2B", sortOrder:0, notes:"", link:"", attachments:[] },
+  { id:"ft-5b", parentId:"ft-5", type:"doc", name:"Customer Service Board", sortOrder:1, notes:"", link:"", attachments:[] },
+  { id:"ft-6", parentId:null, type:"folder", name:"Miscellaneous", sortOrder:5, notes:"", link:"", attachments:[] },
+  { id:"ft-7", parentId:null, type:"folder", name:"Archive", sortOrder:6, notes:"", link:"", attachments:[] },
+  { id:"ft-8", parentId:null, type:"doc", name:"2026 Field Team 5-15-30 Review", sortOrder:7, notes:"", link:"", attachments:[] },
+];
+
 const DEFAULT_INITIATIVES = [
   {id:"init-h2h",     title:"How to Hash Guide",           description:"Branded 'How to Hash' educational booklet placed at point of sale across all partner dispensaries. Covers concentrate types, consumption methods, dosing guidance, and strain profiles. Positions Headchange and CÚRADOR as the authority on craft concentrates in Missouri.", owner:"Brand Team", channel:"12 · In-Store Consumer Education", startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:"headchange", htmlConcept:null, htmlConceptName:"How to Hash Guide", _conceptUrl:"/concepts/how-to-hash.html"},
   {id:"init-buddrops", title:"Bud Drops",                  description:"BudDrops is CÚRADOR's exclusive verified limited-allocation program for top budtenders and cannabis connoisseurs across all brands. Quarterly drops of premium products, early access to new strains, and a direct connection between CÚRADOR brands and their most passionate advocates.",    owner:"Brand Team", channel:"11 · Budtender Appreciation Program",  startDate:"2026-01-01", endDate:"", revolving:true,  fileUrl:null, fileName:null, _brief:null, brandId:null, htmlConcept:null, htmlConceptName:"Bud Drops",         _conceptUrl:"/concepts/bud-drops.html"},
@@ -976,6 +994,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [designView, setDesignView] = useState("queue"); // "queue" | "submit"
   const [showDesignModal, setShowDesignModal] = useState(false);
   const [selectedDesignReq, setSelectedDesignReq] = useState(null);
+  // ── FIELD TEAM STATE ────────────────────────────────────────────────────────
+  const [fieldTeamTree, setFieldTeamTree] = useState(DEFAULT_FIELDTEAM_TREE);
+  const [centralizedContacts, setCentralizedContacts] = useState([]);
 
 
   // Load
@@ -1034,7 +1055,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         }
         if (u) { setCurrentUser(JSON.parse(u.value)); }
         else if (!initialUserName) setShowWhoModal(true);
-        const [,,,,,,,,, cn, dr] = await Promise.all([
+        const [,,,,,,,,, cn, dr, ftt] = await Promise.all([
           window.storage.get("ns-strategy", true),
           window.storage.get("ns-initiatives", true),
           window.storage.get("ns-notes", true),
@@ -1046,9 +1067,11 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           window.storage.get("ns-campaigns", true),
           window.storage.get("ns-concepts", true),
           window.storage.get("ns-design-requests", true),
+          window.storage.get("ns-fieldteam-tree", true),
         ]);
         if (cn) setConcepts(JSON.parse(cn.value));
         if (dr) setDesignRequests(JSON.parse(dr.value));
+        if (ftt) setFieldTeamTree(JSON.parse(ftt.value));
       } catch (_) { if (!initialUserName) setShowWhoModal(true); }
       setReady(true);
     })();
@@ -1137,6 +1160,18 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     window.storage.set("ns-concepts", JSON.stringify(meta), true).catch(() => {});
   }, [concepts, ready]);
   useEffect(() => { if (ready) window.storage.set("ns-design-requests", JSON.stringify(designRequests), true).catch(() => {}); }, [designRequests, ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-fieldteam-tree", JSON.stringify(fieldTeamTree), true).catch(() => {}); }, [fieldTeamTree, ready]);
+  useEffect(() => { if (ready && centralizedContacts.length > 0) window.storage.set("ns-centralized-contacts", JSON.stringify(centralizedContacts), true).catch(() => {}); }, [centralizedContacts, ready]);
+  // Load centralized contacts — from storage or default JSON
+  useEffect(() => {
+    if (!ready) return;
+    (async () => {
+      const stored = await window.storage.get("ns-centralized-contacts", true).catch(() => null);
+      if (stored) { setCentralizedContacts(JSON.parse(stored.value)); return; }
+      // First time — load defaults from public JSON
+      try { const r = await fetch("/data/contacts-default.json"); const d = await r.json(); setCentralizedContacts(d); } catch {}
+    })();
+  }, [ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -1534,6 +1569,12 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     </div>
                   )}
 
+                  {/* Field Team */}
+                  <button className={`lsb-tab ${leftTab === "fieldteam" ? "on" : ""}`} onClick={() => { setLeftTab("fieldteam"); setActiveBrand(null); }}>
+                    <span className="lsb-icon">📁</span>
+                    {lsbOpen && <span className="lsb-lbl">Field Team</span>}
+                  </button>
+
                   {/* Team — with inline dropdown */}
                   <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { setLeftTab("team"); setActiveBrand(null); }}>
                     <span className="lsb-icon">👥</span>
@@ -1590,7 +1631,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 </nav>
 
                 {/* Channels / Campaigns hint */}
-                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design") && (
+                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design" || leftTab === "fieldteam") && (
                   <div style={{ padding: "6px 16px 10px", fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                     Content shown on the right →
                   </div>
@@ -2038,6 +2079,11 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 selectedReq={selectedDesignReq}
                 setSelectedReq={setSelectedDesignReq}
               />
+            )}
+
+            {/* ── FIELD TEAM ── */}
+            {leftTab === "fieldteam" && !activeBrand && (
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9004,6 +9050,293 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
               <button className="btn btn-gold" onClick={handleSave}>Save Changes</button>
             </>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FIELD TEAM PORTAL
+// ════════════════════════════════════════════════════════════════════════════
+function FieldTeamPortal({ tree, setTree, contacts, setContacts }) {
+  const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
+  const [selectedId, setSelectedId] = useState(null);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameVal, setRenameVal] = useState("");
+  const [menuId, setMenuId] = useState(null);
+  const attachRef = useRef();
+
+  const getChildren = (parentId) => tree.filter(n => n.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+  const selected = tree.find(n => n.id === selectedId);
+  const isContactsView = selected?.name === "Centralized Contacts";
+
+  const addNode = (parentId, type) => {
+    const siblings = getChildren(parentId);
+    const node = { id: `ft-${Date.now()}`, parentId, type, name: type === "folder" ? "New Folder" : "New Document", sortOrder: siblings.length, notes: "", link: "", attachments: [] };
+    setTree(p => [...p, node]);
+    if (parentId) setExpanded(p => new Set([...p, parentId]));
+    setRenamingId(node.id);
+    setRenameVal(node.name);
+    if (type === "doc") setSelectedId(node.id);
+  };
+
+  const updateNode = (id, patch) => setTree(p => p.map(n => n.id === id ? { ...n, ...patch } : n));
+
+  const deleteNode = (id) => {
+    const descendants = new Set();
+    const collect = (pid) => { tree.filter(n => n.parentId === pid).forEach(n => { descendants.add(n.id); collect(n.id); }); };
+    descendants.add(id);
+    collect(id);
+    setTree(p => p.filter(n => !descendants.has(n.id)));
+    if (selectedId && descendants.has(selectedId)) setSelectedId(null);
+  };
+
+  const handleAttach = async (files) => {
+    if (!selected) return;
+    const newFiles = [];
+    for (const file of Array.from(files)) {
+      if (file.size > 2 * 1024 * 1024) continue;
+      const data = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(file); });
+      newFiles.push({ id: `fa-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, name: file.name, dataUrl: data });
+    }
+    updateNode(selected.id, { attachments: [...(selected.attachments || []), ...newFiles] });
+  };
+
+  const renderNode = (node, depth = 0) => {
+    const isFolder = node.type === "folder";
+    const isExpanded = expanded.has(node.id);
+    const isSelected = selectedId === node.id;
+    const children = isFolder ? getChildren(node.id) : [];
+    return (
+      <div key={node.id}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", paddingLeft: 10 + depth * 18, cursor: "pointer", borderRadius: 6, fontSize: 12, position: "relative", background: isSelected ? "var(--gold-dim)" : "transparent", color: isSelected ? "var(--gold)" : "var(--text-dim)", border: `1px solid ${isSelected ? "rgba(201,168,76,.25)" : "transparent"}` }}
+          onClick={() => { if (isFolder) { setExpanded(p => { const n = new Set(p); if (n.has(node.id)) n.delete(node.id); else n.add(node.id); return n; }); } setSelectedId(node.id); }}
+          onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,.03)"; }}
+          onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}>
+          {isFolder && <span style={{ fontSize: 9, transition: "transform .15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", opacity: .5 }}>▶</span>}
+          <span style={{ fontSize: 13 }}>{isFolder ? "📁" : "📄"}</span>
+          {renamingId === node.id ? (
+            <input autoFocus value={renameVal} onChange={e => setRenameVal(e.target.value)}
+              onBlur={() => { if (renameVal.trim()) updateNode(node.id, { name: renameVal.trim() }); setRenamingId(null); }}
+              onKeyDown={e => { if (e.key === "Enter") { if (renameVal.trim()) updateNode(node.id, { name: renameVal.trim() }); setRenamingId(null); } if (e.key === "Escape") setRenamingId(null); }}
+              onClick={e => e.stopPropagation()}
+              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--gold)", borderRadius: 4, padding: "2px 6px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
+          ) : (
+            <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: isSelected ? 600 : 400 }}>{node.name}</span>
+          )}
+          <span onClick={e => { e.stopPropagation(); setMenuId(menuId === node.id ? null : node.id); }} style={{ fontSize: 14, opacity: .3, padding: "0 2px", cursor: "pointer" }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".3"}>⋯</span>
+          {menuId === node.id && (
+            <div style={{ position: "absolute", right: 4, top: "100%", zIndex: 20, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, padding: "4px 0", boxShadow: "0 8px 24px rgba(0,0,0,.4)", minWidth: 140 }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => { setRenamingId(node.id); setRenameVal(node.name); setMenuId(null); }} style={{ display: "block", width: "100%", padding: "7px 14px", border: "none", background: "none", color: "var(--text-dim)", fontSize: 12, textAlign: "left", cursor: "pointer", fontFamily: "var(--bf)" }}>Rename</button>
+              {isFolder && <button onClick={() => { addNode(node.id, "doc"); setMenuId(null); }} style={{ display: "block", width: "100%", padding: "7px 14px", border: "none", background: "none", color: "var(--text-dim)", fontSize: 12, textAlign: "left", cursor: "pointer", fontFamily: "var(--bf)" }}>+ Add Document</button>}
+              {isFolder && <button onClick={() => { addNode(node.id, "folder"); setMenuId(null); }} style={{ display: "block", width: "100%", padding: "7px 14px", border: "none", background: "none", color: "var(--text-dim)", fontSize: 12, textAlign: "left", cursor: "pointer", fontFamily: "var(--bf)" }}>+ Add Folder</button>}
+              <div style={{ height: 1, background: "var(--border2)", margin: "4px 0" }} />
+              <button onClick={() => { if (confirm(`Delete "${node.name}"?`)) deleteNode(node.id); setMenuId(null); }} style={{ display: "block", width: "100%", padding: "7px 14px", border: "none", background: "none", color: "#e07b6a", fontSize: 12, textAlign: "left", cursor: "pointer", fontFamily: "var(--bf)" }}>Delete</button>
+            </div>
+          )}
+        </div>
+        {isFolder && isExpanded && children.map(child => renderNode(child, depth + 1))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: "flex", height: "calc(100vh - 57px)", overflow: "hidden" }} onClick={() => setMenuId(null)}>
+      {/* Left — Tree */}
+      <div style={{ width: 280, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", background: "var(--surface)" }}>
+        <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid var(--border2)" }}>
+          <div style={{ fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 4 }}>Sales & Field Operations</div>
+          <div style={{ fontFamily: "var(--df)", fontSize: 20, fontWeight: 300, color: "var(--text)", lineHeight: 1.1, marginBottom: 8 }}>Field Team</div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className="btn btn-sm" style={{ flex: 1, fontSize: 10, borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => addNode(null, "folder")}>+ Folder</button>
+            <button className="btn btn-sm" style={{ flex: 1, fontSize: 10, borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => addNode(null, "doc")}>+ Document</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
+          {getChildren(null).map(node => renderNode(node))}
+        </div>
+      </div>
+      {/* Right — Detail */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {selected && isContactsView ? (
+          <ContactsTable contacts={contacts} setContacts={setContacts} />
+        ) : selected ? (
+          <>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>{selected.type === "folder" ? "📁" : "📄"}</span>
+                <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>{selected.name}</div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="btn btn-sm" onClick={() => { setRenamingId(selected.id); setRenameVal(selected.name); }}>Rename</button>
+                {selected.type === "folder" && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => addNode(selected.id, "doc")}>+ Document</button>}
+                <button className="btn btn-sm" style={{ borderColor: "rgba(224,123,106,.3)", color: "#e07b6a" }} onClick={() => { if (confirm(`Delete "${selected.name}"?`)) deleteNode(selected.id); }}>Delete</button>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>External Link</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input value={selected.link || ""} onChange={e => updateNode(selected.id, { link: e.target.value })} placeholder="Paste a Google Sheets, Docs, or any URL..."
+                    style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
+                  {selected.link && <button className="btn btn-sm" onClick={() => window.open(selected.link, "_blank")}>Open ↗</button>}
+                </div>
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 6 }}>Notes</div>
+                <textarea value={selected.notes || ""} onChange={e => updateNode(selected.id, { notes: e.target.value })} placeholder="Add notes, instructions, or content..."
+                  style={{ width: "100%", minHeight: 200, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "12px 14px", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none", resize: "vertical", lineHeight: 1.7 }} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600 }}>Attachments {(selected.attachments?.length > 0) && `(${selected.attachments.length})`}</div>
+                  <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => attachRef.current?.click()}>+ Add Files</button>
+                  <input ref={attachRef} type="file" multiple style={{ display: "none" }} onChange={e => handleAttach(e.target.files)} />
+                </div>
+                {(selected.attachments || []).length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {selected.attachments.map(af => (
+                      <div key={af.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8 }}>
+                        <span style={{ fontSize: 16 }}>📄</span>
+                        <div style={{ flex: 1, fontSize: 12, color: "var(--text)" }}>{af.name}</div>
+                        <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const a = document.createElement("a"); a.href = af.dataUrl; a.download = af.name; a.click(); }}>Download</button>
+                        <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(224,123,106,.2)", color: "#e07b6a" }} onClick={() => updateNode(selected.id, { attachments: selected.attachments.filter(a => a.id !== af.id) })}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: 8, color: "var(--text-muted)", fontSize: 12, cursor: "pointer" }} onClick={() => attachRef.current?.click()}>
+                    Click to attach files (max 2MB per file)
+                  </div>
+                )}
+              </div>
+              {selected.type === "folder" && getChildren(selected.id).length > 0 && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Contents</div>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {getChildren(selected.id).map(child => (
+                      <div key={child.id} onClick={() => setSelectedId(child.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(201,168,76,.3)"} onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
+                        <span style={{ fontSize: 14 }}>{child.type === "folder" ? "📁" : "📄"}</span>
+                        <span style={{ fontSize: 13, color: "var(--text)" }}>{child.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ textAlign: "center", padding: "60px 40px" }}>
+              <div style={{ fontSize: 48, opacity: .3, marginBottom: 16 }}>📁</div>
+              <div style={{ fontFamily: "var(--df)", fontSize: 24, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>Field Team Portal</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>Select a folder or document from the tree to view details, add notes, attach files, or link to external spreadsheets.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── CONTACTS TABLE (Centralized Contacts) ─────────────────────────────────
+function ContactsTable({ contacts, setContacts }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [filterTier, setFilterTier] = useState("all");
+  const [filterSection, setFilterSection] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const sections = [...new Set(contacts.map(c => c.section))];
+  const tiers = [...new Set(contacts.map(c => c.tier).filter(Boolean))].sort();
+
+  const updateContact = (id, field, val) => setContacts(p => p.map(c => c.id === id ? { ...c, [field]: val } : c));
+  const deleteContact = (id) => setContacts(p => p.filter(c => c.id !== id));
+  const addContact = (section) => {
+    setContacts(p => [...p, { id: `cc-${Date.now()}`, section, name: "", role: "", email: "", tier: "", tierTracker: "", location: "", account: "", phone: "", lastContacted: "", storeOwner: "", notes: "" }]);
+  };
+
+  const filtered = contacts.filter(c => {
+    if (filterTier !== "all" && c.tier !== filterTier) return false;
+    if (filterSection !== "all" && c.section !== filterSection) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return (c.name||"").toLowerCase().includes(s) || (c.email||"").toLowerCase().includes(s) || (c.account||"").toLowerCase().includes(s) || (c.role||"").toLowerCase().includes(s);
+    }
+    return true;
+  });
+
+  const groups = {};
+  filtered.forEach(c => { if (!groups[c.section]) groups[c.section] = []; groups[c.section].push(c); });
+
+  const TIER_COLORS = { "Tier 1": "#4d9e8e", "Tier 2": "#c9a84c", "Tier 3": "#e07b6a" };
+  const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const CG = "1fr 130px 1fr 80px 140px 100px 110px 110px 100px 90px 1fr 30px";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Centralized Contacts</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} contact{filtered.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, account..." style={{ flex: 1, minWidth: 180, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+          <select value={filterSection} onChange={e => setFilterSection(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+            <option value="all">All Regions</option>
+            {sections.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+            <option value="all">All Tiers</option>
+            {tiers.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ minWidth: 1200 }}>
+          <div style={{ display: "grid", gridTemplateColumns: CG, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
+            {["Contact","Role","Email","Tier","Tier Tracker","Location","Account","Phone","Last Contact","Owner","Notes",""].map(h => (
+              <div key={h} style={{ padding: "8px 8px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
+            ))}
+          </div>
+          {Object.entries(groups).map(([section, items]) => (
+            <div key={section}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "8px 12px", background: "rgba(201,168,76,.04)", borderBottom: "1px solid var(--border)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)" }}>{section}</span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} contacts</span>
+              </div>
+              {!collapsed[section] && items.map(c => (
+                <div key={c.id} style={{ display: "grid", gridTemplateColumns: CG, borderBottom: "1px solid var(--border2)", minHeight: 34 }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div style={cs}><input value={c.name||""} onChange={e => updateContact(c.id,"name",e.target.value)} style={{ ...is, fontWeight: 500, color: "var(--text)" }} placeholder="Name" /></div>
+                  <div style={cs}><input value={c.role||""} onChange={e => updateContact(c.id,"role",e.target.value)} style={is} /></div>
+                  <div style={cs}><input value={c.email||""} onChange={e => updateContact(c.id,"email",e.target.value)} style={{ ...is, color: "#89a8e0" }} /></div>
+                  <div style={cs}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: TIER_COLORS[c.tier]||"#555", flexShrink: 0, marginRight: 4 }} />
+                    <select value={c.tier||""} onChange={e => updateContact(c.id,"tier",e.target.value)} style={{ ...is, color: TIER_COLORS[c.tier]||"var(--text-muted)", fontWeight: 600, fontSize: 10 }}>
+                      <option value="">—</option><option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+                    </select>
+                  </div>
+                  <div style={cs}><input value={c.tierTracker||""} onChange={e => updateContact(c.id,"tierTracker",e.target.value)} style={is} /></div>
+                  <div style={cs}><input value={c.location||""} onChange={e => updateContact(c.id,"location",e.target.value)} style={is} /></div>
+                  <div style={cs}><input value={c.account||""} onChange={e => updateContact(c.id,"account",e.target.value)} style={is} /></div>
+                  <div style={cs}><input value={c.phone||""} onChange={e => updateContact(c.id,"phone",e.target.value)} style={is} /></div>
+                  <div style={cs}><input type="date" value={c.lastContacted||""} onChange={e => updateContact(c.id,"lastContacted",e.target.value)} style={{ ...is, fontSize: 10, color: "var(--text-muted)" }} /></div>
+                  <div style={cs}><input value={c.storeOwner||""} onChange={e => updateContact(c.id,"storeOwner",e.target.value)} style={is} /></div>
+                  <div style={cs}><input value={c.notes||""} onChange={e => updateContact(c.id,"notes",e.target.value)} style={is} placeholder="Notes..." /></div>
+                  <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteContact(c.id); }}><span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span></div>
+                </div>
+              ))}
+              {!collapsed[section] && (
+                <div onClick={() => addContact(section)} style={{ padding: "6px 12px", borderBottom: "1px solid var(--border2)", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
+                  onMouseEnter={e => e.currentTarget.style.opacity="1"} onMouseLeave={e => e.currentTarget.style.opacity=".5"}>+ Add contact</div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
