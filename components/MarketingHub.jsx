@@ -10281,6 +10281,12 @@ function PromoCalendarTable({ data, setData, currentUser }) {
 
   const filtered = search ? data.filter(d => { const s = search.toLowerCase(); return (d.name||"").toLowerCase().includes(s) || (d.promoDetails||"").toLowerCase().includes(s) || (d.brand||"").toLowerCase().includes(s); }) : data;
   const groups = {}; filtered.forEach(d => { const s = d.section || "General"; if (!groups[s]) groups[s] = []; groups[s].push(d); });
+  // Sort months most recent first
+  const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const monthVal = (s) => { const m = MONTH_ORDER.findIndex(mo => s.toLowerCase().includes(mo.toLowerCase())); const y = parseInt((s.match(/\d{4}/) || ["2026"])[0]); return y * 12 + (m >= 0 ? m : 0); };
+  const sortedSections = Object.keys(groups).sort((a, b) => monthVal(b) - monthVal(a));
+  const MONTH_COLORS = ["#e07b6a","#6366f1","#4d9e8e","#c9a84c","#a855f7","#3b82f6","#22c55e","#f59e0b","#ec4899","#14b8a6","#8b5cf6","#ef4444"];
+  const getMonthColor = (s) => { const m = MONTH_ORDER.findIndex(mo => s.toLowerCase().includes(mo.toLowerCase())); return m >= 0 ? MONTH_COLORS[m % MONTH_COLORS.length] : "var(--gold)"; };
 
   const STATUS_CLR = { "Planning": "#6366f1", "Active": "#4d9e8e", "Ended": "#8a8a96", "Cancelled": "#e07b6a" };
   const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
@@ -10342,11 +10348,14 @@ function PromoCalendarTable({ data, setData, currentUser }) {
               <div key={h} style={{ padding: "8px 8px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
             ))}
           </div>
-          {Object.entries(groups).map(([section, items]) => (
+          {sortedSections.map(section => {
+            const items = groups[section];
+            const mColor = getMonthColor(section);
+            return (
             <div key={section}>
-              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "10px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", borderLeft: "3px solid var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "10px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", borderLeft: `3px solid ${mColor}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
                 <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{section}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: mColor }}>{section}</span>
                 <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} promo{items.length !== 1 ? "s" : ""}</span>
               </div>
               {!collapsed[section] && items.map(d => (
@@ -10391,7 +10400,7 @@ function PromoCalendarTable({ data, setData, currentUser }) {
                   onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add promo</div>
               )}
             </div>
-          ))}
+          ); })}
         </div>
       </div>
     </div>
