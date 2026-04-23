@@ -908,22 +908,15 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     resetNewMember(); setShowAddMember(false);
   };
 
-  // Auto-set user from login — show profile select/create if no profile chosen yet
+  // Auto-set user from login — restore profile immediately
   useEffect(() => {
     if (initialUserName) {
-      // Check if user already picked a profile this session
       try {
         const existing = localStorage.getItem("ns_ns-user");
         const parsed = existing ? JSON.parse(existing) : null;
         if (parsed?.name) {
-          // Already have a profile — use it silently
           setCurrentUser(parsed);
           setShowWhoModal(false);
-          // Make sure they're in team list
-          setTeamMembers(prev => {
-            if (prev.find(m => m.name === parsed.name)) return prev;
-            return [...prev, { name: parsed.name, color: parsed.color || colorForName(parsed.name), role: parsed.role || "content", title: "", bio: "", strengths: [], skills: [], keyPoints: [], joinedAt: new Date().toISOString() }];
-          });
           return;
         }
       } catch {}
@@ -932,6 +925,15 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
       setShowWhoModal(true);
     }
   }, [initialUserName]);
+
+  // After data loads, ensure current user is in team list
+  useEffect(() => {
+    if (!ready || !currentUser?.name) return;
+    setTeamMembers(prev => {
+      if (prev.find(m => m.name === currentUser.name)) return prev;
+      return [...prev, { name: currentUser.name, color: currentUser.color || colorForName(currentUser.name), role: currentUser.role || "content", title: "", bio: "", strengths: [], skills: [], keyPoints: [], joinedAt: new Date().toISOString() }];
+    });
+  }, [ready, currentUser?.name]);
 
   // Left panel
   const [lsbOpen, setLsbOpen] = useState(true);
