@@ -9387,11 +9387,16 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
 
 // ── CONTACTS TABLE (Centralized Contacts) ─────────────────────────────────
 function ContactsTable({ contacts, setContacts, currentUser }) {
-  const [collapsed, setCollapsed] = useState(() => {
-    const all = {};
-    [...new Set(contacts.map(c => c.section))].forEach(s => { all[s] = true; });
-    return all;
-  });
+  const [collapsed, setCollapsed] = useState({});
+  const [didInitCollapse, setDidInitCollapse] = useState(false);
+  useEffect(() => {
+    if (!didInitCollapse && contacts.length > 0) {
+      const all = {};
+      [...new Set(contacts.map(c => c.section))].forEach(s => { all[s] = true; });
+      setCollapsed(all);
+      setDidInitCollapse(true);
+    }
+  }, [contacts, didInitCollapse]);
   const [filterTier, setFilterTier] = useState("all");
   const [filterSection, setFilterSection] = useState("all");
   const [search, setSearch] = useState("");
