@@ -9797,7 +9797,15 @@ function WeeklyDropsTable({ drops, setDrops }) {
 
   const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
   const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
-  const DG = "100px 1fr 1fr 30px";
+  const [cmtOpen, setCmtOpen] = useState(null);
+  const [cmtText, setCmtText] = useState("");
+  const addDropComment = (dropId) => {
+    if (!cmtText.trim()) return;
+    setDrops(p => p.map(d => d.id === dropId ? { ...d, comments: [...(d.comments || []), { id: `wdc-${Date.now()}`, author: "Team", text: cmtText.trim(), ts: new Date().toISOString() }] } : d));
+    setCmtText("");
+  };
+  const deleteDropComment = (dropId, cId) => setDrops(p => p.map(d => d.id === dropId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
+  const DG = "100px 180px 1fr 40px 30px";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -9849,7 +9857,7 @@ function WeeklyDropsTable({ drops, setDrops }) {
       <div style={{ flex: 1, overflow: "auto" }}>
         <div style={{ minWidth: 500 }}>
           <div style={{ display: "grid", gridTemplateColumns: DG, background: "var(--surface3)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-            {["Brand", "Format / SKU", "Strain", ""].map(h => (
+            {["Brand", "Format / SKU", "Strain", "💬", ""].map(h => (
               <div key={h} style={{ padding: "8px 8px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
             ))}
           </div>
@@ -9879,6 +9887,35 @@ function WeeklyDropsTable({ drops, setDrops }) {
                     <div style={cs}>
                       <input value={d.sku || ""} onChange={e => updateDrop(d.id, "sku", e.target.value)} style={{ ...is, fontWeight: 500, color: "var(--text)" }} />
                       {d.socialHighlight && <span title="Social Highlight" style={{ fontSize: 10, marginLeft: 4, flexShrink: 0 }}>⭐</span>}
+                    </div>
+                    {/* Comment */}
+                    <div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }}
+                      onClick={e => { e.stopPropagation(); setCmtOpen(cmtOpen === d.id ? null : d.id); }}>
+                      <span style={{ fontSize: 14, opacity: (d.comments?.length > 0) ? 1 : .3 }}>💬</span>
+                      {d.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{d.comments.length}</span>}
+                      {cmtOpen === d.id && (
+                        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 280, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>{d.sku || "Drop"}</div>
+                          <div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                            {(d.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments.</div>}
+                            {(d.comments || []).map(c => (
+                              <div key={c.id} style={{ padding: "6px 8px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span>
+                                  <span style={{ fontSize: 8, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
+                                <button onClick={() => deleteDropComment(d.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)" }}>Delete</button>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <input value={cmtText} onChange={e => setCmtText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addDropComment(d.id); }} placeholder="Comment..."
+                              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "5px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                            <button className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addDropComment(d.id)}>Send</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteDrop(d.id); }}>
                       <span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span>
