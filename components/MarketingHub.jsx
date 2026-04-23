@@ -8504,11 +8504,31 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
   const groups = {};
   filtered.forEach(r => { const section = r.section || "General"; if (!groups[section]) groups[section] = []; groups[section].push(r); });
 
+  // Zoom
+  const [zoom, setZoom] = useState(100);
+  // Column widths (resizable)
+  const defaultCols = [52, 100, 200, 120, 120, 120, 120, 90, 90, 115, 85, 180, 40];
+  const [colWidths, setColWidths] = useState(defaultCols);
+  const dragRef = useRef(null);
+
+  const startResize = (colIdx, e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = colWidths[colIdx];
+    const onMove = (ev) => {
+      const diff = ev.clientX - startX;
+      setColWidths(p => { const n = [...p]; n[colIdx] = Math.max(30, startW + diff); return n; });
+    };
+    const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  const GRID = colWidths.map(w => `${w}px`).join(" ");
   // Shared inline cell styles
   const cellBase = { padding: "6px 8px", fontSize: 12, overflow: "hidden", display: "flex", alignItems: "center", borderRight: "1px solid var(--border2)" };
   const selStyle = { background: "transparent", border: "none", color: "inherit", fontSize: 12, fontFamily: "var(--bf)", cursor: "pointer", outline: "none", width: "100%", padding: 0 };
   const inpStyle = { background: "transparent", border: "none", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
-  const GRID = "52px 100px 1fr 120px 120px 120px 120px 90px 90px 115px 85px 1fr 40px";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
@@ -8534,6 +8554,12 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
               <option value="all">All Brands</option>
               {brandList.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
             </select>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 4px", borderLeft: "1px solid var(--border2)", marginLeft: 4 }}>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} style={{ width: 24, height: 24, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>−</button>
+              <span style={{ fontSize: 10, color: "var(--text-muted)", minWidth: 32, textAlign: "center" }}>{zoom}%</span>
+              <button onClick={() => setZoom(z => Math.min(150, z + 10))} style={{ width: 24, height: 24, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>+</button>
+              {zoom !== 100 && <button onClick={() => setZoom(100)} style={{ fontSize: 9, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 4px", fontFamily: "var(--bf)" }}>Reset</button>}
+            </div>
             <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Request</button>
           </div>
         </div>
@@ -8549,11 +8575,17 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
             <button className="btn btn-gold" onClick={() => setShowModal(true)}>+ Submit Request</button>
           </div>
         ) : (
-          <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden", minWidth: 1100 }}>
-            {/* Column headers */}
+          <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left", width: `${10000 / zoom}%` }}>
+          <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+            {/* Column headers with resize handles */}
             <div style={{ display: "grid", gridTemplateColumns: GRID, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
               {["", "Brand", "Project", "Owner", "What Needed", "Channel", "Creative", "Due", "Live", "Status", "Priority", "Notes", "💬"].map((h, i) => (
-                <div key={i} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap" }}>{h}</div>
+                <div key={i} style={{ padding: "8px 8px", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)", whiteSpace: "nowrap", position: "relative", userSelect: "none" }}>
+                  {h}
+                  {i < 12 && <div onMouseDown={e => startResize(i, e)} style={{ position: "absolute", right: -2, top: 0, bottom: 0, width: 5, cursor: "col-resize", zIndex: 3 }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.4)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"} />}
+                </div>
               ))}
             </div>
 
@@ -8664,6 +8696,7 @@ function DesignPortal({ requests, setRequests, brands, teamMembers, currentUser,
             {Object.keys(groups).length === 0 && filtered.length === 0 && requests.length > 0 && (
               <div style={{ padding: "16px", textAlign: "center", color: "var(--text-muted)", fontSize: 12 }}>No requests match filters.</div>
             )}
+          </div>
           </div>
         )}
       </div>
