@@ -1012,6 +1012,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [fieldTeamTree, setFieldTeamTree] = useState(DEFAULT_FIELDTEAM_TREE);
   const [centralizedContacts, setCentralizedContacts] = useState([]);
   const [tierListData, setTierListData] = useState([]);
+  const [weeklyDrops, setWeeklyDrops] = useState([]);
 
 
   // Load
@@ -1204,6 +1205,16 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     })();
   }, [ready]);
   useEffect(() => { if (ready && tierListData.length > 0) window.storage.set("ns-tierlist", JSON.stringify(tierListData), true).catch(() => {}); }, [tierListData, ready]);
+  // Load weekly drops
+  useEffect(() => {
+    if (!ready) return;
+    (async () => {
+      const stored = await window.storage.get("ns-weekly-drops", true).catch(() => null);
+      if (stored) { setWeeklyDrops(JSON.parse(stored.value)); return; }
+      try { const r = await fetch("/data/drops-default.json"); const d = await r.json(); setWeeklyDrops(d); } catch {}
+    })();
+  }, [ready]);
+  useEffect(() => { if (ready && weeklyDrops.length > 0) window.storage.set("ns-weekly-drops", JSON.stringify(weeklyDrops), true).catch(() => {}); }, [weeklyDrops, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -2116,7 +2127,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} currentUser={currentUser} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} currentUser={currentUser} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9185,7 +9196,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, currentUser }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, currentUser }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9197,6 +9208,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
   const selected = tree.find(n => n.id === selectedId);
   const isContactsView = selected?.name === "Centralized Contacts";
   const isTierListView = selected?.name === "Tier List Tracker";
+  const isDropsView = selected?.name === "2026 Weekly Drops Menu";
 
   const addNode = (parentId, type) => {
     const siblings = getChildren(parentId);
@@ -9291,6 +9303,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
           <ContactsTable contacts={contacts} setContacts={setContacts} currentUser={currentUser} />
         ) : selected && isTierListView ? (
           <TierListTable data={tierList} setData={setTierList} currentUser={currentUser} />
+        ) : selected && isDropsView ? (
+          <WeeklyDropsTable drops={drops} setDrops={setDrops} />
         ) : selected ? (
           <>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -9736,6 +9750,139 @@ function TierListTable({ data, setData, currentUser }) {
               ))}
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── WEEKLY DROPS TABLE ────────────────────────────────────────────────────
+const DROP_BRANDS = ["Headchange", "Safe Bet", "Bubbles", "Airo"];
+const DROP_FORMATS = ["Rosin (1g)", "Rosin (2g)", "Rosin (1g + 2g)", "Badder (1g)", "Badder (2g)", "Badder (1g + 2g)", "Sugar", "Sauce Cart", "Rosin Cart", "Rosin AIO", "Resin AIO", "AIO Rosin", "AIO Resin", "Disti Cart", "Mini Hash Hole", "Hash Hole", "Preroll (single)", "Preroll (5pk)", "Preroll (14pk)", "Blunt (1g)", "Diamond Infused Rolls (7pk)", "Diamond Infused Rolls (15pk)", "FECO", "FECO + CBN", "Other"];
+const BRAND_COLORS_MAP = { "Headchange": "#c9a84c", "Safe Bet": "#e07b6a", "Bubbles": "#6366f1", "Airo": "#4d9e8e" };
+
+function WeeklyDropsTable({ drops, setDrops }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [filterBrand, setFilterBrand] = useState("all");
+  const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [newDrop, setNewDrop] = useState({ weekOf: "", brand: "Headchange", format: DROP_FORMATS[0], sku: "" });
+
+  const updateDrop = (id, field, val) => setDrops(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
+  const deleteDrop = (id) => setDrops(p => p.filter(d => d.id !== id));
+  const addDrop = () => {
+    if (!newDrop.sku.trim() || !newDrop.weekOf) return;
+    setDrops(p => [{ ...newDrop, id: `wd-${Date.now()}`, sku: newDrop.sku.trim(), socialHighlight: false }, ...p]);
+    setNewDrop({ weekOf: newDrop.weekOf, brand: newDrop.brand, format: newDrop.format, sku: "" });
+  };
+
+  const filtered = drops.filter(d => {
+    if (filterBrand !== "all" && d.brand !== filterBrand) return false;
+    if (search && !(d.sku||"").toLowerCase().includes(search.toLowerCase()) && !(d.format||"").toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  // Group by week
+  const weeks = {};
+  filtered.forEach(d => { const w = d.weekOf || "No Date"; if (!weeks[w]) weeks[w] = []; weeks[w].push(d); });
+  const sortedWeeks = Object.keys(weeks).sort((a, b) => {
+    const pa = a.split("/").map(Number), pb = b.split("/").map(Number);
+    return (pb[0] * 100 + pb[1]) - (pa[0] * 100 + pa[1]);
+  });
+
+  const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const DG = "100px 1fr 1fr 30px";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      {/* Toolbar */}
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>2026 Weekly Drops Menu</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} drop{filtered.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAdd(o => !o)}>+ New Drop</button>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search strain or format..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+          <select value={filterBrand} onChange={e => setFilterBrand(e.target.value)} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+            <option value="all">All Brands</option>
+            {DROP_BRANDS.map(b => <option key={b}>{b}</option>)}
+          </select>
+        </div>
+        {/* Quick add form */}
+        {showAdd && (
+          <div style={{ marginTop: 10, padding: "12px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <label style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600 }}>Week Of</label>
+              <input type="date" value={newDrop.weekOf} onChange={e => setNewDrop(p => ({ ...p, weekOf: e.target.value ? new Date(e.target.value + "T00:00").toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "" }))}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <label style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600 }}>Brand</label>
+              <select value={newDrop.brand} onChange={e => setNewDrop(p => ({ ...p, brand: e.target.value }))} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: BRAND_COLORS_MAP[newDrop.brand] || "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", fontWeight: 600 }}>
+                {DROP_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <label style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600 }}>Format / SKU</label>
+              <select value={newDrop.format} onChange={e => setNewDrop(p => ({ ...p, format: e.target.value }))} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }}>
+                {DROP_FORMATS.map(f => <option key={f}>{f}</option>)}
+              </select>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
+              <label style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600 }}>Strain Name</label>
+              <input value={newDrop.sku} onChange={e => setNewDrop(p => ({ ...p, sku: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") addDrop(); }} placeholder="e.g. Modified Grapes"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+            </div>
+            <button className="btn btn-gold" style={{ fontSize: 10, padding: "6px 14px" }} onClick={addDrop} disabled={!newDrop.sku.trim() || !newDrop.weekOf}>Add Drop</button>
+          </div>
+        )}
+      </div>
+
+      {/* Table */}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ minWidth: 500 }}>
+          <div style={{ display: "grid", gridTemplateColumns: DG, background: "var(--surface3)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
+            {["Brand", "Format / SKU", "Strain", ""].map(h => (
+              <div key={h} style={{ padding: "8px 8px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
+            ))}
+          </div>
+          {sortedWeeks.map(week => {
+            const items = weeks[week];
+            return (
+              <div key={week}>
+                <div onClick={() => setCollapsed(p => ({ ...p, [week]: !p[week] }))} style={{ padding: "10px 12px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", borderLeft: "3px solid var(--gold)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                  <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[week] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s" }}>▶</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)", fontFamily: "var(--df)" }}>Week of {week}</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} drop{items.length !== 1 ? "s" : ""}</span>
+                  <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                    {[...new Set(items.map(i => i.brand))].map(b => (
+                      <span key={b} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: (BRAND_COLORS_MAP[b] || "#888") + "18", color: BRAND_COLORS_MAP[b] || "#888", fontWeight: 600 }}>{b}</span>
+                    ))}
+                  </div>
+                </div>
+                {!collapsed[week] && items.map(d => (
+                  <div key={d.id} style={{ display: "grid", gridTemplateColumns: DG, borderBottom: "1px solid var(--border2)", minHeight: 32 }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <div style={cs}>
+                      <select value={d.brand} onChange={e => updateDrop(d.id, "brand", e.target.value)} style={{ ...is, color: BRAND_COLORS_MAP[d.brand] || "var(--text)", fontWeight: 600, fontSize: 10 }}>
+                        {DROP_BRANDS.map(b => <option key={b}>{b}</option>)}
+                      </select>
+                    </div>
+                    <div style={cs}><input value={d.format || ""} onChange={e => updateDrop(d.id, "format", e.target.value)} style={is} placeholder="Format" /></div>
+                    <div style={cs}>
+                      <input value={d.sku || ""} onChange={e => updateDrop(d.id, "sku", e.target.value)} style={{ ...is, fontWeight: 500, color: "var(--text)" }} />
+                      {d.socialHighlight && <span title="Social Highlight" style={{ fontSize: 10, marginLeft: 4, flexShrink: 0 }}>⭐</span>}
+                    </div>
+                    <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteDrop(d.id); }}>
+                      <span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
