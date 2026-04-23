@@ -10468,6 +10468,8 @@ function PopupsBlitzTable({ data, setData, currentUser }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [cmtOpen, setCmtOpen] = useState(null);
   const [cmtText, setCmtText] = useState("");
+  const [viewMode, setViewMode] = useState("table"); // "table" | "calendar"
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() }; });
   const [newItem, setNewItem] = useState({ name: "", section: "SWMO", brand: "", date: "", visitType: "Popup", status: "Scheduled", feedbackForm: "Not Started", person: "", merchOrdered: "Not Needed" });
 
   useEffect(() => { if (!didInit && data.length > 0) { const all = {}; [...new Set(data.map(d => d.section))].forEach(s => { all[s] = true; }); setCollapsed(all); setDidInit(true); } }, [data, didInit]);
@@ -10498,7 +10500,19 @@ function PopupsBlitzTable({ data, setData, currentUser }) {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Dizpo</button>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, person, brand..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+          <div style={{ display: "flex", gap: 2, padding: 2, background: "var(--surface2)", borderRadius: 6, border: "1px solid var(--border)" }}>
+            <button onClick={() => setViewMode("table")} style={{ padding: "4px 10px", fontSize: 10, borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "table" ? "var(--gold-dim)" : "transparent", color: viewMode === "table" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontWeight: 600 }}>Table</button>
+            <button onClick={() => setViewMode("calendar")} style={{ padding: "4px 10px", fontSize: 10, borderRadius: 4, border: "none", cursor: "pointer", background: viewMode === "calendar" ? "var(--gold-dim)" : "transparent", color: viewMode === "calendar" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontWeight: 600 }}>Calendar</button>
+          </div>
+          {viewMode === "table" && <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, person, brand..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />}
+          {viewMode === "calendar" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+              <button onClick={() => setCalMonth(p => { const d = new Date(p.year, p.month - 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ width: 24, height: 24, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 12, display: "grid", placeItems: "center" }}>‹</button>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", minWidth: 120, textAlign: "center" }}>{new Date(calMonth.year, calMonth.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+              <button onClick={() => setCalMonth(p => { const d = new Date(p.year, p.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ width: 24, height: 24, borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 12, display: "grid", placeItems: "center" }}>›</button>
+              <button onClick={() => { const d = new Date(); setCalMonth({ year: d.getFullYear(), month: d.getMonth() }); }} className="btn btn-sm" style={{ fontSize: 10 }}>Today</button>
+            </div>
+          )}
         </div>
       </div>
       {showAddModal && (
@@ -10531,6 +10545,46 @@ function PopupsBlitzTable({ data, setData, currentUser }) {
         </div>
       )}
       <div style={{ flex: 1, overflow: "auto" }}>
+        {viewMode === "calendar" ? (
+          /* ── CALENDAR VIEW ── */
+          (() => {
+            const year = calMonth.year, month = calMonth.month;
+            const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Mon start
+            const weeks = [];
+            let day = 1 - startOffset;
+            while (day <= daysInMonth) { const week = []; for (let i = 0; i < 7; i++) { week.push(day); day++; } weeks.push(week); }
+            const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const today = new Date(); const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+            const VT_CLR2 = { "Popup": "#22c55e", "Blitz": "#3b82f6", "Event": "#a855f7", "Other": "#c9a84c" };
+            return (
+              <div style={{ padding: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1 }}>
+                  {dayNames.map(d => <div key={d} style={{ padding: "8px 4px", textAlign: "center", fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{d}</div>)}
+                  {weeks.map((week, wi) => week.map((d, di) => {
+                    const isThisMonth = d >= 1 && d <= daysInMonth;
+                    const dateStr = isThisMonth ? `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
+                    const isToday = dateStr === todayStr;
+                    const dayEvents = isThisMonth ? data.filter(ev => ev.date === dateStr) : [];
+                    return (
+                      <div key={`${wi}-${di}`} style={{ minHeight: 90, padding: "4px 6px", background: isThisMonth ? "var(--surface)" : "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 4, opacity: isThisMonth ? 1 : .4, position: "relative" }}>
+                        <div style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--gold)" : "var(--text-dim)", marginBottom: 4 }}>
+                          {isToday && <span style={{ display: "inline-block", width: 20, height: 20, borderRadius: "50%", background: "var(--gold)", color: "#fff", textAlign: "center", lineHeight: "20px", fontSize: 11 }}>{d}</span>}
+                          {!isToday && isThisMonth && d}
+                        </div>
+                        {dayEvents.slice(0, 3).map(ev => (
+                          <div key={ev.id} title={ev.name} style={{ padding: "2px 5px", marginBottom: 2, borderRadius: 3, fontSize: 9, fontWeight: 500, color: "#fff", background: VT_CLR2[ev.visitType] || "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "default" }}>{ev.name}</div>
+                        ))}
+                        {dayEvents.length > 3 && <div style={{ fontSize: 9, color: "var(--text-muted)", paddingLeft: 5 }}>+{dayEvents.length - 3} more</div>}
+                      </div>
+                    );
+                  }))}
+                </div>
+              </div>
+            );
+          })()
+        ) : (
         <div style={{ minWidth: 900 }}>
           {regions.map(region => {
             const items = groups[region] || [];
@@ -10594,6 +10648,7 @@ function PopupsBlitzTable({ data, setData, currentUser }) {
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );
