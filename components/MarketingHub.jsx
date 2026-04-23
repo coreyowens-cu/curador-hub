@@ -1248,7 +1248,21 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     if (!ready) return;
     (async () => {
       const stored = await window.storage.get("ns-promo-calendar", true).catch(() => null);
-      if (stored) { setPromoCalendar(JSON.parse(stored.value)); return; }
+      if (stored) {
+        // Fix: items named "February" or "March" stuck in January section
+        const parsed = JSON.parse(stored.value);
+        let curSection = "";
+        const fixed = [];
+        for (const item of parsed) {
+          if (/^February$/i.test(item.name) && !item.startDate) { curSection = "February 2026"; continue; }
+          if (/^March$/i.test(item.name) && !item.startDate) { curSection = "March 2026"; continue; }
+          if (/^February$/i.test(item.name) && item.startDate) { item.section = "February 2026"; item.name = "February Promo"; }
+          if (curSection && item.section === "January 2026") item.section = curSection;
+          fixed.push(item);
+        }
+        setPromoCalendar(fixed);
+        return;
+      }
       try { const r = await fetch("/data/promocalendar-default.json"); const d = await r.json(); setPromoCalendar(d); } catch {}
     })();
   }, [ready]);
