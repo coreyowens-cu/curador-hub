@@ -9983,7 +9983,10 @@ function CreditMemoTable({ data, setData, currentUser }) {
 
   const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
   const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
-  const addItem = (section) => setData(p => [...p, { id: `cm-${Date.now()}`, section, name: "", date: new Date().toISOString().slice(0, 10), customer: "", total: 0, priority: "", status: "Submitted", notes: "" }]);
+  const addItem = (section) => {
+    setData(p => [...p, { id: `cm-${Date.now()}`, section, name: "", date: new Date().toISOString().slice(0, 10), customer: "", total: 0, priority: "", status: "Submitted", notes: "" }]);
+    setCollapsed(p => ({ ...p, [section]: false }));
+  };
   const addComment = (itemId) => { if (!cmtText.trim()) return; setData(p => p.map(d => d.id === itemId ? { ...d, comments: [...(d.comments || []), { id: `cmc-${Date.now()}`, author: currentUser?.name || "Team", text: cmtText.trim(), ts: new Date().toISOString() }] } : d)); setCmtText(""); };
   const deleteComment = (itemId, cId) => setData(p => p.map(d => d.id === itemId ? { ...d, comments: (d.comments || []).filter(c => c.id !== cId) } : d));
 
