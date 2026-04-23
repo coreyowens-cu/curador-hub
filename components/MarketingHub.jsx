@@ -1144,6 +1144,12 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     return () => window.removeEventListener("switch-to-board", handler);
   }, []);
 
+  // Scroll content to top when switching tabs
+  useEffect(() => {
+    const el = document.querySelector(".main");
+    if (el) el.scrollTo(0, 0);
+  }, [leftTab]);
+
   const saveUser = (name, role) => {
     const color = colorForName(name);
     const user = { name, color, role };
