@@ -8593,25 +8593,59 @@ function CommentModal({ title, comments, currentUser, onAdd, onEdit, onDelete, o
 // Helper: renders a comment bubble that opens CommentModal
 function CommentBubble({ item, title, currentUser, onUpdateComments }) {
   const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [editText, setEditText] = useState("");
   const comments = item.comments || [];
+  const send = () => { if (!text.trim()) return; onUpdateComments([...comments, { id: `cmt-${Date.now()}`, author: currentUser?.name || "Team", text: text.trim(), ts: new Date().toISOString() }]); setText(""); };
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", width: "100%", height: "100%" }} onClick={e => { e.stopPropagation(); setOpen(true); }}>
+    <div style={{ position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", width: "100%", height: "100%" }} onClick={e => { e.stopPropagation(); setOpen(o => !o); }}>
         <span style={{ fontSize: 16, color: comments.length > 0 ? "var(--gold)" : "#555" }}>💬</span>
-        {comments.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700, lineHeight: "14px" }}>{comments.length}</span>}
+        {comments.length > 0 && <span style={{ position: "absolute", top: -2, right: -2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700, lineHeight: "14px" }}>{comments.length}</span>}
       </div>
       {open && (
-        <CommentModal
-          title={title || item.name || "Item"}
-          comments={comments}
-          currentUser={currentUser}
-          onAdd={(text, replyTo) => onUpdateComments([...comments, { id: `cmt-${Date.now()}`, author: currentUser?.name || "Team", text, ts: new Date().toISOString(), replyTo: replyTo || null }])}
-          onEdit={(id, text) => onUpdateComments(comments.map(c => c.id === id ? { ...c, text } : c))}
-          onDelete={(id) => onUpdateComments(comments.filter(c => c.id !== id))}
-          onClose={() => setOpen(false)}
-        />
+        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", left: -20, top: "100%", width: 300, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.12)", zIndex: 30, marginTop: 4 }}>
+          <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--border2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)", letterSpacing: ".08em", textTransform: "uppercase" }}>{comments.length} comment{comments.length !== 1 ? "s" : ""}</span>
+            <button onClick={() => setOpen(false)} style={{ fontSize: 14, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>×</button>
+          </div>
+          <div style={{ maxHeight: 200, overflowY: "auto", padding: "6px 12px" }}>
+            {comments.length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic", padding: "8px 0" }}>No comments yet.</div>}
+            {comments.map(c => (
+              <div key={c.id} style={{ padding: "6px 0", borderBottom: "1px solid var(--border2)" }}>
+                {editId === c.id ? (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input autoFocus value={editText} onChange={e => setEditText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { onUpdateComments(comments.map(cm => cm.id === c.id ? { ...cm, text: editText } : cm)); setEditId(null); } if (e.key === "Escape") setEditId(null); }}
+                      style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 4, padding: "4px 6px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                    <button onClick={() => { onUpdateComments(comments.map(cm => cm.id === c.id ? { ...cm, text: editText } : cm)); setEditId(null); }} style={{ fontSize: 9, color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--bf)" }}>Save</button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span>
+                      <span style={{ fontSize: 8, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
+                    {c.author === currentUser?.name && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 3 }}>
+                        <button onClick={() => { setEditId(c.id); setEditText(c.text); }} style={{ fontSize: 9, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--bf)" }}>Edit</button>
+                        <button onClick={() => onUpdateComments(comments.filter(cm => cm.id !== c.id))} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--bf)" }}>Delete</button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border2)", display: "flex", gap: 6 }}>
+            <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} placeholder="Comment..."
+              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+            <button onClick={send} disabled={!text.trim()} style={{ fontSize: 10, padding: "4px 10px", borderRadius: 4, border: "none", background: text.trim() ? "var(--gold)" : "var(--surface2)", color: text.trim() ? "#fff" : "var(--text-muted)", cursor: text.trim() ? "pointer" : "default", fontFamily: "var(--bf)", fontWeight: 600 }}>Send</button>
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }
 
