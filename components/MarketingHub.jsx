@@ -10898,7 +10898,7 @@ function FieldAgendaTable({ data, setData, currentUser }) {
   };
   const addTodo = () => {
     if (!todoPopup) return;
-    setTodos(p => [...p, { id: `todo-${Date.now()}`, text: todoPopup.text, owner: todoOwner || currentUser?.name || "", urgency: todoUrgency, status: "Not Started", fromDate: todoPopup.fromDate, createdAt: new Date().toISOString() }]);
+    setTodos(p => [...p, { id: `todo-${Date.now()}`, text: todoPopup.text, owner: todoOwner || "", urgency: todoUrgency, status: "Not Started", fromDate: todoPopup.fromDate, createdAt: new Date().toISOString() }]);
     setTodoPopup(null); setTodoOwner(""); setTodoUrgency("Medium");
   };
   const updateTodo = (id, field, val) => setTodos(p => p.map(t => t.id === id ? { ...t, [field]: val } : t));
