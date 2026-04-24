@@ -1021,6 +1021,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [promoCalendar, setPromoCalendar] = useState([]);
   const [popupsData, setPopupsData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
+  const [fieldAgenda, setFieldAgenda] = useState([]);
 
 
   // Load
@@ -1276,6 +1277,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (ready && popupsData.length > 0) window.storage.set("ns-popups-blitz", JSON.stringify(popupsData), true).catch(() => {}); }, [popupsData, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-events-cal", true).catch(() => null); if (s) { setEventsData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/events-default.json"); setEventsData(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && eventsData.length > 0) window.storage.set("ns-events-cal", JSON.stringify(eventsData), true).catch(() => {}); }, [eventsData, ready]);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-default.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
+  useEffect(() => { if (ready && fieldAgenda.length > 0) window.storage.set("ns-field-agenda", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -2188,7 +2191,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} currentUser={currentUser} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} fieldAgenda={fieldAgenda} setFieldAgenda={setFieldAgenda} currentUser={currentUser} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9351,7 +9354,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, promoCalendar, setPromoCalendar, popupsData, setPopupsData, eventsData, setEventsData, currentUser }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, promoCalendar, setPromoCalendar, popupsData, setPopupsData, eventsData, setEventsData, fieldAgenda, setFieldAgenda, currentUser }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9369,6 +9372,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
   const isPromoCalendarView = selected?.name === "Promo Calendar- Work In Progress";
   const isPopupsView = selected?.name === "Popups and Blitz Calendar";
   const isEventsView = selected?.name === "Events & Event Support";
+  const isAgendaView = selected?.name === "Field Marketing Weekly";
 
   const addNode = (parentId, type) => {
     const siblings = getChildren(parentId);
@@ -9475,6 +9479,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
           <PopupsBlitzTable data={popupsData} setData={setPopupsData} currentUser={currentUser} />
         ) : selected && isEventsView ? (
           <EventsTable data={eventsData} setData={setEventsData} currentUser={currentUser} />
+        ) : selected && isAgendaView ? (
+          <FieldAgendaTable data={fieldAgenda} setData={setFieldAgenda} currentUser={currentUser} />
         ) : selected ? (
           <>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -10802,6 +10808,143 @@ function EventsTable({ data, setData, currentUser }) {
         <div style={{ minWidth: 800 }}>
           {sortedSections.map(section => { const items = groups[section]; const sColor = SEC_CLR[section] || "var(--gold)"; return (<div key={section} style={{ marginBottom: 16 }}><div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}><span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s", color: sColor }}>▶</span><span style={{ fontSize: 16, fontWeight: 700, color: sColor }}>{section}</span></div>{collapsed[section] && <div style={{ padding: "4px 16px 12px", fontSize: 11, color: "var(--text-muted)", borderLeft: `3px solid ${sColor}`, marginLeft: 16 }}>{items.length} event{items.length !== 1 ? "s" : ""}</div>}{!collapsed[section] && (<div style={{ borderLeft: `3px solid ${sColor}`, marginLeft: 16 }}><div style={{ display: "grid", gridTemplateColumns: EG, borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>{["Event", "💬", "Type", "Region", "Date", "Status", "Staff", "Location", ""].map((h, hi) => (<div key={hi} style={{ padding: "6px 8px", fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>))}</div>{items.map(d => (<div key={d.id} style={{ display: "grid", gridTemplateColumns: EG, borderBottom: "1px solid var(--border2)", minHeight: 36 }} onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><div style={cs}><input value={d.name||""} onChange={e => updateItem(d.id, "name", e.target.value)} style={{ ...is5, fontWeight: 500, color: "var(--text)" }} /></div><div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }} onClick={e => { e.stopPropagation(); setCmtOpen(cmtOpen === d.id ? null : d.id); }}><span style={{ fontSize: 16, color: (d.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>{d.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{d.comments.length}</span>}{cmtOpen === d.id && (<div onClick={e => e.stopPropagation()} style={{ position: "absolute", left: 0, top: "100%", width: 280, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}><div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>{d.name}</div><div style={{ maxHeight: 160, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>{(d.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments.</div>}{(d.comments || []).map(c => (<div key={c.id} style={{ padding: "6px 8px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6 }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}><span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span><span style={{ fontSize: 8, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div><div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>{c.author === currentUser?.name && <button onClick={() => deleteComment(d.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)" }}>Delete</button>}</div>))}</div><div style={{ display: "flex", gap: 6 }}><input value={cmtText} onChange={e => setCmtText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addComment(d.id); }} placeholder="Comment..." style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "5px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} /><button className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addComment(d.id)}>Send</button></div></div>)}</div><div style={cs}><div style={{ width: "100%", padding: "3px 0", borderRadius: 4, textAlign: "center", fontSize: 10, fontWeight: 600, color: "#fff", background: AT_CLR[d.activationType] || "#888", cursor: "pointer" }} onClick={() => { const next = ACTIVATION_TYPES[(ACTIVATION_TYPES.indexOf(d.activationType) + 1) % ACTIVATION_TYPES.length]; updateItem(d.id, "activationType", next); }}>{d.activationType || "—"}</div></div><div style={cs}><input value={d.region||""} onChange={e => updateItem(d.id, "region", e.target.value)} style={{ ...is5, fontSize: 10 }} /></div><div style={cs}><input type="date" value={d.date||""} onChange={e => updateItem(d.id, "date", e.target.value)} style={{ ...is5, fontSize: 10, color: "var(--text-muted)" }} /></div><div style={cs}><div style={{ width: "100%", padding: "3px 0", borderRadius: 4, textAlign: "center", fontSize: 9, fontWeight: 600, color: "#fff", background: ES_CLR[d.eventStatus] || "#888", cursor: "pointer" }} onClick={() => { const next = EVENT_STATUSES[(EVENT_STATUSES.indexOf(d.eventStatus) + 1) % EVENT_STATUSES.length]; updateItem(d.id, "eventStatus", next); }}>{d.eventStatus || "—"}</div></div><div style={cs}><input value={d.staffAttending||""} onChange={e => updateItem(d.id, "staffAttending", e.target.value)} style={{ ...is5, fontSize: 10 }} /></div><div style={cs}><input value={d.location||""} onChange={e => updateItem(d.id, "location", e.target.value)} style={{ ...is5, fontSize: 10 }} /></div><div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteItem(d.id); }}><span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span></div></div>))}<div onClick={() => setShowAddModal(true)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }} onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add event</div></div>)}</div>); })}
         </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── FIELD MARKETING WEEKLY AGENDA ─────────────────────────────────────────
+const AGENDA_STATUSES = ["Not Started", "In Progress", "Completed"];
+const AGENDA_ST_CLR = { "Not Started": "#8a8a96", "In Progress": "#c9a84c", "Completed": "#22c55e" };
+
+function FieldAgendaTable({ data, setData, currentUser }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [search, setSearch] = useState("");
+  const [newItem, setNewItem] = useState({ date: new Date().toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }), text: "", owner: "", status: "Not Started" });
+
+  const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
+  const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
+  const addItem = () => {
+    if (!newItem.text.trim()) return;
+    setData(p => [...p, { ...newItem, id: `fma-${Date.now()}` }]);
+    setCollapsed(p => ({ ...p, [newItem.date]: false }));
+    setShowAddModal(false);
+    setNewItem(prev => ({ ...prev, text: "", owner: "" }));
+  };
+
+  const filtered = search ? data.filter(d => { const s = search.toLowerCase(); return (d.text||"").toLowerCase().includes(s) || (d.owner||"").toLowerCase().includes(s); }) : data;
+
+  // Group by date, most recent first
+  const groups = {};
+  filtered.forEach(d => { const dt = d.date || "No Date"; if (!groups[dt]) groups[dt] = []; groups[dt].push(d); });
+  const sortedDates = Object.keys(groups).sort((a, b) => {
+    const pa = new Date(a), pb = new Date(b);
+    return pb.getTime() - pa.getTime();
+  });
+
+  // Needs Attention: completed items from previous meetings
+  const needsAttention = data.filter(d => d.status === "Completed");
+
+  const cs = { padding: "6px 10px", fontSize: 12, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is6 = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 12, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(12px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Field Marketing Weekly Agenda</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} items</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Agenda Item</button>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agenda..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+        </div>
+      </div>
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+              <div className="mtitle">New Agenda Item</div>
+              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+              <div className="ff"><label className="fl">Agenda Item *</label><textarea className="fta" rows={3} placeholder="What needs to be discussed or tracked?" value={newItem.text} onChange={e => setNewItem(p => ({ ...p, text: e.target.value }))} autoFocus /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Meeting Date</label><input className="fi" placeholder="e.g. 4/21/2026" value={newItem.date} onChange={e => setNewItem(p => ({ ...p, date: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Owner</label><input className="fi" placeholder="Who owns this?" value={newItem.owner} onChange={e => setNewItem(p => ({ ...p, owner: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Status</label>
+                <select className="fsel" value={newItem.status} onChange={e => setNewItem(p => ({ ...p, status: e.target.value }))}>{AGENDA_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+              </div>
+            </div>
+            <div className="mfoot">
+              <button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button className="btn btn-gold" disabled={!newItem.text.trim()} onClick={addItem}>Add Item</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{ flex: 1, overflow: "auto", padding: "8px 16px" }}>
+        {sortedDates.map(date => {
+          const items = groups[date];
+          const isCollapsed = collapsed[date];
+          return (
+            <div key={date} style={{ marginBottom: 16 }}>
+              <div onClick={() => setCollapsed(p => ({ ...p, [date]: !p[date] }))} style={{ padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none", borderLeft: "3px solid var(--gold)", background: "var(--surface2)", borderRadius: "0 8px 8px 0" }}>
+                <span style={{ fontSize: 10, display: "inline-block", transform: isCollapsed ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s", color: "var(--gold)" }}>▶</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)", fontFamily: "var(--df)" }}>{date}</span>
+                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} item{items.length !== 1 ? "s" : ""}</span>
+                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                  {["Not Started", "In Progress", "Completed"].map(st => {
+                    const count = items.filter(i => i.status === st).length;
+                    return count > 0 ? <span key={st} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: AGENDA_ST_CLR[st] + "20", color: AGENDA_ST_CLR[st], fontWeight: 600 }}>{count} {st === "Not Started" ? "todo" : st === "In Progress" ? "active" : "done"}</span> : null;
+                  })}
+                </div>
+              </div>
+              {!isCollapsed && (
+                <div style={{ borderLeft: "3px solid var(--border2)", marginLeft: 1, paddingLeft: 12 }}>
+                  {items.map(d => (
+                    <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--border2)" }}>
+                      {/* Status badge — click to cycle */}
+                      <div onClick={() => { const next = AGENDA_STATUSES[(AGENDA_STATUSES.indexOf(d.status) + 1) % AGENDA_STATUSES.length]; updateItem(d.id, "status", next); }}
+                        style={{ flexShrink: 0, padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 600, color: "#fff", background: AGENDA_ST_CLR[d.status] || "#888", cursor: "pointer", minWidth: 80, textAlign: "center", marginTop: 2 }}>
+                        {d.status}
+                      </div>
+                      {/* Text */}
+                      <div style={{ flex: 1 }}>
+                        <input value={d.text||""} onChange={e => updateItem(d.id, "text", e.target.value)} style={{ ...is6, fontWeight: 400, color: d.status === "Completed" ? "var(--text-muted)" : "var(--text)", textDecoration: d.status === "Completed" ? "line-through" : "none", width: "100%" }} />
+                      </div>
+                      {/* Owner */}
+                      <input value={d.owner||""} onChange={e => updateItem(d.id, "owner", e.target.value)} placeholder="Owner" style={{ ...is6, width: 100, flexShrink: 0, color: "#e8a87c", fontSize: 11, textAlign: "right" }} />
+                      {/* Delete */}
+                      <button onClick={() => { if (confirm("Delete?")) deleteItem(d.id); }} style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#e07b6a", opacity: .3, fontSize: 14, padding: "0 4px" }}>×</button>
+                    </div>
+                  ))}
+                  <div onClick={() => setShowAddModal(true)} style={{ padding: "8px 0", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add item</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Needs Attention section */}
+        {needsAttention.length > 0 && (
+          <div style={{ marginTop: 24, padding: "16px", background: "rgba(77,158,142,.04)", border: "1px solid rgba(77,158,142,.15)", borderRadius: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#4d9e8e", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 10 }}>Completed — Needs Attention</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>Items marked as completed. Clear when addressed.</div>
+            {needsAttention.map(d => (
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border2)" }}>
+                <span style={{ fontSize: 10, color: "#4d9e8e", fontWeight: 600 }}>{d.date}</span>
+                <span style={{ flex: 1, fontSize: 12, color: "var(--text-dim)", textDecoration: "line-through" }}>{d.text}</span>
+                <span style={{ fontSize: 10, color: "#e8a87c" }}>{d.owner}</span>
+                <button onClick={() => deleteItem(d.id)} className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(77,158,142,.3)", color: "#4d9e8e" }}>Clear</button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
