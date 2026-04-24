@@ -4196,6 +4196,7 @@ function CampaignsPanel({ campaigns, onNew, onSelect, onDelete, fullWidth }) {
 function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
   const memberColor = member.color?.bg ? member.color : colorForName(member.name || "User");
   const [editing, setEditing] = useState(false);
+  const [nameVal, setNameVal] = useState(member.name || "");
   const [title, setTitle] = useState(member.title || "");
   const [bio, setBio] = useState(member.bio || "");
   const [email, setEmail] = useState(member.email || "");
@@ -4211,6 +4212,7 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
 
   const saveProfile = () => {
     onUpdate(member.name, {
+      name: nameVal.trim() || member.name,
       title,
       bio,
       email,
@@ -4266,6 +4268,10 @@ function TeamMemberModal({ member, currentUser, onClose, onUpdate, onDelete }) {
           {editing ? (
             /* ── EDIT MODE ── */
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="ff" style={{ gridColumn: "1/-1" }}>
+                <label className="fl">Name</label>
+                <input className="fi" value={nameVal} onChange={e => setNameVal(e.target.value)} placeholder="Display name" />
+              </div>
               <div className="ff" style={{ gridColumn: "1/-1" }}>
                 <label className="fl">Job Title</label>
                 <input className="fi" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Creative Director, Brand Strategist…" />
