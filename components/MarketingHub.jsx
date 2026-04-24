@@ -9722,7 +9722,7 @@ function TierListTable({ data, setData, currentUser }) {
 
   const cs = { padding: "5px 6px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
   const is = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
-  const AG = "1fr 140px 130px 80px 80px 80px 80px 80px 80px 80px 80px 80px 40px";
+  const AG = "1fr 36px 140px 130px 80px 80px 80px 80px 80px 80px 80px 80px 80px";
   const SG = "30px 1fr 120px 70px 100px 80px 80px 90px 80px 80px 80px 80px";
 
   return (
@@ -9744,7 +9744,7 @@ function TierListTable({ data, setData, currentUser }) {
         <div style={{ minWidth: 1100 }}>
           {/* Account header */}
           <div style={{ display: "grid", gridTemplateColumns: AG, background: "rgba(10,10,20,.6)", borderBottom: "2px solid var(--border)", position: "sticky", top: 0, zIndex: 2 }}>
-            {["Account", "Brands Carried", "POC Access", "Discount", "Inventory", "Assets", "In-Store", "Digital", "Promos", "Orders", "Scorecard", "Proj Q2", "💬"].map(h => (
+            {["Account", "💬", "Brands Carried", "POC Access", "Discount", "Inventory", "Assets", "In-Store", "Digital", "Promos", "Orders", "Scorecard", "Proj Q2"].map(h => (
               <div key={h} style={{ padding: "8px 6px", fontSize: 9, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
             ))}
           </div>
@@ -9766,6 +9766,32 @@ function TierListTable({ data, setData, currentUser }) {
                       <input value={a.name} onChange={e => updateAccount(a.id, "name", e.target.value)} style={{ ...is, fontWeight: 600, color: "var(--text)" }} />
                       <span style={{ fontSize: 9, color: "var(--text-muted)", flexShrink: 0 }}>{a.stores.length}</span>
                     </div>
+                    {/* Comment — next to account */}
+                    <div style={{ ...cs, justifyContent: "center", cursor: "pointer", position: "relative" }}
+                      onClick={e => { e.stopPropagation(); setCommentOpen(commentOpen === a.id ? null : a.id); }}>
+                      <span style={{ fontSize: 16, color: (a.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
+                      {a.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{a.comments.length}</span>}
+                      {commentOpen === a.id && (
+                        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", left: 0, top: "100%", width: 280, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>{a.name}</div>
+                          <div style={{ maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                            {(a.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments.</div>}
+                            {(a.comments || []).map(c => (
+                              <div key={c.id} style={{ padding: "6px 8px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 6 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}><span style={{ fontSize: 10, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span><span style={{ fontSize: 8, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>
+                                <div style={{ fontSize: 11, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
+                                {c.author === currentUser?.name && <button onClick={() => deleteComment(a.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)" }}>Delete</button>}
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <input value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addComment(a.id); }} placeholder="Comment..."
+                              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "5px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                            <button className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addComment(a.id)}>Send</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <div style={cs}><input value={a.brandsCarried||""} onChange={e => updateAccount(a.id, "brandsCarried", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.pocAccess||""} onChange={e => updateAccount(a.id, "pocAccess", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.discount||""} onChange={e => updateAccount(a.id, "discount", e.target.value)} style={is} /></div>
@@ -9776,39 +9802,7 @@ function TierListTable({ data, setData, currentUser }) {
                     <div style={cs}><input value={a.promoParticipation||""} onChange={e => updateAccount(a.id, "promoParticipation", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.orderCadence||""} onChange={e => updateAccount(a.id, "orderCadence", e.target.value)} style={is} /></div>
                     <div style={cs}><input value={a.scorecard||""} onChange={e => updateAccount(a.id, "scorecard", e.target.value)} style={is} /></div>
-                    <div style={cs}><input value={a.projQ2||""} onChange={e => updateAccount(a.id, "projQ2", e.target.value)} style={is} /></div>
-                    {/* Comment icon */}
-                    <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer", position: "relative" }}
-                      onClick={e => { e.stopPropagation(); setCommentOpen(commentOpen === a.id ? null : a.id); }}>
-                      <span style={{ fontSize: 16, color: (a.comments?.length > 0) ? "var(--gold)" : "#555" }}>💬</span>
-                      {a.comments?.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700 }}>{a.comments.length}</span>}
-                      {/* Comment dropdown */}
-                      {commentOpen === a.id && (
-                        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", right: 0, top: "100%", width: 320, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,.15)", zIndex: 30, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                          <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>Comments — {a.name}</div>
-                          <div ref={commentRef} style={{ maxHeight: 200, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
-                            {(a.comments || []).length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No comments yet.</div>}
-                            {(a.comments || []).map(c => (
-                              <div key={c.id} style={{ padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border2)", borderRadius: 8 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span>
-                                  <span style={{ fontSize: 9, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                                </div>
-                                <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.5 }}>{c.text}</div>
-                                {c.author === currentUser?.name && (
-                                  <button onClick={() => deleteComment(a.id, c.id)} style={{ fontSize: 9, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: "2px 0", fontFamily: "var(--bf)", marginTop: 2 }}>Delete</button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <input value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addComment(a.id); }} placeholder="Add comment..."
-                              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
-                            <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => addComment(a.id)}>Send</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <div style={{ ...cs, borderRight: "none" }}><input value={a.projQ2||""} onChange={e => updateAccount(a.id, "projQ2", e.target.value)} style={is} /></div>
                   </div>
                   {/* Store sub-rows */}
                   {expandedAcct[a.id] && a.stores.map(st => (
