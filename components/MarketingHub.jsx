@@ -1277,8 +1277,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (ready && popupsData.length > 0) window.storage.set("ns-popups-blitz", JSON.stringify(popupsData), true).catch(() => {}); }, [popupsData, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-events-cal", true).catch(() => null); if (s) { setEventsData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/events-default.json"); setEventsData(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && eventsData.length > 0) window.storage.set("ns-events-cal", JSON.stringify(eventsData), true).catch(() => {}); }, [eventsData, ready]);
-  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-default.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
-  useEffect(() => { if (ready && fieldAgenda.length > 0) window.storage.set("ns-field-agenda", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
+  useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
   useEffect(() => {
     const handler = () => { setLeftTab("initiatives"); setActiveBrand(null); };
@@ -10814,136 +10814,149 @@ function EventsTable({ data, setData, currentUser }) {
   );
 }
 
-// ── FIELD MARKETING WEEKLY AGENDA ─────────────────────────────────────────
+// ── FIELD MARKETING WEEKLY AGENDA V2 ──────────────────────────────────────
 const AGENDA_STATUSES = ["Not Started", "In Progress", "Completed"];
 const AGENDA_ST_CLR = { "Not Started": "#8a8a96", "In Progress": "#c9a84c", "Completed": "#22c55e" };
 
 function FieldAgendaTable({ data, setData, currentUser }) {
-  const [collapsed, setCollapsed] = useState({});
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [search, setSearch] = useState("");
-  const [newItem, setNewItem] = useState({ date: new Date().toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }), text: "", owner: "", status: "Not Started" });
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({ date: new Date().toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }) });
+  const [newItemText, setNewItemText] = useState("");
+  const [newItemSection, setNewItemSection] = useState("Notes");
+  const [todos, setTodos] = useState(() => { try { const v = localStorage.getItem("ns_agenda-todos"); return v ? JSON.parse(v) : []; } catch { return []; } });
 
-  const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
-  const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
-  const addItem = () => {
-    if (!newItem.text.trim()) return;
-    setData(p => [...p, { ...newItem, id: `fma-${Date.now()}` }]);
-    setCollapsed(p => ({ ...p, [newItem.date]: false }));
+  useEffect(() => { try { localStorage.setItem("ns_agenda-todos", JSON.stringify(todos)); } catch {} }, [todos]);
+
+  if (!data?.meetings) return <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Loading agenda...</div>;
+
+  const meetings = data.meetings || [];
+  const addMeeting = () => {
+    if (!newMeeting.date) return;
+    const m = { date: newMeeting.date, sections: [{ title: "Notes", items: [] }] };
+    setData(p => ({ ...p, meetings: [m, ...p.meetings] }));
     setShowAddModal(false);
-    setNewItem(prev => ({ ...prev, text: "", owner: "" }));
+    setSelectedMeeting(0);
   };
+  const addItemToMeeting = (mIdx, sectionTitle, text) => {
+    setData(p => {
+      const ms = [...p.meetings];
+      const m = { ...ms[mIdx], sections: ms[mIdx].sections.map(s => s.title === sectionTitle ? { ...s, items: [...s.items, text] } : s) };
+      if (!m.sections.find(s => s.title === sectionTitle)) m.sections = [...m.sections, { title: sectionTitle, items: [text] }];
+      ms[mIdx] = m;
+      return { ...p, meetings: ms };
+    });
+  };
+  const addToTodos = (text, owner) => {
+    setTodos(p => [...p, { id: `todo-${Date.now()}`, text, owner: owner || currentUser?.name || "", status: "Not Started", createdAt: new Date().toISOString() }]);
+  };
+  const updateTodo = (id, field, val) => setTodos(p => p.map(t => t.id === id ? { ...t, [field]: val } : t));
+  const deleteTodo = (id) => setTodos(p => p.filter(t => t.id !== id));
 
-  const filtered = search ? data.filter(d => { const s = search.toLowerCase(); return (d.text||"").toLowerCase().includes(s) || (d.owner||"").toLowerCase().includes(s); }) : data;
-
-  // Group by date, most recent first
-  const groups = {};
-  filtered.forEach(d => { const dt = d.date || "No Date"; if (!groups[dt]) groups[dt] = []; groups[dt].push(d); });
-  const sortedDates = Object.keys(groups).sort((a, b) => {
-    const pa = new Date(a), pb = new Date(b);
-    return pb.getTime() - pa.getTime();
-  });
-
-  // Needs Attention: completed items from previous meetings
-  const needsAttention = data.filter(d => d.status === "Completed");
-
-  const cs = { padding: "6px 10px", fontSize: 12, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
-  const is6 = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 12, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const active = selectedMeeting !== null ? meetings[selectedMeeting] : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(12px)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Field Marketing Weekly Agenda</div>
-          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} items</div>
+    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
+      {/* Left — Meeting list */}
+      <div style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", background: "var(--surface)" }}>
+        <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid var(--border2)" }}>
+          <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 6 }}>Weekly Meetings</div>
+          <button className="btn btn-gold" style={{ width: "100%", fontSize: 10, justifyContent: "center" }} onClick={() => setShowAddModal(true)}>+ New Meeting</button>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Agenda Item</button>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agenda..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
+          {meetings.map((m, i) => (
+            <button key={i} onClick={() => setSelectedMeeting(i)} style={{
+              display: "block", width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${selectedMeeting === i ? "rgba(184,150,58,.3)" : "transparent"}`,
+              background: selectedMeeting === i ? "var(--gold-dim)" : "transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all .13s", fontFamily: "var(--bf)",
+            }}
+              onMouseEnter={e => { if (selectedMeeting !== i) e.currentTarget.style.background = "rgba(0,0,0,.03)"; }}
+              onMouseLeave={e => { if (selectedMeeting !== i) e.currentTarget.style.background = "transparent"; }}>
+              <div style={{ fontSize: 13, fontWeight: selectedMeeting === i ? 600 : 400, color: selectedMeeting === i ? "var(--gold)" : "var(--text)" }}>{m.date}</div>
+              <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{m.sections.reduce((s, sec) => s + sec.items.length, 0)} items</div>
+            </button>
+          ))}
+        </div>
+        {/* Todos section */}
+        <div style={{ borderTop: "1px solid var(--border)", padding: "10px 12px", maxHeight: "40%", overflowY: "auto" }}>
+          <div style={{ fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase", color: "#22c55e", fontWeight: 600, marginBottom: 8 }}>Action Items ({todos.filter(t => t.status !== "Completed").length})</div>
+          {todos.length === 0 && <div style={{ fontSize: 10, color: "var(--text-muted)", fontStyle: "italic" }}>No todos yet</div>}
+          {todos.map(t => (
+            <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "4px 0", borderBottom: "1px solid var(--border2)" }}>
+              <div onClick={() => { const next = AGENDA_STATUSES[(AGENDA_STATUSES.indexOf(t.status) + 1) % AGENDA_STATUSES.length]; updateTodo(t.id, "status", next); }}
+                style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${AGENDA_ST_CLR[t.status]}`, background: t.status === "Completed" ? "#22c55e" : "transparent", cursor: "pointer", flexShrink: 0, marginTop: 2, display: "grid", placeItems: "center" }}>
+                {t.status === "Completed" && <span style={{ fontSize: 9, color: "#fff" }}>✓</span>}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: t.status === "Completed" ? "var(--text-muted)" : "var(--text)", textDecoration: t.status === "Completed" ? "line-through" : "none" }}>{t.text}</div>
+                <div style={{ fontSize: 9, color: "#e8a87c" }}>{t.owner}</div>
+              </div>
+              <button onClick={() => deleteTodo(t.id)} style={{ fontSize: 10, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", opacity: .4, padding: 0 }}>×</button>
+            </div>
+          ))}
         </div>
       </div>
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
-            <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
-              <div className="mtitle">New Agenda Item</div>
-              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
-            </div>
-            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
-              <div className="ff"><label className="fl">Agenda Item *</label><textarea className="fta" rows={3} placeholder="What needs to be discussed or tracked?" value={newItem.text} onChange={e => setNewItem(p => ({ ...p, text: e.target.value }))} autoFocus /></div>
-              <div className="frow">
-                <div className="ff"><label className="fl">Meeting Date</label><input className="fi" placeholder="e.g. 4/21/2026" value={newItem.date} onChange={e => setNewItem(p => ({ ...p, date: e.target.value }))} /></div>
-                <div className="ff"><label className="fl">Owner</label><input className="fi" placeholder="Who owns this?" value={newItem.owner} onChange={e => setNewItem(p => ({ ...p, owner: e.target.value }))} /></div>
+
+      {/* Right — Meeting detail */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+        {showAddModal && (
+          <div className="overlay" onClick={() => setShowAddModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+              <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+                <div className="mtitle">New Meeting</div>
+                <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
               </div>
-              <div className="ff"><label className="fl">Status</label>
-                <select className="fsel" value={newItem.status} onChange={e => setNewItem(p => ({ ...p, status: e.target.value }))}>{AGENDA_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+              <div style={{ padding: "18px 20px" }}>
+                <div className="ff"><label className="fl">Date</label><input className="fi" placeholder="e.g. 4/28/2026" value={newMeeting.date} onChange={e => setNewMeeting({ date: e.target.value })} autoFocus /></div>
               </div>
-            </div>
-            <div className="mfoot">
-              <button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button>
-              <button className="btn btn-gold" disabled={!newItem.text.trim()} onClick={addItem}>Add Item</button>
+              <div className="mfoot"><button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button><button className="btn btn-gold" onClick={addMeeting}>Create</button></div>
             </div>
           </div>
-        </div>
-      )}
-      <div style={{ flex: 1, overflow: "auto", padding: "8px 16px" }}>
-        {sortedDates.map(date => {
-          const items = groups[date];
-          const isCollapsed = collapsed[date];
-          return (
-            <div key={date} style={{ marginBottom: 16 }}>
-              <div onClick={() => setCollapsed(p => ({ ...p, [date]: !p[date] }))} style={{ padding: "10px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none", borderLeft: "3px solid var(--gold)", background: "var(--surface2)", borderRadius: "0 8px 8px 0" }}>
-                <span style={{ fontSize: 10, display: "inline-block", transform: isCollapsed ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s", color: "var(--gold)" }}>▶</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--gold)", fontFamily: "var(--df)" }}>{date}</span>
-                <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} item{items.length !== 1 ? "s" : ""}</span>
-                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                  {["Not Started", "In Progress", "Completed"].map(st => {
-                    const count = items.filter(i => i.status === st).length;
-                    return count > 0 ? <span key={st} style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: AGENDA_ST_CLR[st] + "20", color: AGENDA_ST_CLR[st], fontWeight: 600 }}>{count} {st === "Not Started" ? "todo" : st === "In Progress" ? "active" : "done"}</span> : null;
-                  })}
-                </div>
-              </div>
-              {!isCollapsed && (
-                <div style={{ borderLeft: "3px solid var(--border2)", marginLeft: 1, paddingLeft: 12 }}>
-                  {items.map(d => (
-                    <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--border2)" }}>
-                      {/* Status badge — click to cycle */}
-                      <div onClick={() => { const next = AGENDA_STATUSES[(AGENDA_STATUSES.indexOf(d.status) + 1) % AGENDA_STATUSES.length]; updateItem(d.id, "status", next); }}
-                        style={{ flexShrink: 0, padding: "4px 10px", borderRadius: 6, fontSize: 10, fontWeight: 600, color: "#fff", background: AGENDA_ST_CLR[d.status] || "#888", cursor: "pointer", minWidth: 80, textAlign: "center", marginTop: 2 }}>
-                        {d.status}
-                      </div>
-                      {/* Text */}
-                      <div style={{ flex: 1 }}>
-                        <input value={d.text||""} onChange={e => updateItem(d.id, "text", e.target.value)} style={{ ...is6, fontWeight: 400, color: d.status === "Completed" ? "var(--text-muted)" : "var(--text)", textDecoration: d.status === "Completed" ? "line-through" : "none", width: "100%" }} />
-                      </div>
-                      {/* Owner */}
-                      <input value={d.owner||""} onChange={e => updateItem(d.id, "owner", e.target.value)} placeholder="Owner" style={{ ...is6, width: 100, flexShrink: 0, color: "#e8a87c", fontSize: 11, textAlign: "right" }} />
-                      {/* Delete */}
-                      <button onClick={() => { if (confirm("Delete?")) deleteItem(d.id); }} style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#e07b6a", opacity: .3, fontSize: 14, padding: "0 4px" }}>×</button>
-                    </div>
-                  ))}
-                  <div onClick={() => setShowAddModal(true)} style={{ padding: "8px 0", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add item</div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        )}
 
-        {/* Needs Attention section */}
-        {needsAttention.length > 0 && (
-          <div style={{ marginTop: 24, padding: "16px", background: "rgba(77,158,142,.04)", border: "1px solid rgba(77,158,142,.15)", borderRadius: 10 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#4d9e8e", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 10 }}>Completed — Needs Attention</div>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>Items marked as completed. Clear when addressed.</div>
-            {needsAttention.map(d => (
-              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border2)" }}>
-                <span style={{ fontSize: 10, color: "#4d9e8e", fontWeight: 600 }}>{d.date}</span>
-                <span style={{ flex: 1, fontSize: 12, color: "var(--text-dim)", textDecoration: "line-through" }}>{d.text}</span>
-                <span style={{ fontSize: 10, color: "#e8a87c" }}>{d.owner}</span>
-                <button onClick={() => deleteItem(d.id)} className="btn btn-sm" style={{ fontSize: 9, borderColor: "rgba(77,158,142,.3)", color: "#4d9e8e" }}>Clear</button>
+        {active ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: "var(--text)" }}>{active.date}</div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Field Marketing Weekly Check-in</div>
+              </div>
+              <button className="btn btn-sm" style={{ borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => setShowAddItem(true)}>+ Add Item</button>
+            </div>
+
+            {showAddItem && (
+              <div style={{ padding: "14px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-end" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600, marginBottom: 4 }}>Section</div>
+                  <input value={newItemSection} onChange={e => setNewItemSection(e.target.value)} placeholder="e.g. Luke's Notes" style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", marginBottom: 6 }} />
+                  <div style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600, marginBottom: 4 }}>Item</div>
+                  <input value={newItemText} onChange={e => setNewItemText(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && newItemText.trim()) { addItemToMeeting(selectedMeeting, newItemSection, newItemText.trim()); setNewItemText(""); } }} placeholder="Type agenda item..." style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 8px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+                </div>
+                <button className="btn btn-sm" style={{ borderColor: "rgba(184,150,58,.3)", color: "var(--gold)", fontSize: 10 }} onClick={() => { if (newItemText.trim()) { addItemToMeeting(selectedMeeting, newItemSection, newItemText.trim()); setNewItemText(""); } }}>Add</button>
+                <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => setShowAddItem(false)}>Done</button>
+              </div>
+            )}
+
+            {active.sections.map((sec, si) => (
+              <div key={si} style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8, paddingBottom: 4, borderBottom: "1px solid var(--border2)" }}>{sec.title}</div>
+                {sec.items.map((item, ii) => (
+                  <div key={ii} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border2)" }}>
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, marginTop: 7, opacity: .4 }} />
+                    <div style={{ flex: 1, fontSize: 13, color: "var(--text-dim)", lineHeight: 1.6 }}>{item}</div>
+                    <button onClick={() => addToTodos(item, "")} title="Add to todos" style={{ flexShrink: 0, fontSize: 10, color: "var(--text-muted)", background: "none", border: "1px solid var(--border)", borderRadius: 4, padding: "2px 6px", cursor: "pointer", fontFamily: "var(--bf)", opacity: .5 }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = "var(--gold)"; e.currentTarget.style.color = "var(--gold)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = ".5"; e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>+ Todo</button>
+                  </div>
+                ))}
               </div>
             ))}
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: "60px 40px" }}>
+            <div style={{ fontSize: 40, opacity: .3, marginBottom: 16 }}>📋</div>
+            <div style={{ fontFamily: "var(--df)", fontSize: 24, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>Field Marketing Weekly</div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.7 }}>Select a meeting date or create a new one.</div>
           </div>
         )}
       </div>
