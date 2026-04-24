@@ -736,7 +736,7 @@ input[type="date"].fi{color-scheme:light;}
 .fi:focus,.fsel:focus,.fta:focus{border-color:rgba(212,177,85,.4);box-shadow:0 0 0 3px rgba(212,177,85,.08);}
 .fi::placeholder,.fta::placeholder{color:var(--text-muted);}
 .fsel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238a86a0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:34px;cursor:pointer;}
-.fsel option{background:#121222;}
+.fsel option{background:var(--surface2);}
 .fta{resize:vertical;min-height:74px;line-height:1.65;}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
 
@@ -1918,7 +1918,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                         >
                           {/* Concept preview thumbnail */}
                           {hasConcept && (
-                            <div style={{ height: 120, overflow: "hidden", position: "relative", background: "#111", cursor: "pointer" }} onClick={() => setConceptModal(init.id)}>
+                            <div style={{ height: 120, overflow: "hidden", position: "relative", background: "var(--surface2)", cursor: "pointer" }} onClick={() => setConceptModal(init.id)}>
                               <iframe srcDoc={cachedHtml}
                                 style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }}
                                 sandbox="allow-scripts"
@@ -2783,7 +2783,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
             </div>
             <div style={{ flex: 1, overflow: "hidden" }}>
               {(briefViewer.type || "").startsWith("image/") ? (
-                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111", overflow: "auto" }}>
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", overflow: "auto" }}>
                   <img src={briefViewer.data} alt={briefViewer.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 </div>
               ) : (briefViewer.type || "").includes("pdf") ? (
@@ -4700,7 +4700,7 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
               {showFile && campaign._briefFileData && (
                 <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 400 }}>
                   {(campaign._briefFileType || "").startsWith("image/") ? (
-                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111" }}>
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)" }}>
                       <img src={campaign._briefFileData} alt={campaign._briefFile} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                     </div>
                   ) : (campaign._briefFileType || "").includes("pdf") ? (
@@ -4736,7 +4736,7 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
                   {showFile && campaign._briefFileData && (
                     <div style={{ marginTop: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 400 }}>
                       {(campaign._briefFileType || "").startsWith("image/") ? (
-                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111" }}>
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)" }}>
                           <img src={campaign._briefFileData} alt={campaign._briefFile} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                         </div>
                       ) : (campaign._briefFileType || "").includes("pdf") ? (
@@ -6540,7 +6540,7 @@ function AddInitiativeModal({ pillars, brands, preselectedBrand, existing, onClo
                         <button className="bu-file-rm" onClick={() => { setConceptHtml(null); setConceptName(null); }}>✕</button>
                       </div>
                       {/* Mini preview */}
-                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "#111", border: "1px solid var(--border)" }}>
+                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "var(--surface2)", border: "1px solid var(--border)" }}>
                         <iframe srcDoc={conceptHtml} style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }} sandbox="allow-scripts" title="preview" />
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 60%, rgba(7,7,15,.8) 100%)" }} />
                         <div style={{ position: "absolute", bottom: 8, left: 10, fontSize: 10, color: "var(--text-dim)" }}>Live preview · {conceptName}</div>
@@ -7211,7 +7211,7 @@ ${atob(base64)}` }];
                         <span>🎨</span><div className="bu-file-name">{conceptName}</div>
                         <button className="bu-file-rm" onClick={() => { setConceptHtml(null); setConceptName(null); }}>✕</button>
                       </div>
-                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "#111", border: "1px solid var(--border)" }}>
+                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "var(--surface2)", border: "1px solid var(--border)" }}>
                         <iframe srcDoc={conceptHtml} style={{ width:"200%", height:"200%", border:"none", transform:"scale(0.5)", transformOrigin:"0 0", pointerEvents:"none" }} sandbox="allow-scripts" title="preview" />
                         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom,transparent 60%,rgba(7,7,15,.8) 100%)" }} />
                         <div style={{ position:"absolute", bottom:8, left:10, fontSize:10, color:"var(--text-dim)" }}>Live preview · {conceptName}</div>
@@ -7663,7 +7663,7 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
               {/* File preview */}
               <div style={{ flex: 1, overflow: "hidden", background: "#fff" }}>
                 {(fileViewer.type || "").startsWith("image/") ? (
-                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#111", overflow: "auto" }}>
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface2)", overflow: "auto" }}>
                     <img src={fileViewer.data} alt={fileViewer.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                   </div>
                 ) : (fileViewer.type || "").includes("pdf") ? (
@@ -9067,7 +9067,7 @@ function DesignRequestModal({ brands, teamMembers, onClose, onSave }) {
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <div className="bu-file-row"><span>🎨</span><div className="bu-file-name">{conceptName}</div><button className="bu-file-rm" onClick={() => { setConceptHtml(null); setConceptName(null); }}>✕</button></div>
-                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "#111", border: "1px solid var(--border)" }}>
+                      <div style={{ height: 180, borderRadius: 9, overflow: "hidden", position: "relative", background: "var(--surface2)", border: "1px solid var(--border)" }}>
                         <iframe srcDoc={conceptHtml} style={{ width: "200%", height: "200%", border: "none", transform: "scale(0.5)", transformOrigin: "0 0", pointerEvents: "none" }} sandbox="allow-scripts" title="preview" />
                       </div>
                     </div>
