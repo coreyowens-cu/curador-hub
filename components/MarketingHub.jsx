@@ -10846,6 +10846,22 @@ function FieldAgendaTable({ data, setData, currentUser }) {
     setData(p => { const ms = [...p.meetings]; ms[selectedMeeting] = { ...ms[selectedMeeting], sections: [...ms[selectedMeeting].sections, section] }; return { ...p, meetings: ms }; });
     setAgendaTitle(""); setAgendaSubItems([""]); setShowAddAgenda(false);
   };
+  const deleteSection = (mIdx, sIdx) => {
+    setData(p => { const ms = [...p.meetings]; ms[mIdx] = { ...ms[mIdx], sections: ms[mIdx].sections.filter((_, i) => i !== sIdx) }; return { ...p, meetings: ms }; });
+  };
+  const renameSection = (mIdx, sIdx, title) => {
+    setData(p => { const ms = [...p.meetings]; ms[mIdx] = { ...ms[mIdx], sections: ms[mIdx].sections.map((s, i) => i === sIdx ? { ...s, title } : s) }; return { ...p, meetings: ms }; });
+  };
+  const deleteSubItem = (mIdx, sIdx, iIdx) => {
+    setData(p => { const ms = [...p.meetings]; ms[mIdx] = { ...ms[mIdx], sections: ms[mIdx].sections.map((s, i) => i === sIdx ? { ...s, items: s.items.filter((_, j) => j !== iIdx) } : s) }; return { ...p, meetings: ms }; });
+  };
+  const editSubItem = (mIdx, sIdx, iIdx, text) => {
+    setData(p => { const ms = [...p.meetings]; ms[mIdx] = { ...ms[mIdx], sections: ms[mIdx].sections.map((s, i) => i === sIdx ? { ...s, items: s.items.map((it, j) => j === iIdx ? text : it) } : s) }; return { ...p, meetings: ms }; });
+  };
+  const deleteMeeting = (mIdx) => {
+    setData(p => ({ ...p, meetings: p.meetings.filter((_, i) => i !== mIdx) }));
+    setSelectedMeeting(null);
+  };
   const addTodo = () => {
     if (!todoPopup) return;
     setTodos(p => [...p, { id: `todo-${Date.now()}`, text: todoPopup.text, owner: todoOwner || currentUser?.name || "", urgency: todoUrgency, status: "Not Started", fromDate: todoPopup.fromDate, createdAt: new Date().toISOString() }]);
@@ -10987,21 +11003,30 @@ function FieldAgendaTable({ data, setData, currentUser }) {
                 <div style={{ fontFamily: "var(--df)", fontSize: 28, fontWeight: 300, color: "var(--text)" }}>{active.date}</div>
                 <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Field Marketing Weekly Check-in</div>
               </div>
-              <button className="btn btn-gold" style={{ fontSize: 11 }} onClick={() => { setAgendaTitle(""); setAgendaSubItems([""]); setShowAddAgenda(true); }}>+ Add Agenda Item</button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="btn btn-gold" style={{ fontSize: 11 }} onClick={() => { setAgendaTitle(""); setAgendaSubItems([""]); setShowAddAgenda(true); }}>+ Add Agenda Item</button>
+                <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(224,123,106,.3)", color: "#e07b6a" }} onClick={() => { if (confirm(`Delete meeting ${active.date}?`)) deleteMeeting(selectedMeeting); }}>Delete Meeting</button>
+              </div>
             </div>
             {active.sections.length === 0 && <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontSize: 12 }}>No agenda items yet. Click "+ Add Agenda Item" to start.</div>}
             {active.sections.map((sec, si) => (
               <div key={si} style={{ marginBottom: 24, padding: "16px 18px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, borderLeft: "3px solid var(--gold)" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)", marginBottom: 10 }}>{sec.title}</div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <input value={sec.title} onChange={e => renameSection(selectedMeeting, si, e.target.value)} style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)", background: "transparent", border: "none", outline: "none", fontFamily: "var(--bf)", flex: 1, padding: 0 }} />
+                  <button onClick={() => { if (confirm(`Delete "${sec.title}"?`)) deleteSection(selectedMeeting, si); }} style={{ fontSize: 10, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", opacity: .4, padding: "0 4px" }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".4"}>Delete</button>
+                </div>
                 {sec.items.length === 0 && <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No sub-items</div>}
                 {sec.items.map((item, ii) => (
                   <div key={ii} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: ii < sec.items.length - 1 ? "1px solid var(--border2)" : "none" }}>
                     <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--gold)", flexShrink: 0, marginTop: 7, opacity: .5 }} />
-                    <div style={{ flex: 1, fontSize: 13, color: "var(--text-dim)", lineHeight: 1.65 }}>{item}</div>
+                    <input value={item} onChange={e => editSubItem(selectedMeeting, si, ii, e.target.value)} style={{ flex: 1, fontSize: 13, color: "var(--text-dim)", lineHeight: 1.65, background: "transparent", border: "none", outline: "none", fontFamily: "var(--bf)", padding: 0 }} />
                     <button onClick={() => setTodoPopup({ text: item, fromDate: active.date })} title="Add to todos"
                       style={{ flexShrink: 0, fontSize: 9, color: "var(--text-muted)", background: "none", border: "1px solid var(--border)", borderRadius: 4, padding: "3px 8px", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600, letterSpacing: ".04em", textTransform: "uppercase", transition: "all .15s" }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "#22c55e"; e.currentTarget.style.color = "#22c55e"; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>+ Todo</button>
+                    <button onClick={() => deleteSubItem(selectedMeeting, si, ii)} style={{ flexShrink: 0, fontSize: 12, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", opacity: .3, padding: 0 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".3"}>×</button>
                   </div>
                 ))}
               </div>
