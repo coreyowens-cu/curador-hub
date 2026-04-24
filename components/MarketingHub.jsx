@@ -1020,7 +1020,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [salesContacts, setSalesContacts] = useState([]);
   const [promoCalendar, setPromoCalendar] = useState([]);
   const [popupsData, setPopupsData] = useState([]);
-  const [eventsData, setEventsData] = useState([]);
+  const [eventsData, setEventsData] = useState([]);\n  const [csBoardData, setCsBoardData] = useState([]);
   const [fieldAgenda, setFieldAgenda] = useState([]);
 
 
@@ -1276,7 +1276,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-popups-blitz", true).catch(() => null); if (s) { setPopupsData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/popups-default.json"); setPopupsData(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && popupsData.length > 0) window.storage.set("ns-popups-blitz", JSON.stringify(popupsData), true).catch(() => {}); }, [popupsData, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-events-cal", true).catch(() => null); if (s) { setEventsData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/events-default.json"); setEventsData(await r.json()); } catch {} })(); }, [ready]);
-  useEffect(() => { if (ready && eventsData.length > 0) window.storage.set("ns-events-cal", JSON.stringify(eventsData), true).catch(() => {}); }, [eventsData, ready]);
+  useEffect(() => { if (ready && eventsData.length > 0) window.storage.set("ns-events-cal", JSON.stringify(eventsData), true).catch(() => {}); }, [eventsData, ready]);\
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-cs-board", true).catch(() => null); if (s) { setCsBoardData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/csboard-default.json"); setCsBoardData(await r.json()); } catch {} })(); }, [ready]);\
+  useEffect(() => { if (ready && csBoardData.length > 0) window.storage.set("ns-cs-board", JSON.stringify(csBoardData), true).catch(() => {}); }, [csBoardData, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
@@ -2191,7 +2193,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
 
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
-              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} fieldAgenda={fieldAgenda} setFieldAgenda={setFieldAgenda} currentUser={currentUser} />
+              <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} csBoardData={csBoardData} setCsBoardData={setCsBoardData} fieldAgenda={fieldAgenda} setFieldAgenda={setFieldAgenda} currentUser={currentUser} />
             )}
 
             {/* ── COMPLIANCE ── */}
@@ -9394,7 +9396,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
 // ════════════════════════════════════════════════════════════════════════════
 // FIELD TEAM PORTAL
 // ════════════════════════════════════════════════════════════════════════════
-function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, promoCalendar, setPromoCalendar, popupsData, setPopupsData, eventsData, setEventsData, fieldAgenda, setFieldAgenda, currentUser }) {
+function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTierList, drops, setDrops, creditMemos, setCreditMemos, salesContacts, setSalesContacts, promoCalendar, setPromoCalendar, popupsData, setPopupsData, eventsData, setEventsData, csBoardData, setCsBoardData, fieldAgenda, setFieldAgenda, currentUser }) {
   const [expanded, setExpanded] = useState(() => new Set(tree.filter(n => n.type === "folder").map(n => n.id)));
   const [selectedId, setSelectedId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
@@ -9412,7 +9414,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
   const isPromoCalendarView = selected?.name === "Promo Calendar- Work In Progress";
   const isPopupsView = selected?.name === "Popups and Blitz Calendar";
   const isEventsView = selected?.name === "Events & Event Support";
-  const isAgendaView = selected?.name === "Field Marketing Weekly";
+  const isAgendaView = selected?.name === "Field Marketing Weekly";\
+  const isCsBoardView = selected?.name === "Customer Service Board";
 
   const addNode = (parentId, type) => {
     const siblings = getChildren(parentId);
@@ -9519,6 +9522,8 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
           <PopupsBlitzTable data={popupsData} setData={setPopupsData} currentUser={currentUser} />
         ) : selected && isEventsView ? (
           <EventsTable data={eventsData} setData={setEventsData} currentUser={currentUser} />
+        \) : selected && isCsBoardView ? (\
+          <CSBoardTable data={csBoardData} setData={setCsBoardData} currentUser={currentUser} />\
         ) : selected && isAgendaView ? (
           <FieldAgendaTable data={fieldAgenda} setData={setFieldAgenda} currentUser={currentUser} />
         ) : selected ? (
@@ -11079,6 +11084,133 @@ function FieldAgendaTable({ data, setData, currentUser }) {
             <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.7 }}>Select a meeting or create a new one to view the agenda.</div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── CUSTOMER SERVICE BOARD ────────────────────────────────────────────────
+const CS_STATUSES = ["New", "Initial Contact Made", "Reviewing", "Approved", "Shipped", "Closed"];
+const CS_SOURCES = ["Website", "Email", "Phone", "Social Media", "In-Store", "Other"];
+const CS_BRANDS = ["Curador", "Headchange", "Safe Bet", "Bubbles", "Airo"];
+const CS_ST_CLR = { "New": "#3b82f6", "Initial Contact Made": "#c9a84c", "Reviewing": "#a855f7", "Approved": "#22c55e", "Shipped": "#14b8a6", "Closed": "#8a8a96" };
+const CS_SEC_CLR = { "New Tickets": "#3b82f6", "Under Review": "#a855f7", "Hashtonaut Approved": "#22c55e", "Shipped & Tracking": "#14b8a6", "Closed Tickets": "#8a8a96" };
+const CS_SECTIONS = ["New Tickets", "Under Review", "Hashtonaut Approved", "Shipped & Tracking", "Closed Tickets"];
+
+function CSBoardTable({ data, setData, currentUser }) {
+  const [collapsed, setCollapsed] = useState({});
+  const [didInit, setDidInit] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newItem, setNewItem] = useState({ name: "", section: "New Tickets", brand: "Curador", date: new Date().toISOString().slice(0, 10), ticketSource: "Website", csStatus: "New", email: "", phone: "", reason: "", shippingAddress: "", productIssue: "", carePackageType: "", shirtSize: "" });
+
+  useEffect(() => { if (!didInit && data.length > 0) { setCollapsed({ "Closed Tickets": true }); setDidInit(true); } }, [data, didInit]);
+
+  const updateItem = (id, field, val) => setData(p => p.map(d => d.id === id ? { ...d, [field]: val } : d));
+  const deleteItem = (id) => setData(p => p.filter(d => d.id !== id));
+  const addItem = () => {
+    if (!newItem.name.trim()) return;
+    setData(p => [...p, { ...newItem, id: `cs-${Date.now()}` }]);
+    setCollapsed(p => ({ ...p, [newItem.section]: false }));
+    setShowAddModal(false);
+    setNewItem({ name: "", section: "New Tickets", brand: "Curador", date: new Date().toISOString().slice(0, 10), ticketSource: "Website", csStatus: "New", email: "", phone: "", reason: "", shippingAddress: "", productIssue: "", carePackageType: "", shirtSize: "" });
+  };
+
+  const filtered = search ? data.filter(d => { const s = search.toLowerCase(); return (d.name || "").toLowerCase().includes(s) || (d.email || "").toLowerCase().includes(s) || (d.reason || "").toLowerCase().includes(s); }) : data;
+  const groups = {};
+  filtered.forEach(d => { const s = d.section || "New Tickets"; if (!groups[s]) groups[s] = []; groups[s].push(d); });
+
+  const cs = { padding: "5px 8px", fontSize: 11, borderRight: "1px solid var(--border2)", display: "flex", alignItems: "center", overflow: "hidden" };
+  const is7 = { background: "transparent", border: "none", color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--bf)", outline: "none", width: "100%", padding: 0 };
+  const CSG = "1fr 36px 80px 90px 90px 100px 1fr 110px 1fr 28px";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(12px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)" }}>Customer Service Board</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{filtered.length} ticket{filtered.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button className="btn btn-gold" style={{ fontSize: 11, padding: "6px 14px" }} onClick={() => setShowAddModal(true)}>+ New Ticket</button>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, reason..." style={{ flex: 1, minWidth: 150, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 11, fontFamily: "var(--bf)", outline: "none" }} />
+        </div>
+      </div>
+      {showAddModal && (
+        <div className="overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+            <div className="mhdr" style={{ borderTop: "2px solid #3b82f6", borderRadius: "16px 16px 0 0" }}>
+              <div className="mtitle">New Ticket</div>
+              <button className="mclose" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <div style={{ padding: "18px 20px", overflowY: "auto", maxHeight: "60vh" }}>
+              <div className="ff"><label className="fl">Customer Name *</label><input className="fi" placeholder="Full name" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} autoFocus /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Brand</label><select className="fsel" value={newItem.brand} onChange={e => setNewItem(p => ({ ...p, brand: e.target.value }))}>{CS_BRANDS.map(b => <option key={b}>{b}</option>)}</select></div>
+                <div className="ff"><label className="fl">Source</label><select className="fsel" value={newItem.ticketSource} onChange={e => setNewItem(p => ({ ...p, ticketSource: e.target.value }))}>{CS_SOURCES.map(s => <option key={s}>{s}</option>)}</select></div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Email</label><input className="fi" type="email" placeholder="customer@email.com" value={newItem.email} onChange={e => setNewItem(p => ({ ...p, email: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Phone</label><input className="fi" placeholder="555-123-4567" value={newItem.phone} onChange={e => setNewItem(p => ({ ...p, phone: e.target.value }))} /></div>
+              </div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Section</label><select className="fsel" value={newItem.section} onChange={e => setNewItem(p => ({ ...p, section: e.target.value }))}>{CS_SECTIONS.map(s => <option key={s}>{s}</option>)}</select></div>
+                <div className="ff"><label className="fl">Date</label><input className="fi" type="date" value={newItem.date} onChange={e => setNewItem(p => ({ ...p, date: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Reason for Contact</label><textarea className="fta" rows={3} placeholder="Describe the issue or request..." value={newItem.reason} onChange={e => setNewItem(p => ({ ...p, reason: e.target.value }))} /></div>
+              <div className="frow">
+                <div className="ff"><label className="fl">Care Package Type</label><input className="fi" placeholder="e.g. Merch, Product Replace" value={newItem.carePackageType} onChange={e => setNewItem(p => ({ ...p, carePackageType: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Shirt Size</label><input className="fi" placeholder="S/M/L/XL/XXL" value={newItem.shirtSize} onChange={e => setNewItem(p => ({ ...p, shirtSize: e.target.value }))} /></div>
+              </div>
+            </div>
+            <div className="mfoot"><button className="btn" onClick={() => setShowAddModal(false)}>Cancel</button><button className="btn btn-gold" disabled={!newItem.name.trim()} onClick={addItem}>Create Ticket</button></div>
+          </div>
+        </div>
+      )}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ minWidth: 900 }}>
+          {CS_SECTIONS.map(section => {
+            const items = groups[section] || [];
+            const sColor = CS_SEC_CLR[section] || "var(--gold)";
+            if (items.length === 0 && collapsed[section]) return null;
+            return (
+              <div key={section} style={{ marginBottom: 16 }}>
+                <div onClick={() => setCollapsed(p => ({ ...p, [section]: !p[section] }))} style={{ padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, userSelect: "none" }}>
+                  <span style={{ fontSize: 10, display: "inline-block", transform: collapsed[section] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform .15s", color: sColor }}>▶</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: sColor }}>{section}</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{items.length} ticket{items.length !== 1 ? "s" : ""}</span>
+                </div>
+                {collapsed[section] && items.length > 0 && <div style={{ padding: "4px 16px 12px", fontSize: 11, color: "var(--text-muted)", borderLeft: `3px solid ${sColor}`, marginLeft: 16 }}>{items.length} ticket{items.length !== 1 ? "s" : ""}</div>}
+                {!collapsed[section] && (
+                  <div style={{ borderLeft: `3px solid ${sColor}`, marginLeft: 16 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: CSG, borderBottom: "1px solid var(--border)", background: "var(--surface2)" }}>
+                      {["Ticket", "💬", "Brand", "Date", "Source", "Status", "Email", "Phone", "Reason", ""].map((h, hi) => (
+                        <div key={hi} style={{ padding: "6px 8px", fontSize: 9, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
+                      ))}
+                    </div>
+                    {items.map(d => (
+                      <div key={d.id} style={{ display: "grid", gridTemplateColumns: CSG, borderBottom: "1px solid var(--border2)", minHeight: 36 }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,.02)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <div style={cs}><input value={d.name||""} onChange={e => updateItem(d.id, "name", e.target.value)} style={{ ...is7, fontWeight: 500, color: "var(--text)" }} /></div>
+                        <div style={{ ...cs, overflow: "visible" }}><CommentBubble item={d} title={d.name||""} currentUser={currentUser} onUpdateComments={c => updateItem(d.id, "comments", c)} /></div>
+                        <div style={cs}><select value={d.brand||""} onChange={e => updateItem(d.id, "brand", e.target.value)} style={{ ...is7, fontSize: 10 }}>{CS_BRANDS.map(b => <option key={b}>{b}</option>)}</select></div>
+                        <div style={cs}><input type="date" value={d.date||""} onChange={e => updateItem(d.id, "date", e.target.value)} style={{ ...is7, fontSize: 10, color: "var(--text-muted)" }} /></div>
+                        <div style={cs}><select value={d.ticketSource||""} onChange={e => updateItem(d.id, "ticketSource", e.target.value)} style={{ ...is7, fontSize: 10 }}>{CS_SOURCES.map(s => <option key={s}>{s}</option>)}</select></div>
+                        <div style={cs}><div style={{ width: "100%", padding: "3px 0", borderRadius: 4, textAlign: "center", fontSize: 9, fontWeight: 600, color: "#fff", background: CS_ST_CLR[d.csStatus] || "#888", cursor: "pointer" }} onClick={() => { const next = CS_STATUSES[(CS_STATUSES.indexOf(d.csStatus) + 1) % CS_STATUSES.length]; updateItem(d.id, "csStatus", next); }}>{d.csStatus || "New"}</div></div>
+                        <div style={cs}><input value={d.email||""} onChange={e => updateItem(d.id, "email", e.target.value)} style={{ ...is7, color: "#3b82f6" }} /></div>
+                        <div style={cs}><input value={d.phone||""} onChange={e => updateItem(d.id, "phone", e.target.value)} style={is7} /></div>
+                        <div style={cs}><input value={d.reason||""} onChange={e => updateItem(d.id, "reason", e.target.value)} style={is7} placeholder="Reason..." /></div>
+                        <div style={{ ...cs, borderRight: "none", justifyContent: "center", cursor: "pointer" }} onClick={() => { if (confirm("Delete?")) deleteItem(d.id); }}><span style={{ fontSize: 12, opacity: .3, color: "#e07b6a" }}>×</span></div>
+                      </div>
+                    ))}
+                    <div onClick={() => setShowAddModal(true)} style={{ padding: "8px 12px", cursor: "pointer", fontSize: 11, color: "var(--text-muted)", opacity: .5 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = ".5"}>+ Add ticket</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
