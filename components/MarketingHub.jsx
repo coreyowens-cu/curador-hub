@@ -8518,6 +8518,100 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
 // DESIGN PORTAL
 // ════════════════════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════════════════════
+// SHARED COMMENT MODAL
+// ════════════════════════════════════════════════════════════════════════════
+function CommentModal({ title, comments, currentUser, onAdd, onEdit, onDelete, onClose }) {
+  const [text, setText] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const endRef = useRef();
+  const send = () => { if (!text.trim()) return; onAdd(text.trim(), replyTo); setText(""); setReplyTo(null); setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50); };
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+        <div className="mhdr" style={{ borderTop: "2px solid var(--gold)", borderRadius: "16px 16px 0 0" }}>
+          <div className="mtitle" style={{ fontSize: 15 }}>Comments — {title}</div>
+          <button className="mclose" onClick={onClose}>×</button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", maxHeight: "50vh", display: "flex", flexDirection: "column", gap: 10 }}>
+          {(!comments || comments.length === 0) && <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-muted)", fontSize: 12, fontStyle: "italic" }}>No comments yet. Start the conversation.</div>}
+          {(comments || []).map(c => {
+            const isReply = c.replyTo;
+            const parent = isReply ? (comments || []).find(p => p.id === c.replyTo) : null;
+            const isMe = c.author === currentUser?.name;
+            return (
+              <div key={c.id} style={{ marginLeft: isReply ? 20 : 0, padding: "10px 14px", background: isMe ? "rgba(184,150,58,.06)" : "var(--surface2)", border: `1px solid ${isMe ? "rgba(184,150,58,.15)" : "var(--border2)"}`, borderRadius: 10 }}>
+                {isReply && parent && <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 4, fontStyle: "italic" }}>Replying to {parent.author}</div>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--gold)" }}>{c.author}</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{new Date(c.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })} {new Date(c.ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
+                </div>
+                {editId === c.id ? (
+                  <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                    <input autoFocus value={editText} onChange={e => setEditText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { onEdit(c.id, editText); setEditId(null); } if (e.key === "Escape") setEditId(null); }}
+                      style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
+                    <button className="btn btn-sm" style={{ fontSize: 10, borderColor: "rgba(184,150,58,.3)", color: "var(--gold)" }} onClick={() => { onEdit(c.id, editText); setEditId(null); }}>Save</button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 13, color: "var(--text-dim)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{c.text}</div>
+                    <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                      <button onClick={() => setReplyTo(c.id)} style={{ fontSize: 10, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--bf)" }}>Reply</button>
+                      {isMe && <button onClick={() => { setEditId(c.id); setEditText(c.text); }} style={{ fontSize: 10, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--bf)" }}>Edit</button>}
+                      {isMe && <button onClick={() => onDelete(c.id)} style={{ fontSize: 10, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--bf)" }}>Delete</button>}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <div ref={endRef} />
+        </div>
+        <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)" }}>
+          {replyTo && (
+            <div style={{ fontSize: 10, color: "var(--gold)", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+              Replying to {(comments || []).find(c => c.id === replyTo)?.author || "comment"}
+              <button onClick={() => setReplyTo(null)} style={{ fontSize: 12, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>×</button>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} placeholder="Type a comment..."
+              style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 14px", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none" }} />
+            <button className="btn btn-gold" onClick={send} disabled={!text.trim()}>Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper: renders a comment bubble that opens CommentModal
+function CommentBubble({ item, title, currentUser, onUpdateComments }) {
+  const [open, setOpen] = useState(false);
+  const comments = item.comments || [];
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", width: "100%", height: "100%" }} onClick={e => { e.stopPropagation(); setOpen(true); }}>
+        <span style={{ fontSize: 16, color: comments.length > 0 ? "var(--gold)" : "#555" }}>💬</span>
+        {comments.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, fontSize: 8, background: "var(--gold)", color: "#fff", borderRadius: 100, padding: "0 4px", fontWeight: 700, lineHeight: "14px" }}>{comments.length}</span>}
+      </div>
+      {open && (
+        <CommentModal
+          title={title || item.name || "Item"}
+          comments={comments}
+          currentUser={currentUser}
+          onAdd={(text, replyTo) => onUpdateComments([...comments, { id: `cmt-${Date.now()}`, author: currentUser?.name || "Team", text, ts: new Date().toISOString(), replyTo: replyTo || null }])}
+          onEdit={(id, text) => onUpdateComments(comments.map(c => c.id === id ? { ...c, text } : c))}
+          onDelete={(id) => onUpdateComments(comments.filter(c => c.id !== id))}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
 const DESIGN_STATUSES = ["Not Started", "In Progress", "In Review", "Completed", "On Hold"];
 const DESIGN_SECTIONS = ["Active & Upcoming Launches", "New Ideas — Strain Drops", "Field Kit Design Needs", "Social Content", "Packaging", "Events", "Other"];
 
