@@ -1756,7 +1756,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 </nav>
 
                 {/* Channels / Campaigns hint */}
-                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design" || leftTab === "fieldteam") && (
+                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design" || leftTab === "fieldteam" || leftTab === "packaging") && (
                   <div style={{ padding: "6px 16px 10px", fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                     Content shown on the right →
                   </div>
