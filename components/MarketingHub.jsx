@@ -1694,13 +1694,13 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     {lsbOpen && <span className="lsb-lbl">Field Team</span>}
                   </button>
 
-                  {/\* Packaging \*/}\
-                  <button className={`lsb-tab ${leftTab === "packaging" ? "on" : ""}`} onClick={() => { if (leftTab === "packaging") { setLeftTab("company"); } else { setLeftTab("packaging"); } setActiveBrand(null); }}>\
-                    <span className="lsb-icon">📦</span>\
-                    {lsbOpen && <span className="lsb-lbl">Packaging</span>}\
-                  </button>\
-\
-                  {/\* Team — with inline dropdown \*/}
+                  {/* Packaging */}
+                  <button className={`lsb-tab ${leftTab === "packaging" ? "on" : ""}`} onClick={() => { if (leftTab === "packaging") { setLeftTab("company"); } else { setLeftTab("packaging"); } setActiveBrand(null); }}>
+                    <span className="lsb-icon">📦</span>
+                    {lsbOpen && <span className="lsb-lbl">Packaging</span>}
+                  </button>
+
+                  {/* Team — with inline dropdown */}
                   <button className={`lsb-tab ${leftTab === "team" ? "on" : ""}`} onClick={() => { if (leftTab === "team") { setLeftTab("company"); } else { setLeftTab("team"); } setActiveBrand(null); }}>
                     <span className="lsb-icon">👥</span>
                     {lsbOpen && <span className="lsb-lbl">Team</span>}
