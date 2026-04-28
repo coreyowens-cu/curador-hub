@@ -1300,6 +1300,50 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     return () => window.removeEventListener("switch-to-board", handler);
   }, []);
 
+  // Auto-refresh shared data when tab gains focus
+  useEffect(() => {
+    const reload = async () => {
+      if (!ready || !window.storage) return;
+      try {
+        const [i, ca, cn, dr, ft, ct, tl, cm, sc, pc, pb, ev, fa, cs2] = await Promise.all([
+          window.storage.get("ns-initiatives", true).catch(() => null),
+          window.storage.get("ns-campaigns", true).catch(() => null),
+          window.storage.get("ns-concepts", true).catch(() => null),
+          window.storage.get("ns-design-requests", true).catch(() => null),
+          window.storage.get("ns-fieldteam-tree", true).catch(() => null),
+          window.storage.get("ns-centralized-contacts", true).catch(() => null),
+          window.storage.get("ns-tierlist", true).catch(() => null),
+          window.storage.get("ns-credit-memos", true).catch(() => null),
+          window.storage.get("ns-sales-contacts", true).catch(() => null),
+          window.storage.get("ns-promo-calendar", true).catch(() => null),
+          window.storage.get("ns-popups-blitz", true).catch(() => null),
+          window.storage.get("ns-events-cal", true).catch(() => null),
+          window.storage.get("ns-field-agenda-v2", true).catch(() => null),
+          window.storage.get("ns-cs-board", true).catch(() => null),
+        ]);
+        if (i) setInitiatives(JSON.parse(i.value));
+        if (ca) setCampaigns(JSON.parse(ca.value));
+        if (cn) setConcepts(JSON.parse(cn.value).map(c => ({ ...c })));
+        if (dr) setDesignRequests(JSON.parse(dr.value));
+        if (ft) setFieldTeamTree(JSON.parse(ft.value));
+        if (ct) setCentralizedContacts(JSON.parse(ct.value));
+        if (tl) setTierListData(JSON.parse(tl.value));
+        if (cm) setCreditMemos(JSON.parse(cm.value));
+        if (sc) setSalesContacts(JSON.parse(sc.value));
+        if (pc) setPromoCalendar(JSON.parse(pc.value));
+        if (pb) setPopupsData(JSON.parse(pb.value));
+        if (ev) setEventsData(JSON.parse(ev.value));
+        if (fa) setFieldAgenda(JSON.parse(fa.value));
+        if (cs2) setCsBoardData(JSON.parse(cs2.value));
+      } catch {}
+    };
+    const onFocus = () => reload();
+    window.addEventListener("focus", onFocus);
+    // Also refresh every 60 seconds
+    const interval = setInterval(reload, 60000);
+    return () => { window.removeEventListener("focus", onFocus); clearInterval(interval); };
+  }, [ready]);
+
   // Scroll content to top when switching tabs
   useEffect(() => {
     const el = document.querySelector(".main");
