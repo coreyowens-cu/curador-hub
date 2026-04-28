@@ -2211,6 +2211,11 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
               <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} csBoardData={csBoardData} setCsBoardData={setCsBoardData} fieldAgenda={fieldAgenda} setFieldAgenda={setFieldAgenda} currentUser={currentUser} />
             )}
 
+            {/* ── PACKAGING ── */}
+            {leftTab === "packaging" && !activeBrand && (
+              <PackagingPortal tracker={packagingTracker} setTracker={setPackagingTracker} confirmed={packagingConfirmed} setConfirmed={setPackagingConfirmed} brands={brands} currentUser={currentUser} />
+            )}
+
             {/* ── COMPLIANCE ── */}
             {leftTab === "compliance" && !activeBrand && (
               <CompliancePanel
