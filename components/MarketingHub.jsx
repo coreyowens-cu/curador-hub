@@ -1287,6 +1287,10 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (ready && eventsData.length > 0) window.storage.set("ns-events-cal", JSON.stringify(eventsData), true).catch(() => {}); }, [eventsData, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-cs-board", true).catch(() => null); if (s) { setCsBoardData(JSON.parse(s.value)); return; } try { const r = await fetch("/data/csboard-default.json"); setCsBoardData(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && csBoardData.length > 0) window.storage.set("ns-cs-board", JSON.stringify(csBoardData), true).catch(() => {}); }, [csBoardData, ready]);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-packaging-tracker", true).catch(() => null); if (s) setPackagingTracker(JSON.parse(s.value)); })(); }, [ready]);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-packaging-confirmed", true).catch(() => null); if (s) setPackagingConfirmed(JSON.parse(s.value)); })(); }, [ready]);
+  useEffect(() => { if (ready && packagingTracker.length > 0) window.storage.set("ns-packaging-tracker", JSON.stringify(packagingTracker), true).catch(() => {}); }, [packagingTracker, ready]);
+  useEffect(() => { if (ready && packagingConfirmed.length > 0) window.storage.set("ns-packaging-confirmed", JSON.stringify(packagingConfirmed), true).catch(() => {}); }, [packagingConfirmed, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
@@ -11267,7 +11271,12 @@ function PackagingPortal({ tracker, setTracker, confirmed, setConfirmed, brands,
   const deleteElement = (itemId, elId) => setData(p => p.map(d => d.id === itemId ? { ...d, elements: (d.elements || []).filter(e => e.id !== elId) } : d));
   const addItem = () => {
     if (!newItem.sku.trim()) return;
-    setData(p => [...p, { ...newItem, id: `pkg-${Date.now()}`, comments: [], elements: [], attachment: null, attachmentName: "", createdAt: new Date().toISOString(), createdBy: currentUser?.name || "Team" }]);
+    const defaultElements = [
+      { id: `el-${Date.now()}-1`, name: "", type: "", supplier: "", cost: "", notes: "" },
+      { id: `el-${Date.now()}-2`, name: "", type: "", supplier: "", cost: "", notes: "" },
+      { id: `el-${Date.now()}-3`, name: "", type: "", supplier: "", cost: "", notes: "" },
+    ];
+    setData(p => [...p, { ...newItem, id: `pkg-${Date.now()}`, comments: [], elements: defaultElements, attachment: null, attachmentName: "", createdAt: new Date().toISOString(), createdBy: currentUser?.name || "Team" }]);
     setCollapsed(p => ({ ...p, [newItem.brand]: false }));
     setShowAddModal(false);
     setNewItem({ brand: brandList[0]?.name || "Headchange", sku: "", packageType: PKG_TYPES[0], supplier: "", cost: "", contact: "", status: "Idea", notes: "" });
