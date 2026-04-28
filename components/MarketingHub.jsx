@@ -11471,14 +11471,14 @@ function PackagingPortal({ tracker, setTracker, confirmed, setConfirmed, brands,
                               <button onClick={() => addElement(d.id)} style={{ fontSize: 9, color: "var(--gold)", background: "none", border: "1px solid rgba(184,150,58,.2)", borderRadius: 4, padding: "3px 8px", cursor: "pointer", fontFamily: "var(--bf)", fontWeight: 600 }}>+ Add Element</button>
                             </div>
                             {(d.elements || []).length > 0 && (
-                              <div style={{ border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" }}>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 80px 80px 60px 80px 70px 60px 60px 60px 70px 65px 65px 65px 1fr 24px", background: "var(--surface3)", borderBottom: "1px solid var(--border)" }}>
+                              <div style={{ border: "1px solid var(--border)", borderRadius: 6, overflowX: "auto" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 80px 80px 60px 80px 70px 60px 60px 60px 70px 65px 65px 65px 1fr 24px", background: "var(--surface3)", borderBottom: "1px solid var(--border)", minWidth: 1100 }}>
                                   {["Element", "Type", "Sample", "Hardware", "Specs", "CAD", "Sample Status", "Supplier", "Cost", "Lead Time", "MOQ", "Touch Points", "Casability", "Sizing", "Current Cost", "Notes", ""].map(h => (
                                     <div key={h} style={{ padding: "4px 8px", fontSize: 8, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
                                   ))}
                                 </div>
                                 {(d.elements || []).map(el => (
-                                  <div key={el.id} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 80px 80px 60px 80px 70px 60px 60px 60px 70px 65px 65px 65px 1fr 24px", borderBottom: "1px solid var(--border2)" }}>
+                                  <div key={el.id} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 80px 80px 60px 80px 70px 60px 60px 60px 70px 65px 65px 65px 1fr 24px", borderBottom: "1px solid var(--border2)", minWidth: 1100 }}>
                                     <div style={{ padding: "4px 8px" }}><input value={el.name||""} onChange={e => updateElement(d.id, el.id, "name", e.target.value)} placeholder="e.g. Lid, Label, Insert" style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><input value={el.type||""} onChange={e => updateElement(d.id, el.id, "type", e.target.value)} style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><select value={el.sampleType||""} onChange={e => updateElement(d.id, el.id, "sampleType", e.target.value)} style={{ ...is8, fontSize: 10, color: el.sampleType === "Custom" ? "#a855f7" : el.sampleType === "Stock" ? "#22c55e" : "var(--text-muted)" }}><option value="">—</option><option value="Stock">Stock</option><option value="Custom">Custom</option></select></div>
