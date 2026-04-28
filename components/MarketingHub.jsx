@@ -11380,16 +11380,7 @@ function PackagingPortal({ tracker, setTracker, confirmed, setConfirmed, brands,
                 <div className="ff"><label className="fl">Package Type</label><select className="fsel" value={newItem.packageType} onChange={e => setNewItem(p => ({ ...p, packageType: e.target.value }))}>{PKG_TYPES.map(t => <option key={t}>{t}</option>)}</select></div>
               </div>
               <div className="ff"><label className="fl">SKU / Product Name *</label>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <select className="fsel" value={newItem.sku} onChange={e => setNewItem(p => ({ ...p, sku: e.target.value }))} style={{ flex: 1 }}>
-                    <option value="">Select packaging SKU...</option>
-                    {(BRAND_PKG_SKUS[newItem.brand] || []).map(s => <option key={s} value={s}>{s}</option>)}
-                    <option value="__custom">-- Custom / Other --</option>
-                  </select>
-                  {(newItem.sku === "__custom" || (!BRAND_PKG_SKUS[newItem.brand]?.includes(newItem.sku) && newItem.sku)) && (
-                    <input className="fi" placeholder="Custom SKU name" value={newItem.sku === "__custom" ? "" : newItem.sku} onChange={e => setNewItem(p => ({ ...p, sku: e.target.value }))} style={{ flex: 1 }} autoFocus />
-                  )}
-                </div>
+                <input className="fi" placeholder="e.g. Rosin AIO 0.5g, Concentrate Box, etc." value={newItem.sku} onChange={e => setNewItem(p => ({ ...p, sku: e.target.value }))} autoFocus />
               </div>
               <div className="frow">
                 <div className="ff"><label className="fl">Supplier</label><input className="fi" placeholder="Supplier name" value={newItem.supplier} onChange={e => setNewItem(p => ({ ...p, supplier: e.target.value }))} /></div>
