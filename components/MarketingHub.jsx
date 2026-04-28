@@ -11437,17 +11437,21 @@ function PackagingPortal({ tracker, setTracker, confirmed, setConfirmed, brands,
                             </div>
                             {(d.elements || []).length > 0 && (
                               <div style={{ border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" }}>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 60px 1fr 24px", background: "var(--surface3)", borderBottom: "1px solid var(--border)" }}>
-                                  {["Element", "Type", "Supplier", "Cost", "Notes", ""].map(h => (
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 60px 80px 70px 70px 70px 1fr 24px", background: "var(--surface3)", borderBottom: "1px solid var(--border)" }}>
+                                  {["Element", "Type", "Supplier", "Cost", "Touch Points", "Casability", "Sizing", "Current Cost", "Notes", ""].map(h => (
                                     <div key={h} style={{ padding: "4px 8px", fontSize: 8, fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-muted)", borderRight: "1px solid var(--border2)" }}>{h}</div>
                                   ))}
                                 </div>
                                 {(d.elements || []).map(el => (
-                                  <div key={el.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 60px 1fr 24px", borderBottom: "1px solid var(--border2)" }}>
+                                  <div key={el.id} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px 60px 80px 70px 70px 70px 1fr 24px", borderBottom: "1px solid var(--border2)" }}>
                                     <div style={{ padding: "4px 8px" }}><input value={el.name||""} onChange={e => updateElement(d.id, el.id, "name", e.target.value)} placeholder="e.g. Lid, Label, Insert" style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><input value={el.type||""} onChange={e => updateElement(d.id, el.id, "type", e.target.value)} style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><input value={el.supplier||""} onChange={e => updateElement(d.id, el.id, "supplier", e.target.value)} style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><input value={el.cost||""} onChange={e => updateElement(d.id, el.id, "cost", e.target.value)} style={{ ...is8, fontSize: 10 }} /></div>
+                                    <div style={{ padding: "4px 8px" }}><input value={el.touchPoints||""} onChange={e => updateElement(d.id, el.id, "touchPoints", e.target.value)} placeholder="Touch points" style={{ ...is8, fontSize: 10 }} /></div>
+                                    <div style={{ padding: "4px 8px" }}><input value={el.casability||""} onChange={e => updateElement(d.id, el.id, "casability", e.target.value)} placeholder="Casability" style={{ ...is8, fontSize: 10 }} /></div>
+                                    <div style={{ padding: "4px 8px" }}><input value={el.sizing||""} onChange={e => updateElement(d.id, el.id, "sizing", e.target.value)} placeholder="Sizing" style={{ ...is8, fontSize: 10 }} /></div>
+                                    <div style={{ padding: "4px 8px" }}><input value={el.currentCost||""} onChange={e => updateElement(d.id, el.id, "currentCost", e.target.value)} placeholder="Current $" style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px" }}><input value={el.notes||""} onChange={e => updateElement(d.id, el.id, "notes", e.target.value)} style={{ ...is8, fontSize: 10 }} /></div>
                                     <div style={{ padding: "4px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}><button onClick={() => deleteElement(d.id, el.id)} style={{ fontSize: 10, color: "#e07b6a", background: "none", border: "none", cursor: "pointer", opacity: .4 }}>×</button></div>
                                   </div>
