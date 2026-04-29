@@ -4922,10 +4922,12 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
   const roles = orgRoles?.length ? orgRoles : ORG_ROLES;
   const existingMembers = teamMembers || [];
 
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+
   return (
-    <div className="overlay">
-      <div className="modal" style={{ maxWidth: 480, maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-        <div className="who-inner" style={{ overflowY: "auto", flex: 1 }}>
+    <div className="overlay" style={{ overflow: "hidden" }}>
+      <div className="modal" style={{ maxWidth: 480, maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+        <div className="who-inner" style={{ overflowY: "auto", flex: 1, padding: "24px 24px 0" }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             {preview && mode === "create" ? (
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: preview.bg, color: preview.text, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, margin: "0 auto 12px" }}>{initials(whoName.trim())}</div>
@@ -4965,9 +4967,6 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
                     </button>
                   );
                 })}
-              </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", position: "sticky", bottom: 0, background: "var(--surface)", padding: "12px 0 4px", borderTop: "1px solid var(--border2)" }}>
-                <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Continue as {whoName || "..."} →</button>
               </div>
             </>
           ) : (
@@ -5010,11 +5009,14 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Create Profile →</button>
-              </div>
             </>
           )}
+        </div>
+        {/* Fixed footer */}
+        <div style={{ padding: "12px 24px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", flexShrink: 0, background: "var(--surface)" }}>
+          <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>
+            {mode === "select" ? `Continue as ${whoName || "..."} →` : "Create Profile →"}
+          </button>
         </div>
       </div>
     </div>
