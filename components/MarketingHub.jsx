@@ -4924,8 +4924,8 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
 
   return (
     <div className="overlay">
-      <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-        <div className="who-inner">
+      <div className="modal" style={{ maxWidth: 480, maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+        <div className="who-inner" style={{ overflowY: "auto", flex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             {preview && mode === "create" ? (
               <div style={{ width: 52, height: 52, borderRadius: "50%", background: preview.bg, color: preview.text, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, margin: "0 auto 12px" }}>{initials(whoName.trim())}</div>
@@ -4947,7 +4947,7 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
           {mode === "select" && existingMembers.length > 0 ? (
             <>
               <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600, marginBottom: 8 }}>Select your profile</div>
-              <div style={{ display: "grid", gap: 6, maxHeight: 320, overflowY: "auto", marginBottom: 12 }}>
+              <div style={{ display: "grid", gap: 6, maxHeight: "50vh", overflowY: "auto", marginBottom: 12 }}>
                 {existingMembers.map(m => {
                   const c = m.color?.bg ? m.color : colorForName(m.name);
                   const selected = whoName === m.name;
@@ -4966,7 +4966,7 @@ function WhoModal({ whoName, setWhoName, whoRole, setWhoRole, onSave, orgRoles, 
                   );
                 })}
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", position: "sticky", bottom: 0, background: "var(--surface)", padding: "12px 0 4px", borderTop: "1px solid var(--border2)" }}>
                 <button className="btn btn-gold" disabled={!whoName.trim()} onClick={() => onSave(whoName.trim(), whoRole)}>Continue as {whoName || "..."} →</button>
               </div>
             </>
