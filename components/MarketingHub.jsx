@@ -231,7 +231,7 @@ ${FONTS}
   --df:'Cormorant Garamond',Georgia,serif;--bf:'Inter',system-ui,sans-serif;--mf:'JetBrains Mono',monospace;
   --lsb:272px;--nw:318px;
 }
-html,body{background:var(--bg);min-height:100vh;}
+html,body{background:var(--bg);min-height:100vh;overscroll-behavior:none;}
 .page{display:flex;flex-direction:column;min-height:100vh;background:linear-gradient(160deg, #f4f2ee 0%, #eae7e0 40%, #f0ede6 100%);position:relative;}
 .page::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 30% 20%, rgba(184,150,58,.04) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(120,100,200,.03) 0%, transparent 50%);}
 
@@ -259,10 +259,10 @@ html,body{background:var(--bg);min-height:100vh;}
 .tz-sep{width:1px;height:22px;background:rgba(255,255,255,.08);flex-shrink:0;}
 
 /* BODY */
-.body-row{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px);}
+.body-row{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px);overscroll-behavior:none;}
 
 /* LEFT SIDEBAR */
-.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;}
+.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow-x:hidden;overflow-y:auto;overscroll-behavior:none;}
 .lsb.collapsed{width:48px;}
 .lsb-top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 10px;border-bottom:1px solid var(--border2);flex-shrink:0;min-height:46px;}
 .lsb-top-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);font-weight:500;white-space:nowrap;overflow:hidden;}
@@ -274,7 +274,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .lsb-tab.on{background:var(--gold-dim);color:var(--gold);box-shadow:0 1px 3px rgba(184,150,58,.1);}
 .lsb-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center;}
 .lsb-lbl{overflow:hidden;white-space:nowrap;}
-.lsb-body{flex:1;overflow-y:auto;overscroll-behavior:contain;}
+.lsb-body{flex:1;overflow-y:auto;overscroll-behavior:none;}
 
 /* ── COMPANY PANEL TABS ── */
 .cp-nav{display:flex;flex-direction:column;padding:10px 8px;gap:4px;}
@@ -439,7 +439,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .cmp-empty-icon{font-size:28px;display:block;margin-bottom:10px;opacity:.4;}
 
 /* MAIN */
-.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;overscroll-behavior:contain;}
+.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;overscroll-behavior:none;}
 .main.nr{margin-right:var(--nw);}
 /* ── ASSET LIBRARY (DAM) ── */
 .dam-wrap{display:flex;height:100%;min-height:calc(100vh - 57px);}
