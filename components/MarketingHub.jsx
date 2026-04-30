@@ -1028,7 +1028,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [eventsData, setEventsData] = useState([]);
   const [csBoardData, setCsBoardData] = useState([]);
   const [packagingTracker, setPackagingTracker] = useState([]);
-  const [packagingConfirmed, setPackagingConfirmed] = useState([]);\
+  const [packagingConfirmed, setPackagingConfirmed] = useState([]);
   const [agencySubmissions, setAgencySubmissions] = useState([]);
   const [fieldAgenda, setFieldAgenda] = useState([]);
 
