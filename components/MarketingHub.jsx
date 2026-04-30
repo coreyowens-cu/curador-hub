@@ -259,10 +259,10 @@ html,body{background:var(--bg);min-height:100vh;overscroll-behavior:none;}
 .tz-sep{width:1px;height:22px;background:rgba(255,255,255,.08);flex-shrink:0;}
 
 /* BODY */
-.body-row{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px);}
+.body-row{display:flex;flex:1;height:calc(100vh - 57px);overflow:hidden;}
 
 /* LEFT SIDEBAR */
-.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow-x:hidden;overflow-y:hidden;height:100%;}
 .lsb.collapsed{width:48px;}
 .lsb-top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 10px;border-bottom:1px solid var(--border2);flex-shrink:0;min-height:46px;}
 .lsb-top-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);font-weight:500;white-space:nowrap;overflow:hidden;}
@@ -274,7 +274,7 @@ html,body{background:var(--bg);min-height:100vh;overscroll-behavior:none;}
 .lsb-tab.on{background:var(--gold-dim);color:var(--gold);box-shadow:0 1px 3px rgba(184,150,58,.1);}
 .lsb-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center;}
 .lsb-lbl{overflow:hidden;white-space:nowrap;}
-.lsb-body{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;-webkit-overflow-scrolling:touch;}
+.lsb-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none;-webkit-overflow-scrolling:touch;}
 
 /* ── COMPANY PANEL TABS ── */
 .cp-nav{display:flex;flex-direction:column;padding:10px 8px;gap:4px;}
@@ -439,7 +439,7 @@ html,body{background:var(--bg);min-height:100vh;overscroll-behavior:none;}
 .cmp-empty-icon{font-size:28px;display:block;margin-bottom:10px;opacity:.4;}
 
 /* MAIN */
-.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;overscroll-behavior:none;-webkit-overflow-scrolling:touch;}
+.main{flex:1;min-width:0;min-height:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);overscroll-behavior:none;-webkit-overflow-scrolling:touch;}
 .main.nr{margin-right:var(--nw);}
 /* ── ASSET LIBRARY (DAM) ── */
 .dam-wrap{display:flex;height:100%;min-height:calc(100vh - 57px);}
