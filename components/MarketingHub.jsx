@@ -1028,7 +1028,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   const [eventsData, setEventsData] = useState([]);
   const [csBoardData, setCsBoardData] = useState([]);
   const [packagingTracker, setPackagingTracker] = useState([]);
-  const [packagingConfirmed, setPackagingConfirmed] = useState([]);
+  const [packagingConfirmed, setPackagingConfirmed] = useState([]);\
+  const [agencySubmissions, setAgencySubmissions] = useState([]);
   const [fieldAgenda, setFieldAgenda] = useState([]);
 
 
@@ -1742,6 +1743,23 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                     {lsbOpen && <span className="lsb-lbl">Field Team</span>}
                   </button>
 
+                  {/* Agency Portal */}
+                  <button className={`lsb-tab ${leftTab === "agency" ? "on" : ""}`} onClick={() => { if (leftTab === "agency") { setLeftTab("company"); } else { setLeftTab("agency"); } setActiveBrand(null); }}>
+                    <span className="lsb-icon">🏢</span>
+                    {lsbOpen && <span className="lsb-lbl">Agency Portal</span>}
+                    {lsbOpen && (
+                      <span style={{ marginLeft: "auto", fontSize: 10, opacity: .5, transition: "transform .18s", display: "inline-block", transform: leftTab === "agency" ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                    )}
+                  </button>
+                  {leftTab === "agency" && lsbOpen && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 1, paddingLeft: 8, marginTop: 1 }}>
+                      <button className="lsb-tab on" style={{ paddingLeft: 20, fontSize: 11 }}>
+                        <span className="lsb-icon" style={{ fontSize: 11 }}>📋</span>
+                        <span className="lsb-lbl">Headchange Strategy</span>
+                      </button>
+                    </div>
+                  )}
+
                   {/* Packaging */}
                   <button className={`lsb-tab ${leftTab === "packaging" ? "on" : ""}`} onClick={() => { if (leftTab === "packaging") { setLeftTab("company"); } else { setLeftTab("packaging"); } setActiveBrand(null); }}>
                     <span className="lsb-icon">📦</span>
@@ -1804,7 +1822,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                 </nav>
 
                 {/* Channels / Campaigns hint */}
-                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design" || leftTab === "fieldteam" || leftTab === "packaging") && (
+                {(leftTab === "channels" || leftTab === "campaigns" || leftTab === "concepts" || leftTab === "initiatives" || leftTab === "timeline" || leftTab === "dam" || leftTab === "compliance" || leftTab === "design" || leftTab === "fieldteam" || leftTab === "packaging" || leftTab === "agency") && (
                   <div style={{ padding: "6px 16px 10px", fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>
                     Content shown on the right →
                   </div>
@@ -2257,6 +2275,11 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
             {/* ── FIELD TEAM ── */}
             {leftTab === "fieldteam" && !activeBrand && (
               <FieldTeamPortal tree={fieldTeamTree} setTree={setFieldTeamTree} contacts={centralizedContacts} setContacts={setCentralizedContacts} tierList={tierListData} setTierList={setTierListData} drops={weeklyDrops} setDrops={setWeeklyDrops} creditMemos={creditMemos} setCreditMemos={setCreditMemos} salesContacts={salesContacts} setSalesContacts={setSalesContacts} promoCalendar={promoCalendar} setPromoCalendar={setPromoCalendar} popupsData={popupsData} setPopupsData={setPopupsData} eventsData={eventsData} setEventsData={setEventsData} csBoardData={csBoardData} setCsBoardData={setCsBoardData} fieldAgenda={fieldAgenda} setFieldAgenda={setFieldAgenda} currentUser={currentUser} />
+            )}
+
+            {/* ── AGENCY PORTAL ── */}
+            {leftTab === "agency" && !activeBrand && (
+              <AgencyPortal submissions={agencySubmissions} setSubmissions={setAgencySubmissions} currentUser={currentUser} />
             )}
 
             {/* ── PACKAGING ── */}
@@ -11523,6 +11546,214 @@ function PackagingPortal({ tracker, setTracker, confirmed, setConfirmed, brands,
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── AGENCY PORTAL — HEADCHANGE STRATEGY HOMEWORK ──────────────────────────
+const HC_SECTIONS = [
+  { title: "GOAL SETTING", questions: [
+    "List up to five of your main business challenges (anticipated or current).",
+    "How would you like things to look for the brand this time next year?",
+    "How would you like things to look in 5 years? Feel free to go big.",
+    "How would/will you measure success?",
+    "If there are any specific challenges you would like to discuss/resolve in the workshop, please detail them here.",
+  ]},
+  { title: "COMPETITORS & UNIQUE VALUE PROP", questions: [
+    "Who are some brands that you admire? Why?",
+    "Who do you see as your top 5 competitors? Why?",
+    "What do you envision your business excels at vs. others?",
+    "What is your unique selling point? How do you differentiate from your competitors?",
+  ]},
+  { title: "MISSION + VISION", questions: [
+    "What does your business do?",
+    "How do you do it?",
+    "Why does your business do what it does? (Try to begin your answer with 'We believe...')",
+    "What is the impact you want to make on the world?",
+    "How will your business change the world?",
+  ]},
+  { title: "PERSONAS", questions: [
+    "Who do you see as your target customer?",
+    "How old are they?",
+    "What is their gender?",
+    "Where do they live?",
+    "What is their income?",
+    "What do they value most?",
+    "What are their pet peeves?",
+    "Where do they shop?",
+    "What do they watch / listen to?",
+    "Are there any other customers you think your brand will attract?",
+    "How will you reach out to them? How will they reach out to you?",
+  ]},
+  { title: "VALUES", questions: [
+    "How would you describe your company culture/values?",
+    "What does your business stand for?",
+    "What do you value in your employees?",
+    "What's important to you as individuals?",
+  ]},
+  { title: "POSITIONING", questions: [
+    "List up to 5 of your customers' main problems.",
+    "List how you solve each of these problems.",
+    "List the end benefits of your product/service for the customer.",
+    "What are the primary sources of inspiration behind your brand and the work you share with the world?",
+    "How do you want your incoming clients to feel when they visit or see your brand?",
+    "Select 5 keywords to describe your business (ex. Cool, adventurous, scientific, lively, modern)",
+    "What is the rationale for your business name?",
+    "What is your brand story? (From Origin to Present to Future)",
+  ]},
+];
+
+function AgencyPortal({ submissions, setSubmissions, currentUser }) {
+  const [view, setView] = useState("form"); // "form" | "results"
+  const [formData, setFormData] = useState(() => {
+    const answers = {};
+    HC_SECTIONS.forEach((sec, si) => sec.questions.forEach((_, qi) => { answers[`${si}-${qi}`] = ""; }));
+    return { name: currentUser?.name || "", email: "", business: "Curador Brands", answers };
+  });
+  const [selectedSub, setSelectedSub] = useState(null);
+
+  const updateAnswer = (key, val) => setFormData(p => ({ ...p, answers: { ...p.answers, [key]: val } }));
+  const totalQuestions = HC_SECTIONS.reduce((s, sec) => s + sec.questions.length, 0);
+  const answeredCount = Object.values(formData.answers).filter(a => a.trim()).length;
+
+  const submitForm = () => {
+    if (!formData.name.trim()) return;
+    setSubmissions(p => [...p, { id: `sub-${Date.now()}`, ...formData, submittedAt: new Date().toISOString() }]);
+    setView("results");
+    // Reset form
+    const answers = {};
+    HC_SECTIONS.forEach((sec, si) => sec.questions.forEach((_, qi) => { answers[`${si}-${qi}`] = ""; }));
+    setFormData({ name: currentUser?.name || "", email: "", business: "Curador Brands", answers });
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 57px)", overflow: "hidden" }}>
+      {/* Toolbar */}
+      <div style={{ padding: "12px 24px", borderBottom: "1px solid var(--border)", background: "var(--surface)", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600 }}>Agency Portal</div>
+            <div style={{ fontFamily: "var(--df)", fontSize: 26, fontWeight: 300, color: "var(--text)" }}>Headchange Strategy Homework</div>
+          </div>
+          <div style={{ display: "flex", gap: 2, padding: 2, background: "var(--surface2)", borderRadius: 6, border: "1px solid var(--border)" }}>
+            <button onClick={() => setView("form")} style={{ padding: "5px 14px", fontSize: 11, borderRadius: 4, border: "none", cursor: "pointer", background: view === "form" ? "var(--gold-dim)" : "transparent", color: view === "form" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontWeight: 600 }}>Fill Out Form</button>
+            <button onClick={() => setView("results")} style={{ padding: "5px 14px", fontSize: 11, borderRadius: 4, border: "none", cursor: "pointer", background: view === "results" ? "var(--gold-dim)" : "transparent", color: view === "results" ? "var(--gold)" : "var(--text-muted)", fontFamily: "var(--bf)", fontWeight: 600 }}>Results ({submissions.length})</button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {view === "form" ? (
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "28px 24px" }}>
+            {/* Identity */}
+            <div style={{ padding: "20px 24px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 24, borderLeft: "3px solid var(--gold)" }}>
+              <div className="frow">
+                <div className="ff"><label className="fl">Your Name *</label><input className="fi" value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} /></div>
+                <div className="ff"><label className="fl">Email</label><input className="fi" type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} /></div>
+              </div>
+              <div className="ff"><label className="fl">Business Name</label><input className="fi" value={formData.business} onChange={e => setFormData(p => ({ ...p, business: e.target.value }))} /></div>
+            </div>
+
+            {/* Progress */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+              <div style={{ flex: 1, height: 6, borderRadius: 3, background: "var(--surface2)", overflow: "hidden" }}>
+                <div style={{ width: `${(answeredCount / totalQuestions) * 100}%`, height: "100%", background: "var(--gold)", borderRadius: 3, transition: "width .3s" }} />
+              </div>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>{answeredCount}/{totalQuestions}</span>
+            </div>
+
+            {/* Sections */}
+            {HC_SECTIONS.map((sec, si) => (
+              <div key={si} style={{ marginBottom: 28, padding: "20px 24px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, borderLeft: "3px solid var(--gold)" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 16 }}>{sec.title}</div>
+                {sec.questions.map((q, qi) => (
+                  <div key={qi} style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.5, marginBottom: 6 }}>{qi + 1}. {q}</div>
+                    <textarea value={formData.answers[`${si}-${qi}`] || ""} onChange={e => updateAnswer(`${si}-${qi}`, e.target.value)}
+                      placeholder="Your answer..."
+                      style={{ width: "100%", minHeight: 70, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px", color: "var(--text)", fontSize: 13, fontFamily: "var(--bf)", outline: "none", resize: "vertical", lineHeight: 1.65 }} />
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            {/* Submit */}
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 0 40px", gap: 10 }}>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", alignSelf: "center" }}>{answeredCount}/{totalQuestions} answered</span>
+              <button className="btn btn-gold" style={{ fontSize: 13, padding: "10px 28px" }} disabled={!formData.name.trim()} onClick={submitForm}>Submit Homework</button>
+            </div>
+          </div>
+        ) : (
+          /* Results view */
+          <div style={{ padding: "24px" }}>
+            {submissions.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 40px" }}>
+                <div style={{ fontSize: 40, opacity: .3, marginBottom: 16 }}>📋</div>
+                <div style={{ fontFamily: "var(--df)", fontSize: 22, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>No Submissions Yet</div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Switch to "Fill Out Form" to submit your answers.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 20 }}>
+                {/* Left — submission list */}
+                <div style={{ width: 260, flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase", color: "var(--gold)", fontWeight: 600, marginBottom: 10 }}>Submissions ({submissions.length})</div>
+                  {submissions.map((sub, i) => (
+                    <button key={sub.id} onClick={() => setSelectedSub(i)} style={{
+                      display: "block", width: "100%", padding: "12px 14px", borderRadius: 10, marginBottom: 6, cursor: "pointer", textAlign: "left", fontFamily: "var(--bf)", transition: "all .13s",
+                      border: `1px solid ${selectedSub === i ? "rgba(184,150,58,.3)" : "var(--border)"}`,
+                      background: selectedSub === i ? "var(--gold-dim)" : "var(--surface)",
+                    }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: selectedSub === i ? "var(--gold)" : "var(--text)" }}>{sub.name}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{sub.email || "No email"} · {new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{Object.values(sub.answers).filter(a => a.trim()).length}/{totalQuestions} answered</div>
+                    </button>
+                  ))}
+                </div>
+                {/* Right — selected submission */}
+                <div style={{ flex: 1 }}>
+                  {selectedSub !== null && submissions[selectedSub] ? (() => {
+                    const sub = submissions[selectedSub];
+                    return (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                          <div>
+                            <div style={{ fontFamily: "var(--df)", fontSize: 24, fontWeight: 300, color: "var(--text)" }}>{sub.name}</div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{sub.email} · {sub.business} · {new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button className="btn btn-sm" onClick={() => {
+                              let text = `HEADCHANGE STRATEGY HOMEWORK\n${sub.name} · ${sub.email} · ${sub.business}\nSubmitted: ${new Date(sub.submittedAt).toLocaleDateString()}\n\n`;
+                              HC_SECTIONS.forEach((sec, si) => { text += `\n${sec.title}\n${"─".repeat(40)}\n`; sec.questions.forEach((q, qi) => { text += `\n${qi+1}. ${q}\n${sub.answers[`${si}-${qi}`] || "(no answer)"}\n`; }); });
+                              const blob = new Blob([text], { type: "text/plain" });
+                              const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${sub.name.replace(/\s+/g, "_")}_HC_Strategy.txt`; a.click();
+                            }}>Download</button>
+                            <button className="btn btn-sm" style={{ borderColor: "rgba(224,123,106,.3)", color: "#e07b6a" }} onClick={() => { if (confirm(`Delete ${sub.name}'s submission?`)) { setSubmissions(p => p.filter((_, j) => j !== selectedSub)); setSelectedSub(null); } }}>Delete</button>
+                          </div>
+                        </div>
+                        {HC_SECTIONS.map((sec, si) => (
+                          <div key={si} style={{ marginBottom: 24, padding: "16px 20px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, borderLeft: "3px solid var(--gold)" }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 12 }}>{sec.title}</div>
+                            {sec.questions.map((q, qi) => (
+                              <div key={qi} style={{ marginBottom: 12 }}>
+                                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 3 }}>{qi + 1}. {q}</div>
+                                <div style={{ fontSize: 13, color: sub.answers[`${si}-${qi}`] ? "var(--text)" : "var(--text-muted)", lineHeight: 1.65, padding: "6px 0", fontStyle: sub.answers[`${si}-${qi}`] ? "normal" : "italic" }}>
+                                  {sub.answers[`${si}-${qi}`] || "(no answer)"}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })() : (
+                    <div style={{ textAlign: "center", padding: "60px 40px", color: "var(--text-muted)", fontSize: 13 }}>Select a submission to view.</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
