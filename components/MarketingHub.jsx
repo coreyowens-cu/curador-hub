@@ -1650,7 +1650,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
             </div>
 
             {lsbOpen && (
-              <div className="lsb-body" onWheel={e => e.stopPropagation()}>
+              <div className="lsb-body">
                 {/* CÚRADOR + brands always visible at top */}
                 <CompanyPanel company={company}
                   brands={brands}
@@ -1844,7 +1844,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           </aside>
 
           {/* MAIN */}
-          <main ref={mainRef} className={`main ${notesOpen ? "nr" : ""} ${markerMode ? "marker-active" : ""}`} onWheel={e => e.stopPropagation()}>
+          <main ref={mainRef} className={`main ${notesOpen ? "nr" : ""} ${markerMode ? "marker-active" : ""}`}>
             <div className="hub">
 
             {/* ── TEAM VIEW ── */}
