@@ -262,7 +262,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .body-row{display:flex;flex:1;overflow:hidden;height:calc(100vh - 57px);}
 
 /* LEFT SIDEBAR */
-.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.lsb{width:var(--lsb);flex-shrink:0;border-right:1px solid var(--border);background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(1.4);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden;overscroll-behavior:contain;}
 .lsb.collapsed{width:48px;}
 .lsb-top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 10px;border-bottom:1px solid var(--border2);flex-shrink:0;min-height:46px;}
 .lsb-top-title{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);font-weight:500;white-space:nowrap;overflow:hidden;}
@@ -439,7 +439,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .cmp-empty-icon{font-size:28px;display:block;margin-bottom:10px;opacity:.4;}
 
 /* MAIN */
-.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;}
+.main{flex:1;min-width:0;overflow:auto;transition:margin-right .35s cubic-bezier(.4,0,.2,1);height:100%;overscroll-behavior:contain;}
 .main.nr{margin-right:var(--nw);}
 /* ── ASSET LIBRARY (DAM) ── */
 .dam-wrap{display:flex;height:100%;min-height:calc(100vh - 57px);}
@@ -948,20 +948,30 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     resetNewMember(); setShowAddMember(false);
   };
 
+  // Map Gmail names to team member names
+  const NAME_MAP = { "Sean Baltzell": "Sean" };
+
   // Auto-set user from login — restore profile immediately
   useEffect(() => {
     if (initialUserName) {
+      const mappedName = NAME_MAP[initialUserName] || initialUserName;
       try {
         const existing = localStorage.getItem("ns_ns-user");
         const parsed = existing ? JSON.parse(existing) : null;
-        if (parsed?.name) {
+        // If stored name matches mapped name or original, use it
+        if (parsed?.name && (parsed.name === mappedName || parsed.name === initialUserName)) {
+          // Update to mapped name if different
+          if (parsed.name !== mappedName) {
+            parsed.name = mappedName;
+            localStorage.setItem("ns_ns-user", JSON.stringify(parsed));
+          }
           setCurrentUser(parsed);
           setShowWhoModal(false);
           return;
         }
       } catch {}
-      // No profile yet — pre-fill name and show the select/create modal
-      setWhoName(initialUserName);
+      // No profile yet — pre-fill with mapped name and show the select/create modal
+      setWhoName(mappedName);
       setShowWhoModal(true);
     }
   }, [initialUserName]);
