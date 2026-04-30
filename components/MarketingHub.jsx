@@ -1349,6 +1349,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => {
     const el = document.querySelector(".main");
     if (el) el.scrollTo(0, 0);
+    // Also scroll after a tick in case content renders late
+    setTimeout(() => { const el2 = document.querySelector(".main"); if (el2) el2.scrollTo(0, 0); }, 50);
   }, [leftTab]);
 
   const saveUser = (name, role) => {
