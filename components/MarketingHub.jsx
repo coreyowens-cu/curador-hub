@@ -274,7 +274,7 @@ html,body{background:var(--bg);min-height:100vh;}
 .lsb-tab.on{background:var(--gold-dim);color:var(--gold);box-shadow:0 1px 3px rgba(184,150,58,.1);}
 .lsb-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center;}
 .lsb-lbl{overflow:hidden;white-space:nowrap;}
-.lsb-body{flex:1;overflow-y:auto;}
+.lsb-body{flex:1;overflow-y:auto;overscroll-behavior:contain;}
 
 /* ── COMPANY PANEL TABS ── */
 .cp-nav{display:flex;flex-direction:column;padding:10px 8px;gap:4px;}
