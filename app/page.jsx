@@ -13,7 +13,9 @@ export default function Page() {
   const [hubState, setHubState] = useState({});
 
   useEffect(() => {
-    window.storage = storage;
+    if (process.env.NODE_ENV !== "production") {
+      window.storage = storage;
+    }
   }, []);
 
   const syncState = useCallback(async () => {

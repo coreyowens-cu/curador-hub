@@ -600,7 +600,7 @@ function AssetCard({ asset, onOpen, onDel, onNote }) {
         <span className="dam-card-fallback">{TYPE_EMOJI[asset.type]||"📁"}</span>
         <div className="dam-card-acts">
           {onNote && <button className="dam-act" onClick={e=>{e.stopPropagation();onNote({section:"DAM",type:"Asset",label:asset.name,id:asset.id});}}>✎</button>}
-          <button className="dam-act" onClick={e=>{e.stopPropagation();window.open(asset.driveUrl,"_blank");}}>↗</button>
+          <button className="dam-act" onClick={e=>{e.stopPropagation();window.open(asset.driveUrl,"_blank","noopener,noreferrer");}}>↗</button>
           {onDel && <button className="dam-act del" onClick={e=>{e.stopPropagation();onDel();}}>✕</button>}
         </div>
       </div>
@@ -634,7 +634,7 @@ function AssetRow({ asset, onOpen, onDel, onNote }) {
       <div className="dam-row-date">{fmtDate(asset.addedAt)}</div>
       <div className="dam-row-acts" onClick={e=>e.stopPropagation()}>
         {onNote && <button className="dam-act" onClick={()=>onNote({section:"DAM",type:"Asset",label:asset.name,id:asset.id})}>✎</button>}
-        <button className="dam-act" onClick={()=>window.open(asset.driveUrl,"_blank")}>↗</button>
+        <button className="dam-act" onClick={()=>window.open(asset.driveUrl,"_blank","noopener,noreferrer")}>↗</button>
         {onDel && <button className="dam-act del" onClick={onDel}>✕</button>}
       </div>
     </div>
@@ -786,7 +786,7 @@ function PreviewPanel({ asset, onClose, onNote, onDel }) {
             <div className="dam-noembed">
               <div style={{fontSize:64,opacity:.18}}>{TYPE_EMOJI[asset.type]||"📁"}</div>
               <div style={{fontSize:13,color:"rgba(255,255,255,.38)"}}>{asset.name}</div>
-              <button className="dam-plink" style={{width:"auto",padding:"9px 20px"}} onClick={()=>window.open(asset.driveUrl,"_blank")}>Open in Google Drive ↗</button>
+              <button className="dam-plink" style={{width:"auto",padding:"9px 20px"}} onClick={()=>window.open(asset.driveUrl,"_blank","noopener,noreferrer")}>Open in Google Drive ↗</button>
             </div>
           )}
         </div>
@@ -803,7 +803,7 @@ function PreviewPanel({ asset, onClose, onNote, onDel }) {
           {asset.tags&&<><div className="dam-mlbl">Tags</div><div style={{marginBottom:12}}>{asset.tags.split(",").map(t=>t.trim()).filter(Boolean).map(t=><span key={t} className="dam-tag">{t}</span>)}</div></>}
           {asset.notes&&<><div className="dam-mlbl">Notes</div><div style={{fontSize:12,color:"rgba(255,255,255,.5)",lineHeight:1.65,marginBottom:12}}>{asset.notes}</div></>}
           <div style={{marginTop:8}}>
-            <button className="dam-plink" onClick={()=>window.open(asset.driveUrl,"_blank")}>🗂 View in Google Drive ↗</button>
+            <button className="dam-plink" onClick={()=>window.open(asset.driveUrl,"_blank","noopener,noreferrer")}>🗂 View in Google Drive ↗</button>
             {onNote&&<button className="dam-pnote" onClick={()=>setNoteOpen(o=>!o)}>✎ Add Note</button>}
             {onDel&&<button className="dam-pdel" onClick={onDel}>✕ Remove Asset</button>}
           </div>
