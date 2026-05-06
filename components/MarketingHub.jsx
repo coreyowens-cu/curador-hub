@@ -1302,6 +1302,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-packaging-confirmed", true).catch(() => null); if (s) setPackagingConfirmed(JSON.parse(s.value)); })(); }, [ready]);
   useEffect(() => { if (ready && packagingTracker.length > 0) window.storage.set("ns-packaging-tracker", JSON.stringify(packagingTracker), true).catch(() => {}); }, [packagingTracker, ready]);
   useEffect(() => { if (ready && packagingConfirmed.length > 0) window.storage.set("ns-packaging-confirmed", JSON.stringify(packagingConfirmed), true).catch(() => {}); }, [packagingConfirmed, ready]);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) setAgencySubmissions(JSON.parse(s.value)); })(); }, [ready]);
+  useEffect(() => { if (ready) window.storage.set("ns-agency-submissions", JSON.stringify(agencySubmissions), true).catch(() => {}); }, [agencySubmissions, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
@@ -1316,7 +1318,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     const reload = async () => {
       if (!ready || !window.storage) return;
       try {
-        const [i, ca, cn, dr, ft, ct, tl, cm, sc, pc, pb, ev, fa, cs2] = await Promise.all([
+        const [i, ca, cn, dr, ft, ct, tl, cm, sc, pc, pb, ev, fa, cs2, ag] = await Promise.all([
           window.storage.get("ns-initiatives", true).catch(() => null),
           window.storage.get("ns-campaigns", true).catch(() => null),
           window.storage.get("ns-concepts", true).catch(() => null),
@@ -1331,6 +1333,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           window.storage.get("ns-events-cal", true).catch(() => null),
           window.storage.get("ns-field-agenda-v2", true).catch(() => null),
           window.storage.get("ns-cs-board", true).catch(() => null),
+          window.storage.get("ns-agency-submissions", true).catch(() => null),
         ]);
         if (i) setInitiatives(JSON.parse(i.value));
         if (ca) setCampaigns(JSON.parse(ca.value));
@@ -1346,6 +1349,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         if (ev) setEventsData(JSON.parse(ev.value));
         if (fa) setFieldAgenda(JSON.parse(fa.value));
         if (cs2) setCsBoardData(JSON.parse(cs2.value));
+        if (ag) setAgencySubmissions(JSON.parse(ag.value));
       } catch {}
     };
     const onFocus = () => reload();
