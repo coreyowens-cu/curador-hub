@@ -26,6 +26,20 @@ const ALLOWED_KEYS = new Set<string>([
   "ns-compliance-overview",
   "ns-user",
   "ns-agency-submissions",
+  "ns-tierlist",
+  "ns-weekly-drops",
+  "ns-credit-memos",
+  "ns-sales-contacts",
+  "ns-promo-calendar",
+  "ns-popups-blitz",
+  "ns-events-cal",
+  "ns-cs-board",
+  "ns-packaging-tracker",
+  "ns-packaging-confirmed",
+  "ns-design-requests",
+  "ns-fieldteam-tree",
+  "ns-centralized-contacts",
+  "ns-field-agenda-v2",
 ]);
 
 const ALLOWED_PREFIXES = ["ns-concept-html-", "ns-camp-html-", "ns-ch-"];

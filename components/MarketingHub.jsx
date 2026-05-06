@@ -1303,7 +1303,8 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (ready && packagingTracker.length > 0) window.storage.set("ns-packaging-tracker", JSON.stringify(packagingTracker), true).catch(() => {}); }, [packagingTracker, ready]);
   useEffect(() => { if (ready && packagingConfirmed.length > 0) window.storage.set("ns-packaging-confirmed", JSON.stringify(packagingConfirmed), true).catch(() => {}); }, [packagingConfirmed, ready]);
   const agencyLoadedRef = useRef(false);
-  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) { try { setAgencySubmissions(JSON.parse(s.value)); } catch {} } agencyLoadedRef.current = true; })(); }, [ready]);
+  const normalizeAgencySubs = (raw) => Array.isArray(raw) ? raw.filter(s => s && typeof s === "object" && typeof s.id === "string").map(s => ({ ...s, answers: s.answers && typeof s.answers === "object" ? s.answers : {} })) : [];
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) { try { setAgencySubmissions(normalizeAgencySubs(JSON.parse(s.value))); } catch {} } agencyLoadedRef.current = true; })(); }, [ready]);
   useEffect(() => { if (!ready || !agencyLoadedRef.current) return; window.storage.set("ns-agency-submissions", JSON.stringify(agencySubmissions), true).catch(() => {}); }, [agencySubmissions, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
@@ -1350,7 +1351,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         if (ev) setEventsData(JSON.parse(ev.value));
         if (fa) setFieldAgenda(JSON.parse(fa.value));
         if (cs2) setCsBoardData(JSON.parse(cs2.value));
-        if (ag) setAgencySubmissions(JSON.parse(ag.value));
+        if (ag) { try { setAgencySubmissions(normalizeAgencySubs(JSON.parse(ag.value))); } catch {} }
       } catch {}
     };
     const onFocus = () => reload();
