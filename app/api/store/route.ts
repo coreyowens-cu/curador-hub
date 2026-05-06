@@ -25,6 +25,7 @@ const ALLOWED_KEYS = new Set<string>([
   "ns-compliance-links",
   "ns-compliance-overview",
   "ns-user",
+  "ns-agency-submissions",
 ]);
 
 const ALLOWED_PREFIXES = ["ns-concept-html-", "ns-camp-html-", "ns-ch-"];
