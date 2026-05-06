@@ -1302,8 +1302,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-packaging-confirmed", true).catch(() => null); if (s) setPackagingConfirmed(JSON.parse(s.value)); })(); }, [ready]);
   useEffect(() => { if (ready && packagingTracker.length > 0) window.storage.set("ns-packaging-tracker", JSON.stringify(packagingTracker), true).catch(() => {}); }, [packagingTracker, ready]);
   useEffect(() => { if (ready && packagingConfirmed.length > 0) window.storage.set("ns-packaging-confirmed", JSON.stringify(packagingConfirmed), true).catch(() => {}); }, [packagingConfirmed, ready]);
-  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) setAgencySubmissions(JSON.parse(s.value)); })(); }, [ready]);
-  useEffect(() => { if (ready) window.storage.set("ns-agency-submissions", JSON.stringify(agencySubmissions), true).catch(() => {}); }, [agencySubmissions, ready]);
+  const agencyLoadedRef = useRef(false);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) { try { setAgencySubmissions(JSON.parse(s.value)); } catch {} } agencyLoadedRef.current = true; })(); }, [ready]);
+  useEffect(() => { if (!ready || !agencyLoadedRef.current) return; window.storage.set("ns-agency-submissions", JSON.stringify(agencySubmissions), true).catch(() => {}); }, [agencySubmissions, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
