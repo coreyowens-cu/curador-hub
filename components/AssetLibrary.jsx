@@ -392,7 +392,7 @@ export default function AssetLibrary({
                     <span className="dam-card-fb">{DAM_TYPE_EMOJI[a.type]||"📁"}</span>
                     <div className="dam-card-acts">
                       {onNote && <button className="dam-iact" onClick={e=>{e.stopPropagation();onNote({section:"Asset Library",type:"Asset",label:a.name,id:a.id});}}>✎</button>}
-                      <button className="dam-iact" onClick={e=>{e.stopPropagation();window.open(a.driveUrl,"_blank");}}>↗</button>
+                      <button className="dam-iact" onClick={e=>{e.stopPropagation();window.open(a.driveUrl,"_blank","noopener,noreferrer");}}>↗</button>
                       {isAdmin && <button className="dam-iact del" onClick={e=>{e.stopPropagation();delAsset(a.id);}}>✕</button>}
                     </div>
                   </div>
@@ -422,7 +422,7 @@ export default function AssetLibrary({
                     <div className="dam-row-date">{damFmtDate(a.addedAt)}</div>
                     <div className="dam-row-acts" onClick={e=>e.stopPropagation()}>
                       {onNote && <button className="dam-iact" onClick={()=>onNote({section:"Asset Library",type:"Asset",label:a.name,id:a.id})}>✎</button>}
-                      <button className="dam-iact" onClick={()=>window.open(a.driveUrl,"_blank")}>↗</button>
+                      <button className="dam-iact" onClick={()=>window.open(a.driveUrl,"_blank","noopener,noreferrer")}>↗</button>
                       {isAdmin && <button className="dam-iact del" onClick={()=>delAsset(a.id)}>✕</button>}
                     </div>
                   </div>
@@ -573,7 +573,7 @@ function DamPreview({ asset, onClose, onNote, onDel }) {
             <div className="dam-noembed">
               <div style={{fontSize:64,opacity:.18}}>{DAM_TYPE_EMOJI[asset.type]||"📁"}</div>
               <div style={{fontSize:13,color:"var(--text-dim)"}}>{asset.name}</div>
-              <button className="dam-plink" style={{width:"auto",padding:"9px 20px"}} onClick={()=>window.open(asset.driveUrl,"_blank")}>Open in Google Drive ↗</button>
+              <button className="dam-plink" style={{width:"auto",padding:"9px 20px"}} onClick={()=>window.open(asset.driveUrl,"_blank","noopener,noreferrer")}>Open in Google Drive ↗</button>
             </div>
           )}
         </div>
@@ -588,7 +588,7 @@ function DamPreview({ asset, onClose, onNote, onDel }) {
           {asset.tags&&<><div className="dam-mlbl">Tags</div><div style={{marginBottom:12}}>{asset.tags.split(",").map(t=>t.trim()).filter(Boolean).map(t=><span key={t} className="dam-ptag">{t}</span>)}</div></>}
           {asset.notes&&<><div className="dam-mlbl">Notes</div><div style={{fontSize:12,color:"var(--text-dim)",lineHeight:1.65,marginBottom:12}}>{asset.notes}</div></>}
           <div style={{marginTop:8}}>
-            <button className="dam-plink" onClick={()=>window.open(asset.driveUrl,"_blank")}>🗂 View in Google Drive ↗</button>
+            <button className="dam-plink" onClick={()=>window.open(asset.driveUrl,"_blank","noopener,noreferrer")}>🗂 View in Google Drive ↗</button>
             {onNote&&<button className="dam-pnote" onClick={()=>setNoteOpen(o=>!o)}>✎ Add Note</button>}
             {onDel&&<button className="dam-pdel" onClick={onDel}>✕ Remove Asset</button>}
           </div>

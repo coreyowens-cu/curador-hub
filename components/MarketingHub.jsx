@@ -1302,6 +1302,9 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-packaging-confirmed", true).catch(() => null); if (s) setPackagingConfirmed(JSON.parse(s.value)); })(); }, [ready]);
   useEffect(() => { if (ready && packagingTracker.length > 0) window.storage.set("ns-packaging-tracker", JSON.stringify(packagingTracker), true).catch(() => {}); }, [packagingTracker, ready]);
   useEffect(() => { if (ready && packagingConfirmed.length > 0) window.storage.set("ns-packaging-confirmed", JSON.stringify(packagingConfirmed), true).catch(() => {}); }, [packagingConfirmed, ready]);
+  const agencyLoadedRef = useRef(false);
+  useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-agency-submissions", true).catch(() => null); if (s) { try { setAgencySubmissions(JSON.parse(s.value)); } catch {} } agencyLoadedRef.current = true; })(); }, [ready]);
+  useEffect(() => { if (!ready || !agencyLoadedRef.current) return; window.storage.set("ns-agency-submissions", JSON.stringify(agencySubmissions), true).catch(() => {}); }, [agencySubmissions, ready]);
   useEffect(() => { if (!ready) return; (async () => { const s = await window.storage.get("ns-field-agenda-v2", true).catch(() => null); if (s) { setFieldAgenda(JSON.parse(s.value)); return; } try { const r = await fetch("/data/fieldagenda-v2.json"); setFieldAgenda(await r.json()); } catch {} })(); }, [ready]);
   useEffect(() => { if (ready && fieldAgenda?.meetings) window.storage.set("ns-field-agenda-v2", JSON.stringify(fieldAgenda), true).catch(() => {}); }, [fieldAgenda, ready]);
 
@@ -1316,7 +1319,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
     const reload = async () => {
       if (!ready || !window.storage) return;
       try {
-        const [i, ca, cn, dr, ft, ct, tl, cm, sc, pc, pb, ev, fa, cs2] = await Promise.all([
+        const [i, ca, cn, dr, ft, ct, tl, cm, sc, pc, pb, ev, fa, cs2, ag] = await Promise.all([
           window.storage.get("ns-initiatives", true).catch(() => null),
           window.storage.get("ns-campaigns", true).catch(() => null),
           window.storage.get("ns-concepts", true).catch(() => null),
@@ -1331,6 +1334,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
           window.storage.get("ns-events-cal", true).catch(() => null),
           window.storage.get("ns-field-agenda-v2", true).catch(() => null),
           window.storage.get("ns-cs-board", true).catch(() => null),
+          window.storage.get("ns-agency-submissions", true).catch(() => null),
         ]);
         if (i) setInitiatives(JSON.parse(i.value));
         if (ca) setCampaigns(JSON.parse(ca.value));
@@ -1346,6 +1350,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
         if (ev) setEventsData(JSON.parse(ev.value));
         if (fa) setFieldAgenda(JSON.parse(fa.value));
         if (cs2) setCsBoardData(JSON.parse(cs2.value));
+        if (ag) setAgencySubmissions(JSON.parse(ag.value));
       } catch {}
     };
     const onFocus = () => reload();
@@ -1702,7 +1707,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                           {item.id === "timeline" && (
                             <button
                               title="Pop out timeline"
-                              onClick={() => window.open("/campaign-timeline", "_blank", "width=1500,height=800,resizable=yes,scrollbars=yes")}
+                              onClick={() => window.open("/campaign-timeline", "_blank", "width=1500,height=800,resizable=yes,scrollbars=yes,noopener,noreferrer")}
                               style={{ width: 22, height: 22, borderRadius: 5, border: "1px solid rgba(255,255,255,.08)", background: "transparent", color: "var(--text-muted)", fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 4, transition: "all .15s" }}
                               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,.4)"; e.currentTarget.style.color = "var(--gold)"; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.08)"; e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -2144,7 +2149,7 @@ export default function MarketingHub({ initialUserName, isSessionAdmin }) {
                       </div>
                       <button
                         title="Open timeline in its own window"
-                        onClick={() => window.open("/campaign-timeline", "_blank", "width=1500,height=800,resizable=yes,scrollbars=yes")}
+                        onClick={() => window.open("/campaign-timeline", "_blank", "width=1500,height=800,resizable=yes,scrollbars=yes,noopener,noreferrer")}
                         style={{ marginTop: 8, padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 12, cursor: "pointer", letterSpacing: ".04em", transition: "all .15s", display: "flex", alignItems: "center", gap: 6 }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,.4)"; e.currentTarget.style.color = "var(--gold)"; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}
@@ -4774,7 +4779,7 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             {onViewConcept && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={onViewConcept}>🎨 View Concept</button>}
             {campaignHtml && <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }} onClick={() => setShowHtml(o => !o)}>{showHtml ? "Hide HTML" : "📄 View HTML"}</button>}
-            {campaignHtml && <button className="btn btn-sm" onClick={() => { const w = window.open("","_blank"); if(w){w.document.open();w.document.write(campaignHtml);w.document.close();} }}>↗ Full Screen</button>}
+            {campaignHtml && <button className="btn btn-sm" onClick={() => { const url = URL.createObjectURL(new Blob([campaignHtml], { type: "text/html" })); window.open(url, "_blank", "noopener,noreferrer"); }}>↗ Full Screen</button>}
             {onHtmlAttach && <button className="btn btn-sm" onClick={() => htmlInputRef.current?.click()}>📎 {campaign._htmlName ? "Replace HTML" : "Attach HTML"}</button>}
             <input ref={htmlInputRef} type="file" accept=".html,text/html" style={{ display:"none" }} onChange={handleHtmlFile} />
             <button className="btn btn-sm" onClick={() => setNoteOpen(o => !o)} style={{ borderColor: noteOpen ? "var(--gold)":"var(--border)", color: noteOpen ? "var(--gold)":"var(--text-muted)" }}>✎ Note</button>
@@ -4898,7 +4903,7 @@ function CampaignDetailModal({ campaign, pillars, onClose, onSaveAsInit, onNote,
           )}
           {showHtml && campaignHtml && (
             <div style={{ marginTop: 16, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", height: 520 }}>
-              <iframe srcDoc={campaignHtml} title={campaign._htmlName || campaign.title} sandbox="allow-scripts allow-same-origin allow-forms" style={{ width: "100%", height: "100%", border: "none", background: "#fff" }} />
+              <iframe srcDoc={campaignHtml} title={campaign._htmlName || campaign.title} sandbox="allow-scripts allow-forms" style={{ width: "100%", height: "100%", border: "none", background: "#fff" }} />
             </div>
           )}
         </div>
@@ -6135,10 +6140,8 @@ ${MO_CANNABIS_COMPLIANCE_KB}`,
                 <div style={{ display: "flex", gap: 6, borderTop: "1px solid var(--border2)", paddingTop: 10 }}>
                   <button onClick={() => {
                     if (isDoc) {
-                      const w = window.open();
-                      if (item.data.startsWith("data:")) { w.document.write(`<iframe src="${item.data}" style="width:100%;height:100vh;border:none;"></iframe>`); }
-                      else { w.location = item.data; }
-                    } else { window.open(item.url, "_blank"); }
+                      window.open(item.data, "_blank", "noopener,noreferrer");
+                    } else { window.open(item.url, "_blank", "noopener,noreferrer"); }
                   }} style={{ flex: 1, padding: "6px 0", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-muted)", fontFamily: "var(--bf)", fontSize: 11, cursor: "pointer", transition: "all .13s" }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = catColor + "55"; e.currentTarget.style.color = catColor; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
@@ -6268,7 +6271,7 @@ function DetailModal({ init, getAccent, onClose, onFileClick, onCreateCampaign, 
             <div className="fpbar">
               <span>📎</span>
               <span className="fpname">{init.fileName || "Attached file"}</span>
-              <button className="fpact" onClick={() => { const w = window.open(); if (init.fileUrl.startsWith("data:")) { w.document.write(`<iframe src="${init.fileUrl}" style="width:100%;height:100vh;border:none;"></iframe>`); } else { w.location = init.fileUrl; } }}>Open ↗</button>
+              <button className="fpact" onClick={() => { window.open(init.fileUrl, "_blank", "noopener,noreferrer"); }}>Open ↗</button>
               <button className="fpact" onClick={() => { onClose(); onFileClick(init.id); }}>Swap</button>
             </div>
           )}
@@ -6971,7 +6974,7 @@ function ConceptViewerModal({ init, onClose, onUpload, onNote }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn btn-sm" onClick={() => { const blob = new Blob([init.htmlConcept], { type: "text/html" }); window.open(URL.createObjectURL(blob), "_blank"); }}>Open Full Screen ↗</button>
+          <button className="btn btn-sm" onClick={() => { const blob = new Blob([init.htmlConcept], { type: "text/html" }); window.open(URL.createObjectURL(blob), "_blank", "noopener,noreferrer"); }}>Open Full Screen ↗</button>
           <button className="btn btn-sm" onClick={onUpload}>↺ Replace</button>
           <button className="btn btn-sm" onClick={() => setNoteOpen(o => !o)} style={{ borderColor: noteOpen ? "var(--gold)":"rgba(255,255,255,.1)", color: noteOpen ? "var(--gold)":"var(--text-muted)" }}>✎ Note</button>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 7, border: "1px solid rgba(255,255,255,.1)", background: "transparent", color: "var(--text-muted)", cursor: "pointer", fontSize: 16, display: "grid", placeItems: "center" }}>×</button>
@@ -6993,7 +6996,7 @@ function ConceptViewerModal({ init, onClose, onUpload, onNote }) {
           </div>
         </div>
       )}
-      <iframe srcDoc={init.htmlConcept} title={init.title} sandbox="allow-scripts allow-same-origin allow-forms allow-downloads" style={{ flex: 1, border: "none", width: "100%", background: "#fff" }} />
+      <iframe srcDoc={init.htmlConcept} title={init.title} sandbox="allow-scripts allow-forms allow-downloads" style={{ flex: 1, border: "none", width: "100%", background: "#fff" }} />
     </div>
   );
 }
@@ -7610,7 +7613,7 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                   </div>
                 )}
                 <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.2)", color: "var(--gold)" }} onClick={() => setShowEditModal(activeConcept)}>Edit</button>
-                <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); window.open(URL.createObjectURL(blob),"_blank"); }}>Open ↗</button>
+                <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); window.open(URL.createObjectURL(blob),"_blank","noopener,noreferrer"); }}>Open ↗</button>
                 <button className="btn btn-sm" onClick={() => { const blob = new Blob([activeHtml],{type:"text/html"}); const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=activeConcept.name+".html"; a.click(); }}>↓ Download</button>
               </div>
             </div>
@@ -7624,7 +7627,7 @@ function ConceptsPanel({ concepts, activeConceptId, setActiveConceptId, onAdd, o
                 ))}
               </div>
             )}
-            <iframe key={activeConcept.id} srcDoc={activeHtml} title={activeConcept.name} sandbox="allow-scripts allow-same-origin allow-forms allow-downloads" style={{ flex: 1, border: "none", width: "100%", background: "#fff" }} />
+            <iframe key={activeConcept.id} srcDoc={activeHtml} title={activeConcept.name} sandbox="allow-scripts allow-forms allow-downloads" style={{ flex: 1, border: "none", width: "100%", background: "#fff" }} />
           </>
         ) : activeConcept && !activeHtml ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -8451,7 +8454,7 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
             <div style={{ padding: "7px 14px", borderBottom: "1px solid rgba(0,0,0,.08)", background: "#f5f5f5", flexShrink: 0 }}>
               <div style={{ fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "#666", fontWeight: 500 }}>Live Preview</div>
             </div>
-            <iframe key={draft.length} srcDoc={draft} title="Gantt Live Preview" sandbox="allow-scripts allow-same-origin allow-forms" style={{ flex: 1, border: "none", width: "100%" }} />
+            <iframe key={draft.length} srcDoc={draft} title="Gantt Live Preview" sandbox="allow-scripts allow-forms" style={{ flex: 1, border: "none", width: "100%" }} />
           </div>
         </div>
       </div>
@@ -8473,8 +8476,10 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
             📋 Items {(timelineItems||[]).length > 0 && <span style={{ marginLeft: 4, fontSize: 9, padding: "1px 5px", borderRadius: 100, background: "rgba(201,168,76,.15)", color: "var(--gold)" }}>{(timelineItems||[]).length}</span>}
           </button>
           <button className="btn btn-sm" onClick={() => {
-            const w = window.open("", "_blank", "width=1400,height=800");
-            if (w) { w.document.open(); w.document.write(ganttHtml || draft); w.document.close(); }
+            const html = ganttHtml || draft;
+            if (!html) return;
+            const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+            window.open(url, "_blank", "width=1400,height=800,noopener,noreferrer");
           }}>↗ Expand</button>
           {canEdit && <button className="btn btn-sm" onClick={() => setEditing(true)} style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)" }}>✏ Edit HTML</button>}
           {canEdit && <button className="btn btn-sm" onClick={() => fileRef.current.click()}>↺ Replace</button>}
@@ -8486,7 +8491,7 @@ function GanttViewer({ ganttHtml, onUpdate, canEdit, timelineItems, setTimelineI
       {/* Content: iframe + optional items panel */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Gantt iframe */}
-        <iframe className="gv-frame" srcDoc={ganttHtml} title="Timeline" sandbox="allow-scripts allow-same-origin allow-downloads allow-forms"
+        <iframe className="gv-frame" srcDoc={ganttHtml} title="Timeline" sandbox="allow-scripts allow-downloads allow-forms"
           style={{ flex: 1, border: "none", borderTop: 0 }} />
 
         {/* Items panel */}
@@ -9320,7 +9325,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
                     <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{request._briefFile}</div>
                     {request._briefFileData && (
                       <>
-                        <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", fontSize: 10 }} onClick={() => { const w = window.open("", "_blank"); if (w) { w.document.write(`<iframe src="${request._briefFileData}" style="width:100%;height:100%;border:none"></iframe>`); } }}>View</button>
+                        <button className="btn btn-sm" style={{ borderColor: "rgba(201,168,76,.3)", color: "var(--gold)", fontSize: 10 }} onClick={() => { window.open(request._briefFileData, "_blank", "noopener,noreferrer"); }}>View</button>
                         <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const a = document.createElement("a"); a.href = request._briefFileData; a.download = request._briefFile; a.click(); }}>Download</button>
                       </>
                     )}
@@ -9364,7 +9369,7 @@ function DesignDetailModal({ request, brands, teamMembers, onClose, onUpdate, on
                     <div style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 600 }}>HTML Concept — {request._htmlName || "Attached"}</div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const blob = new Blob([request._html], { type: "text/html" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (request._htmlName || "concept") + ".html"; a.click(); }}>Download</button>
-                      <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const blob = new Blob([request._html], { type: "text/html" }); window.open(URL.createObjectURL(blob), "_blank"); }}>Open</button>
+                      <button className="btn btn-sm" style={{ fontSize: 10 }} onClick={() => { const blob = new Blob([request._html], { type: "text/html" }); window.open(URL.createObjectURL(blob), "_blank", "noopener,noreferrer"); }}>Open</button>
                     </div>
                   </div>
                   <div style={{ height: 200, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)", background: "#fff" }}>
@@ -9650,7 +9655,7 @@ function FieldTeamPortal({ tree, setTree, contacts, setContacts, tierList, setTi
                 <div style={{ display: "flex", gap: 8 }}>
                   <input value={selected.link || ""} onChange={e => updateNode(selected.id, { link: e.target.value })} placeholder="Paste a Google Sheets, Docs, or any URL..."
                     style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", color: "var(--text)", fontSize: 12, fontFamily: "var(--bf)", outline: "none" }} />
-                  {selected.link && <button className="btn btn-sm" onClick={() => window.open(selected.link, "_blank")}>Open ↗</button>}
+                  {selected.link && <button className="btn btn-sm" onClick={() => window.open(selected.link, "_blank", "noopener,noreferrer")}>Open ↗</button>}
                 </div>
               </div>
               <div style={{ marginBottom: 20 }}>

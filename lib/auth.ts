@@ -17,6 +17,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ profile }) {
       if (!profile?.email) return false;
+      if (profile.email_verified !== true) return false;
 
       const email = profile.email.toLowerCase();
       const domain = email.split("@")[1];
